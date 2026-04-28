@@ -1,0 +1,29 @@
+{
+  "name": "episfolio",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local-first career portfolio app for solo job-changers",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.18.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @episfolio/desktop dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "tauri": "pnpm --filter @episfolio/desktop tauri",
+    "tauri:dev": "pnpm --filter @episfolio/desktop tauri dev",
+    "lint": "biome check .",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "typescript": "^6.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]
+  }
+}
