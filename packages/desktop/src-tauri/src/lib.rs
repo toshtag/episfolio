@@ -20,6 +20,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::episodes::create_episode,
             commands::episodes::list_episodes,
+            commands::settings::save_api_key,
+            commands::settings::load_api_key,
+            commands::settings::delete_api_key,
+            commands::settings::test_openai_connection,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
