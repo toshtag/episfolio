@@ -1,6 +1,9 @@
 import { LitElement, css, html } from 'lit';
 import type { Episode } from '@episfolio/kernel';
 import { createEpisode, listEpisodes } from './ipc/episodes.js';
+import './settings-view.js';
+
+type Tab = 'episodes' | 'settings';
 
 class EpisodeApp extends LitElement {
   static override properties = {
@@ -8,12 +11,14 @@ class EpisodeApp extends LitElement {
     newTitle: { state: true },
     saving: { state: true },
     error: { state: true },
+    tab: { state: true },
   };
 
   declare episodes: Episode[];
   declare newTitle: string;
   declare saving: boolean;
   declare error: string;
+  declare tab: Tab;
 
   constructor() {
     super();
@@ -21,16 +26,38 @@ class EpisodeApp extends LitElement {
     this.newTitle = '';
     this.saving = false;
     this.error = '';
+    this.tab = 'episodes';
   }
 
   static override styles = css`
     :host {
       display: block;
-      padding: 2rem;
       font-family: system-ui, -apple-system, sans-serif;
       color: #1a1a1a;
       max-width: 720px;
     }
+    nav {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #ddd;
+      padding: 0 1.5rem;
+    }
+    nav button {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: #888;
+    }
+    nav button.active {
+      color: #1a1a1a;
+      border-bottom-color: #1a1a1a;
+      font-weight: 600;
+    }
+    .panel { padding: 2rem; }
     h1 { margin: 0 0 1.5rem; font-size: 1.4rem; }
     .form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
     input {
@@ -40,7 +67,7 @@ class EpisodeApp extends LitElement {
       border: 1px solid #ccc;
       border-radius: 0.3rem;
     }
-    button {
+    button.save-btn {
       padding: 0.4rem 0.9rem;
       font-size: 0.95rem;
       background: #1a1a1a;
@@ -49,7 +76,7 @@ class EpisodeApp extends LitElement {
       border-radius: 0.3rem;
       cursor: pointer;
     }
-    button:disabled { opacity: 0.5; cursor: default; }
+    button.save-btn:disabled { opacity: 0.5; cursor: default; }
     .error { color: #c00; font-size: 0.85rem; margin-bottom: 0.5rem; }
     table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid #ddd; }
@@ -92,34 +119,51 @@ class EpisodeApp extends LitElement {
 
   override render() {
     return html`
-      <h1>Episfolio</h1>
-      <div class="form">
-        <input
-          .value=${this.newTitle}
-          @input=${(e: Event) => { this.newTitle = (e.target as HTMLInputElement).value; }}
-          @keydown=${this.handleKeydown}
-          placeholder="エピソードのタイトルを入力"
-        />
-        <button @click=${this.handleSave} ?disabled=${this.saving || !this.newTitle.trim()}>
-          保存
-        </button>
-      </div>
-      ${this.error ? html`<p class="error">${this.error}</p>` : ''}
-      ${this.episodes.length === 0
-        ? html`<p class="empty">エピソードはまだありません</p>`
-        : html`
-          <table>
-            <thead><tr><th>タイトル</th><th>作成日時</th></tr></thead>
-            <tbody>
-              ${this.episodes.map(ep => html`
-                <tr>
-                  <td>${ep.title}</td>
-                  <td>${ep.createdAt.replace('T', ' ').replace('Z', '')}</td>
-                </tr>
-              `)}
-            </tbody>
-          </table>
-        `}
+      <nav>
+        <button
+          class=${this.tab === 'episodes' ? 'active' : ''}
+          @click=${() => { this.tab = 'episodes'; }}
+        >エピソード</button>
+        <button
+          class=${this.tab === 'settings' ? 'active' : ''}
+          @click=${() => { this.tab = 'settings'; }}
+        >設定</button>
+      </nav>
+
+      ${this.tab === 'episodes' ? html`
+        <div class="panel">
+          <h1>エピソード</h1>
+          <div class="form">
+            <input
+              .value=${this.newTitle}
+              @input=${(e: Event) => { this.newTitle = (e.target as HTMLInputElement).value; }}
+              @keydown=${this.handleKeydown}
+              placeholder="エピソードのタイトルを入力"
+            />
+            <button class="save-btn" @click=${this.handleSave} ?disabled=${this.saving || !this.newTitle.trim()}>
+              保存
+            </button>
+          </div>
+          ${this.error ? html`<p class="error">${this.error}</p>` : ''}
+          ${this.episodes.length === 0
+            ? html`<p class="empty">エピソードはまだありません</p>`
+            : html`
+              <table>
+                <thead><tr><th>タイトル</th><th>作成日時</th></tr></thead>
+                <tbody>
+                  ${this.episodes.map(ep => html`
+                    <tr>
+                      <td>${ep.title}</td>
+                      <td>${ep.createdAt.replace('T', ' ').replace('Z', '')}</td>
+                    </tr>
+                  `)}
+                </tbody>
+              </table>
+            `}
+        </div>
+      ` : html`
+        <settings-view></settings-view>
+      `}
     `;
   }
 }
