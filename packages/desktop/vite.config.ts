@@ -1,28 +1,31 @@
 import { defineConfig } from 'vite';
 
-const host = process.env.TAURI_DEV_HOST;
+const tauriDevHost = process.env['TAURI_DEV_HOST'];
+const tauriDebug = !!process.env['TAURI_ENV_DEBUG'];
 
 export default defineConfig({
   clearScreen: false,
   server: {
     port: 5173,
     strictPort: true,
-    host: host ?? false,
-    hmr: host
-      ? {
-          protocol: 'ws',
-          host,
-          port: 5174,
-        }
-      : undefined,
     watch: {
       ignored: ['**/src-tauri/**'],
     },
+    ...(tauriDevHost
+      ? {
+          host: tauriDevHost,
+          hmr: {
+            protocol: 'ws',
+            host: tauriDevHost,
+            port: 5174,
+          },
+        }
+      : {}),
   },
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
   build: {
     target: 'es2022',
-    minify: !process.env.TAURI_ENV_DEBUG ? 'esbuild' : false,
-    sourcemap: !!process.env.TAURI_ENV_DEBUG,
+    minify: tauriDebug ? false : 'esbuild',
+    sourcemap: tauriDebug,
   },
 });
