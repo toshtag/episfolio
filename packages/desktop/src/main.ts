@@ -10,10 +10,18 @@ class EpisodeApp extends LitElement {
     error: { state: true },
   };
 
-  episodes: Episode[] = [];
-  newTitle = '';
-  saving = false;
-  error = '';
+  declare episodes: Episode[];
+  declare newTitle: string;
+  declare saving: boolean;
+  declare error: string;
+
+  constructor() {
+    super();
+    this.episodes = [];
+    this.newTitle = '';
+    this.saving = false;
+    this.error = '';
+  }
 
   static override styles = css`
     :host {
