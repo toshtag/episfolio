@@ -3,7 +3,7 @@
 docs/private/
 
 # Claude Code の hook 状態ファイル
-.claude/state/
+.claude
 
 # Build artifacts
 node_modules/
