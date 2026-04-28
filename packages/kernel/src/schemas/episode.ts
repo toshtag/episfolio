@@ -27,3 +27,11 @@ export const EpisodeDraftSchema = EpisodeSchema.partial().required({
 });
 
 export type EpisodeDraft = z.infer<typeof EpisodeDraftSchema>;
+
+export const EpisodeUpdateSchema = EpisodeSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial();
+
+export type EpisodeUpdate = z.infer<typeof EpisodeUpdateSchema>;

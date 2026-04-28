@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { EpisodeDraftSchema, EpisodeSchema } from '../../src/schemas/episode.js';
+import {
+  EpisodeDraftSchema,
+  EpisodeSchema,
+  EpisodeUpdateSchema,
+} from '../../src/schemas/episode.js';
 
 const validEpisode = {
   id: '01JQZB3K2MXNV8P4RY5T6W7F9D',
@@ -82,5 +86,59 @@ describe('EpisodeDraftSchema', () => {
       tags: ['backend'],
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe('EpisodeUpdateSchema', () => {
+  it('空オブジェクトを受け入れる（全フィールド optional）', () => {
+    const result = EpisodeUpdateSchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+
+  it('一部フィールドだけの partial 更新を受け入れる', () => {
+    const result = EpisodeUpdateSchema.safeParse({
+      problem: '更新後の課題',
+      remoteLLMAllowed: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('title が空文字のとき失敗する', () => {
+    const result = EpisodeUpdateSchema.safeParse({ title: '' });
+    expect(result.success).toBe(false);
+  });
+
+  it('id を含むと unknown key として無視される（safeParse は通る）', () => {
+    const result = EpisodeUpdateSchema.safeParse({
+      id: '01JQZB3K2MXNV8P4RY5T6W7F9D',
+      title: '更新',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect('id' in result.data).toBe(false);
+    }
+  });
+
+  it('createdAt / updatedAt を含んでも無視される', () => {
+    const result = EpisodeUpdateSchema.safeParse({
+      title: '更新',
+      createdAt: '2026-04-28T00:00:00Z',
+      updatedAt: '2026-04-28T00:00:00Z',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect('createdAt' in result.data).toBe(false);
+      expect('updatedAt' in result.data).toBe(false);
+    }
+  });
+
+  it('relatedSkills の型が不正なとき失敗する', () => {
+    const result = EpisodeUpdateSchema.safeParse({ relatedSkills: 'backend' });
+    expect(result.success).toBe(false);
+  });
+
+  it('remoteLLMAllowed が boolean 以外のとき失敗する', () => {
+    const result = EpisodeUpdateSchema.safeParse({ remoteLLMAllowed: 'true' });
+    expect(result.success).toBe(false);
   });
 });
