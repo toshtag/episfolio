@@ -1,0 +1,53 @@
+# Internal docs（個人的な設計メモ・ロードマップ・進捗）
+# OSS public repo に混入させない
+docs/private/
+
+# Claude Code の hook 状態ファイル
+.claude/state/
+
+# Build artifacts
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Cargo / Tauri
+target/
+src-tauri/target/
+src-tauri/gen/
+
+# Local data / secrets
+.env
+.env.local
+.env.*.local
+*.db
+*.db-wal
+*.db-shm
+appdata/
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.turbo/
+.parcel-cache/
+
+# Misc
+*.pem
+*.key

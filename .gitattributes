@@ -1,0 +1,30 @@
+# 改行コードを LF に正規化
+* text=auto eol=lf
+
+# 明示的に LF を強制（macOS/Linux 起動スクリプト等）
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows 用は CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# バイナリ
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.zip binary
+*.gz binary
+*.dmg binary
+*.exe binary
+
+# 言語別の linguist 設定（GitHub の言語統計）
+*.md linguist-detectable=true
+docs/private/* linguist-documentation
