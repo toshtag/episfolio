@@ -109,10 +109,10 @@ pub fn list_life_timeline_entries(
         "SELECT {SELECT_COLUMNS} FROM life_timeline_entries ORDER BY age_range_start ASC, created_at ASC"
     );
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
-    stmt.query_map([], row_from_query)
-        .map_err(|e| e.to_string())?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())
+    let rows = stmt
+        .query_map([], row_from_query)
+        .map_err(|e| e.to_string())?;
+    rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
