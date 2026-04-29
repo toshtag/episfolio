@@ -291,6 +291,75 @@ pub fn get_document(
 }
 
 // ──────────────────────────────────────────────
+// create_document_manual
+// ──────────────────────────────────────────────
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateDocumentManualArgs {
+    pub title: String,
+    pub template: String,
+    pub content: String,
+    pub source_evidence_ids: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateDocumentManualResult {
+    pub document: CareerDocumentRow,
+    pub revision: DocumentRevisionRow,
+}
+
+#[tauri::command]
+pub fn create_document_manual(
+    db: State<'_, Mutex<Connection>>,
+    args: CreateDocumentManualArgs,
+) -> Result<CreateDocumentManualResult, String> {
+    let now = chrono_now();
+    let doc_id = Ulid::new().to_string();
+    let rev_id = Ulid::new().to_string();
+    let title = args.title.trim().to_string();
+    if title.is_empty() {
+        return Err("タイトルは必須です".to_string());
+    }
+    let content = if args.content.is_empty() {
+        template_content(&args.template)
+    } else {
+        args.content.clone()
+    };
+    let doc = save_document(&db, &doc_id, &title, "", &now)?;
+    let ids_json = serde_json::to_string(&args.source_evidence_ids).unwrap_or_default();
+    let rev = {
+        let conn = db.lock().map_err(|e| e.to_string())?;
+        conn.execute(
+            "INSERT INTO document_revisions \
+             (id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, created_at) \
+             VALUES (?1, ?2, ?3, ?4, NULL, 'human', ?5)",
+            rusqlite::params![rev_id, doc_id, content, ids_json, now],
+        )
+        .map_err(|e| e.to_string())?;
+        DocumentRevisionRow {
+            id: rev_id,
+            document_id: doc_id.clone(),
+            content,
+            source_evidence_ids: args.source_evidence_ids,
+            source_ai_run_id: None,
+            created_by: "human".to_string(),
+            created_at: now,
+        }
+    };
+    Ok(CreateDocumentManualResult { document: doc, revision: rev })
+}
+
+fn template_content(template: &str) -> String {
+    match template {
+        "resume" => "# 職務経歴書\n\n## 職務要約\n\n\n\n## 強み・スキル\n\n\n\n## 職務経歴\n\n".to_string(),
+        "skill-summary" => "# スキルサマリー\n\n## 技術スキル\n\n\n\n## ソフトスキル\n\n".to_string(),
+        _ => String::new(),
+    }
+}
+
+// ──────────────────────────────────────────────
 // helpers
 // ──────────────────────────────────────────────
 
