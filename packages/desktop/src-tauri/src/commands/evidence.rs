@@ -304,6 +304,86 @@ pub async fn extract_evidence(
 }
 
 // ──────────────────────────────────────────────
+// create_skill_evidence_manual
+// ──────────────────────────────────────────────
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateManualEvidenceArgs {
+    pub strength_label: String,
+    pub description: String,
+    pub evidence_episode_ids: Vec<String>,
+    pub reproducibility: Option<String>,
+    pub evaluated_context: Option<String>,
+    pub confidence: Option<String>,
+}
+
+#[tauri::command]
+pub fn create_skill_evidence_manual(
+    db: State<'_, Mutex<Connection>>,
+    args: CreateManualEvidenceArgs,
+) -> Result<SkillEvidenceRow, String> {
+    if args.strength_label.trim().is_empty() {
+        return Err("強みのラベルは必須です".to_string());
+    }
+    if args.description.trim().is_empty() {
+        return Err("説明は必須です".to_string());
+    }
+    let confidence = args.confidence.unwrap_or_else(|| "medium".to_string());
+    if !matches!(confidence.as_str(), "low" | "medium" | "high") {
+        return Err(format!("無効な confidence: {confidence}"));
+    }
+
+    let id = Ulid::new().to_string();
+    let now = chrono_now();
+    let evidence_ids_json =
+        serde_json::to_string(&args.evidence_episode_ids).map_err(|e| e.to_string())?;
+    let reproducibility = args.reproducibility.unwrap_or_default();
+    let evaluated_context = args.evaluated_context.unwrap_or_default();
+
+    {
+        let conn = db.lock().map_err(|e| e.to_string())?;
+        conn.execute(
+            "INSERT INTO skill_evidence \
+             (id, strength_label, description, evidence_episode_ids, reproducibility, \
+              evaluated_context, confidence, status, created_by, source_ai_run_id, \
+              created_at, updated_at) \
+             VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
+            rusqlite::params![
+                id,
+                args.strength_label.trim(),
+                args.description.trim(),
+                evidence_ids_json,
+                reproducibility,
+                evaluated_context,
+                confidence,
+                "accepted",
+                "human",
+                None::<String>,
+                now,
+                now,
+            ],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+
+    Ok(SkillEvidenceRow {
+        id,
+        strength_label: args.strength_label.trim().to_string(),
+        description: args.description.trim().to_string(),
+        evidence_episode_ids: args.evidence_episode_ids,
+        reproducibility,
+        evaluated_context,
+        confidence,
+        status: "accepted".to_string(),
+        created_by: "human".to_string(),
+        source_ai_run_id: None,
+        created_at: now.clone(),
+        updated_at: now,
+    })
+}
+
+// ──────────────────────────────────────────────
 // list_skill_evidence
 // ──────────────────────────────────────────────
 
