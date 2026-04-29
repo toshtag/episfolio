@@ -1,21 +1,9 @@
 import type { Episode, EpisodeUpdate } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
 import { deleteEpisode, getEpisode, updateEpisode } from './ipc/episodes.js';
-import {
-  type CreateManualEvidenceArgs,
-  createSkillEvidenceManual,
-  extractEvidence,
-} from './ipc/evidence.js';
+import { type CreateManualEvidenceArgs, createSkillEvidenceManual } from './ipc/evidence.js';
 
-type Status =
-  | 'idle'
-  | 'loading'
-  | 'saving'
-  | 'deleting'
-  | 'saved'
-  | 'extracting'
-  | 'creating-evidence'
-  | 'error';
+type Status = 'idle' | 'loading' | 'saving' | 'deleting' | 'saved' | 'creating-evidence' | 'error';
 type Confidence = 'low' | 'medium' | 'high';
 
 class EpisodeDetailView extends LitElement {
@@ -144,15 +132,6 @@ class EpisodeDetailView extends LitElement {
       font-size: 0.9rem;
       cursor: pointer;
     }
-    button.extract {
-      padding: 0.4rem 0.9rem;
-      background: #2563eb;
-      color: #fff;
-      border: none;
-      border-radius: 0.3rem;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
     button.manual-evidence {
       padding: 0.4rem 0.9rem;
       background: #fff;
@@ -248,7 +227,6 @@ class EpisodeDetailView extends LitElement {
       reproducibility: this.episode.reproducibility,
       personalFeeling: this.episode.personalFeeling,
       externalFeedback: this.episode.externalFeedback,
-      remoteLLMAllowed: this.episode.remoteLLMAllowed,
       relatedSkills: this.relatedSkillsText
         .split('\n')
         .map((s) => s.trim())
@@ -287,25 +265,6 @@ class EpisodeDetailView extends LitElement {
     try {
       await deleteEpisode(this.episode.id);
       this.dispatchEvent(new CustomEvent('episode-deleted', { bubbles: true, composed: true }));
-    } catch (e) {
-      this.status = 'error';
-      this.message = String(e);
-    }
-  }
-
-  private async handleExtract() {
-    if (!this.episode) return;
-    this.status = 'extracting';
-    this.message = '';
-    try {
-      const result = await extractEvidence([this.episode.id]);
-      if (result.parseError) {
-        this.status = 'error';
-        this.message = `Evidence 生成エラー: ${result.parseError}`;
-      } else {
-        this.status = 'saved';
-        this.message = `Evidence を ${result.evidences.length} 件生成しました。「Evidence」タブで確認してください。`;
-      }
     } catch (e) {
       this.status = 'error';
       this.message = String(e);
@@ -463,10 +422,7 @@ class EpisodeDetailView extends LitElement {
     }
     const ep = this.episode;
     const busy =
-      this.status === 'saving' ||
-      this.status === 'deleting' ||
-      this.status === 'extracting' ||
-      this.status === 'creating-evidence';
+      this.status === 'saving' || this.status === 'deleting' || this.status === 'creating-evidence';
 
     return html`
       <div class="header">
@@ -507,20 +463,11 @@ class EpisodeDetailView extends LitElement {
         ></textarea>
       </div>
 
-      <div class="field">
-        <label class="checkbox">
-          <input
-            type="checkbox"
-            .checked=${ep.remoteLLMAllowed}
-            @change=${(e: Event) => this.updateField('remoteLLMAllowed', (e.target as HTMLInputElement).checked)}
-          />
-          リモート LLM への送信を許可する
-        </label>
-      </div>
+      <!-- hidden in v0.1 — see ADR-0007. v0.2 で再設計予定 -->
+      <!-- remoteLLMAllowed チェックボックス・Evidence 生成ボタンは v0.1 では非表示 -->
 
       <div class="actions">
         <button class="primary" @click=${this.handleSave} ?disabled=${busy || this.confirmDelete}>保存</button>
-        <button class="extract" @click=${this.handleExtract} ?disabled=${busy || this.confirmDelete}>Evidence 生成</button>
         <button
           class="manual-evidence"
           @click=${this.toggleManualEvidenceForm}

@@ -46,3 +46,21 @@ export async function listDocuments(): Promise<CareerDocumentRow[]> {
 export async function getDocument(documentId: string): Promise<GetDocumentResult> {
   return invoke<GetDocumentResult>('get_document', { args: { documentId } });
 }
+
+export type CreateDocumentManualArgs = {
+  title: string;
+  template: 'resume' | 'skill-summary' | 'blank';
+  content: string;
+  sourceEvidenceIds: string[];
+};
+
+export type CreateDocumentManualResult = {
+  document: CareerDocumentRow;
+  revision: DocumentRevisionRow;
+};
+
+export async function createDocumentManual(
+  args: CreateDocumentManualArgs,
+): Promise<CreateDocumentManualResult> {
+  return invoke<CreateDocumentManualResult>('create_document_manual', { args });
+}

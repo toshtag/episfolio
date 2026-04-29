@@ -1,10 +1,22 @@
 import { css, html, LitElement } from 'lit';
 import type { CareerDocumentRow, DocumentRevisionRow } from './ipc/documents.js';
-import { generateDocument, getDocument, listDocuments } from './ipc/documents.js';
+import {
+  type CreateDocumentManualArgs,
+  createDocumentManual,
+  getDocument,
+  listDocuments,
+} from './ipc/documents.js';
 import type { SkillEvidenceRow } from './ipc/evidence.js';
 import { listSkillEvidence } from './ipc/evidence.js';
 
-type ViewState = 'list' | 'detail' | 'generating';
+type Template = 'resume' | 'skill-summary' | 'blank';
+type ViewState = 'list' | 'new' | 'edit';
+
+const TEMPLATES: { value: Template; label: string }[] = [
+  { value: 'resume', label: '職務経歴書' },
+  { value: 'skill-summary', label: 'スキルサマリー' },
+  { value: 'blank', label: '空白' },
+];
 
 class DocumentView extends LitElement {
   static override properties = {
@@ -13,7 +25,11 @@ class DocumentView extends LitElement {
     revisions: { state: true },
     acceptedEvidences: { state: true },
     viewState: { state: true },
-    jobTarget: { state: true },
+    newTitle: { state: true },
+    newTemplate: { state: true },
+    editContent: { state: true },
+    selectedEvidenceId: { state: true },
+    isSaving: { state: true },
     error: { state: true },
   };
 
@@ -22,7 +38,11 @@ class DocumentView extends LitElement {
   declare revisions: DocumentRevisionRow[];
   declare acceptedEvidences: SkillEvidenceRow[];
   declare viewState: ViewState;
-  declare jobTarget: string;
+  declare newTitle: string;
+  declare newTemplate: Template;
+  declare editContent: string;
+  declare selectedEvidenceId: string;
+  declare isSaving: boolean;
   declare error: string;
 
   constructor() {
@@ -32,7 +52,11 @@ class DocumentView extends LitElement {
     this.revisions = [];
     this.acceptedEvidences = [];
     this.viewState = 'list';
-    this.jobTarget = '';
+    this.newTitle = '';
+    this.newTemplate = 'resume';
+    this.editContent = '';
+    this.selectedEvidenceId = '';
+    this.isSaving = false;
     this.error = '';
   }
 
@@ -47,19 +71,39 @@ class DocumentView extends LitElement {
     h2 { margin: 0 0 1.25rem; font-size: 1.2rem; }
     .error { color: #c00; font-size: 0.85rem; margin-bottom: 0.75rem; }
     .empty { color: #888; font-size: 0.9rem; }
-    .form-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-      align-items: center;
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: #555;
+      cursor: pointer;
+      text-decoration: underline;
     }
-    input {
-      flex: 1;
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1rem; }
+    th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid #ddd; }
+    td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #eee; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover td { background: #f6f6f6; }
+    .field { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 0.3rem; }
+    input[type="text"], select, textarea {
+      width: 100%;
+      box-sizing: border-box;
       padding: 0.4rem 0.7rem;
       font-size: 0.95rem;
       border: 1px solid #ccc;
       border-radius: 0.3rem;
+      font-family: inherit;
     }
+    textarea.editor { min-height: 20rem; resize: vertical; font-family: monospace; font-size: 0.9rem; }
+    .insert-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .insert-row select { flex: 1; }
+    .actions { display: flex; gap: 0.5rem; margin-top: 1.25rem; }
     button.primary {
       padding: 0.4rem 0.9rem;
       font-size: 0.9rem;
@@ -69,17 +113,17 @@ class DocumentView extends LitElement {
       border-radius: 0.3rem;
       cursor: pointer;
     }
-    button.primary:disabled { opacity: 0.5; cursor: default; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1rem; }
-    th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid #ddd; }
-    td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #eee; }
-    tbody tr { cursor: pointer; }
-    tbody tr:hover td { background: #f6f6f6; }
-    .evidence-count {
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 1rem;
+    button.secondary {
+      padding: 0.4rem 0.9rem;
+      font-size: 0.9rem;
+      background: #e5e5e5;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 0.3rem;
+      cursor: pointer;
     }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .revision-meta { font-size: 0.78rem; color: #888; margin-bottom: 0.5rem; }
     .markdown-content {
       white-space: pre-wrap;
       font-size: 0.9rem;
@@ -90,20 +134,7 @@ class DocumentView extends LitElement {
       padding: 1.25rem;
       margin-top: 0.75rem;
     }
-    .revision-meta {
-      font-size: 0.78rem;
-      color: #888;
-      margin-bottom: 0.5rem;
-    }
-    .back-link {
-      display: inline-block;
-      margin-bottom: 1rem;
-      font-size: 0.85rem;
-      color: #555;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-    .generating-msg { color: #555; font-size: 0.9rem; }
+    .new-btn-row { margin-bottom: 1.25rem; }
   `;
 
   override async connectedCallback() {
@@ -121,70 +152,100 @@ class DocumentView extends LitElement {
     }
   }
 
-  private async handleGenerate() {
-    const t = this.jobTarget.trim();
-    if (!t) return;
-    this.viewState = 'generating';
-    this.error = '';
-    try {
-      const result = await generateDocument([], t);
-      await this.loadAll();
-      await this.openDocument(result.document.id);
-    } catch (e) {
-      this.error = String(e);
-      this.viewState = 'list';
-    }
-  }
-
   private async openDocument(id: string) {
     try {
       const result = await getDocument(id);
       this.selected = result.document;
       this.revisions = result.revisions;
-      this.viewState = 'detail';
+      const latest = result.revisions[0];
+      this.editContent = latest?.content ?? '';
+      this.viewState = 'edit';
+      this.error = '';
     } catch (e) {
       this.error = String(e);
     }
   }
 
-  private handleBack() {
+  private handleNewDocument() {
+    this.newTitle = '';
+    this.newTemplate = 'resume';
+    this.editContent = '';
+    this.error = '';
+    this.viewState = 'new';
+  }
+
+  private handleBackToList() {
     this.selected = null;
     this.revisions = [];
+    this.editContent = '';
+    this.error = '';
     this.viewState = 'list';
+  }
+
+  private handleInsertEvidence() {
+    const ev = this.acceptedEvidences.find((e) => e.id === this.selectedEvidenceId);
+    if (!ev) return;
+    const line = `- ${ev.strengthLabel}: ${ev.description}`;
+    this.editContent = this.editContent ? `${this.editContent}\n${line}` : line;
+    this.selectedEvidenceId = '';
+  }
+
+  private async handleCreate() {
+    const title = this.newTitle.trim();
+    if (!title) {
+      this.error = 'タイトルは必須です';
+      return;
+    }
+    this.isSaving = true;
+    this.error = '';
+    try {
+      const args: CreateDocumentManualArgs = {
+        title,
+        template: this.newTemplate,
+        content: this.editContent,
+        sourceEvidenceIds: [],
+      };
+      const result = await createDocumentManual(args);
+      await this.loadAll();
+      await this.openDocument(result.document.id);
+    } catch (e) {
+      this.error = String(e);
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  private async handleSaveRevision() {
+    if (!this.selected) return;
+    this.isSaving = true;
+    this.error = '';
+    try {
+      const args: CreateDocumentManualArgs = {
+        title: this.selected.title,
+        template: 'blank',
+        content: this.editContent,
+        sourceEvidenceIds: [],
+      };
+      const result = await createDocumentManual(args);
+      await this.loadAll();
+      await this.openDocument(result.document.id);
+    } catch (e) {
+      this.error = String(e);
+    } finally {
+      this.isSaving = false;
+    }
   }
 
   private renderList() {
     return html`
       <h2>ドキュメント</h2>
       ${this.error ? html`<p class="error">${this.error}</p>` : ''}
-      <p class="evidence-count">
-        採用済みエビデンス: <strong>${this.acceptedEvidences.length} 件</strong>
-        ${
-          this.acceptedEvidences.length === 0
-            ? html`<span>（Evidence タブで採用してからドキュメントを生成してください）</span>`
-            : ''
-        }
-      </p>
-      <div class="form-row">
-        <input
-          .value=${this.jobTarget}
-          @input=${(e: Event) => {
-            this.jobTarget = (e.target as HTMLInputElement).value;
-          }}
-          @keydown=${(e: KeyboardEvent) => {
-            if (e.key === 'Enter') this.handleGenerate();
-          }}
-          placeholder="応募先・職種（例: バックエンドエンジニア）"
-        />
-        <button
-          class="primary"
-          ?disabled=${!this.jobTarget.trim() || this.acceptedEvidences.length === 0}
-          @click=${this.handleGenerate}
-        >ドキュメント生成</button>
+      <div class="new-btn-row">
+        <button class="primary" @click=${this.handleNewDocument}>新規作成</button>
       </div>
       ${
         this.documents.length === 0
-          ? html`<p class="empty">まだドキュメントがありません。</p>`
+          ? html`<p class="empty">まだドキュメントがありません。「新規作成」から作成してください。</p>`
           : html`
           <table>
             <thead><tr><th>タイトル</th><th>ステータス</th><th>作成日時</th></tr></thead>
@@ -205,38 +266,118 @@ class DocumentView extends LitElement {
     `;
   }
 
-  private renderGenerating() {
+  private renderNew() {
     return html`
-      <p class="generating-msg">ドキュメントを生成中です...</p>
+      <span class="back-link" @click=${this.handleBackToList}>← ドキュメント一覧</span>
+      <h2>新規ドキュメント</h2>
+      ${this.error ? html`<p class="error">${this.error}</p>` : ''}
+      <div class="field">
+        <label>タイトル</label>
+        <input
+          type="text"
+          .value=${this.newTitle}
+          @input=${(e: Event) => {
+            this.newTitle = (e.target as HTMLInputElement).value;
+          }}
+          placeholder="例: バックエンドエンジニア 職務経歴書"
+        />
+      </div>
+      <div class="field">
+        <label>テンプレート</label>
+        <select
+          .value=${this.newTemplate}
+          @change=${(e: Event) => {
+            this.newTemplate = (e.target as HTMLSelectElement).value as Template;
+          }}
+        >
+          ${TEMPLATES.map((t) => html`<option value=${t.value}>${t.label}</option>`)}
+        </select>
+      </div>
+      ${this.renderInsertRow()}
+      <div class="field">
+        <label>本文（Markdown）</label>
+        <textarea
+          class="editor"
+          .value=${this.editContent}
+          @input=${(e: Event) => {
+            this.editContent = (e.target as HTMLTextAreaElement).value;
+          }}
+        ></textarea>
+      </div>
+      <div class="actions">
+        <button class="primary" @click=${this.handleCreate} ?disabled=${this.isSaving || !this.newTitle.trim()}>
+          ${this.isSaving ? '作成中...' : '作成'}
+        </button>
+        <button class="secondary" @click=${this.handleBackToList} ?disabled=${this.isSaving}>キャンセル</button>
+      </div>
     `;
   }
 
-  private renderDetail() {
+  private renderEdit() {
     if (!this.selected) return html``;
     const doc = this.selected;
     const latest = this.revisions[0] ?? null;
     return html`
-      <span class="back-link" @click=${this.handleBack}>← ドキュメント一覧</span>
+      <span class="back-link" @click=${this.handleBackToList}>← ドキュメント一覧</span>
       <h2>${doc.title}</h2>
       ${this.error ? html`<p class="error">${this.error}</p>` : ''}
       ${
         latest
           ? html`
-          <p class="revision-meta">
-            生成日時: ${latest.createdAt.replace('T', ' ').replace('Z', '')}
-            &nbsp;|&nbsp;
-            根拠エビデンス: ${latest.sourceEvidenceIds.length} 件
-          </p>
-          <div class="markdown-content">${latest.content || '（コンテンツなし）'}</div>
-        `
-          : html`<p class="empty">リビジョンがありません。</p>`
+        <p class="revision-meta">
+          最終更新: ${latest.createdAt.replace('T', ' ').replace('Z', '')}
+          &nbsp;|&nbsp;
+          作成者: ${latest.createdBy === 'human' ? '手動' : 'AI'}
+        </p>
+      `
+          : ''
       }
+      ${this.renderInsertRow()}
+      <div class="field">
+        <label>本文（Markdown）</label>
+        <textarea
+          class="editor"
+          .value=${this.editContent}
+          @input=${(e: Event) => {
+            this.editContent = (e.target as HTMLTextAreaElement).value;
+          }}
+        ></textarea>
+      </div>
+      <div class="actions">
+        <button class="primary" @click=${this.handleSaveRevision} ?disabled=${this.isSaving}>
+          ${this.isSaving ? '保存中...' : '保存'}
+        </button>
+      </div>
+    `;
+  }
+
+  private renderInsertRow() {
+    if (this.acceptedEvidences.length === 0) return html``;
+    return html`
+      <div class="insert-row">
+        <select
+          .value=${this.selectedEvidenceId}
+          @change=${(e: Event) => {
+            this.selectedEvidenceId = (e.target as HTMLSelectElement).value;
+          }}
+        >
+          <option value="">— Evidence を選択して挿入 —</option>
+          ${this.acceptedEvidences.map(
+            (ev) => html`<option value=${ev.id}>${ev.strengthLabel}</option>`,
+          )}
+        </select>
+        <button
+          class="secondary"
+          @click=${this.handleInsertEvidence}
+          ?disabled=${!this.selectedEvidenceId}
+        >挿入</button>
+      </div>
     `;
   }
 
   override render() {
-    if (this.viewState === 'generating') return this.renderGenerating();
-    if (this.viewState === 'detail') return this.renderDetail();
+    if (this.viewState === 'new') return this.renderNew();
+    if (this.viewState === 'edit') return this.renderEdit();
     return this.renderList();
   }
 }
