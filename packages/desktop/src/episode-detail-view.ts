@@ -1,9 +1,22 @@
 import type { Episode, EpisodeUpdate } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
 import { deleteEpisode, getEpisode, updateEpisode } from './ipc/episodes.js';
-import { extractEvidence } from './ipc/evidence.js';
+import {
+  type CreateManualEvidenceArgs,
+  createSkillEvidenceManual,
+  extractEvidence,
+} from './ipc/evidence.js';
 
-type Status = 'idle' | 'loading' | 'saving' | 'deleting' | 'saved' | 'extracting' | 'error';
+type Status =
+  | 'idle'
+  | 'loading'
+  | 'saving'
+  | 'deleting'
+  | 'saved'
+  | 'extracting'
+  | 'creating-evidence'
+  | 'error';
+type Confidence = 'low' | 'medium' | 'high';
 
 class EpisodeDetailView extends LitElement {
   static override properties = {
@@ -14,6 +27,12 @@ class EpisodeDetailView extends LitElement {
     relatedSkillsText: { state: true },
     tagsText: { state: true },
     confirmDelete: { state: true },
+    showManualEvidenceForm: { state: true },
+    manualLabel: { state: true },
+    manualDescription: { state: true },
+    manualReproducibility: { state: true },
+    manualEvaluatedContext: { state: true },
+    manualConfidence: { state: true },
   };
 
   declare episodeId: string;
@@ -23,6 +42,12 @@ class EpisodeDetailView extends LitElement {
   declare relatedSkillsText: string;
   declare tagsText: string;
   declare confirmDelete: boolean;
+  declare showManualEvidenceForm: boolean;
+  declare manualLabel: string;
+  declare manualDescription: string;
+  declare manualReproducibility: string;
+  declare manualEvaluatedContext: string;
+  declare manualConfidence: Confidence;
 
   constructor() {
     super();
@@ -33,6 +58,12 @@ class EpisodeDetailView extends LitElement {
     this.relatedSkillsText = '';
     this.tagsText = '';
     this.confirmDelete = false;
+    this.showManualEvidenceForm = false;
+    this.manualLabel = '';
+    this.manualDescription = '';
+    this.manualReproducibility = '';
+    this.manualEvaluatedContext = '';
+    this.manualConfidence = 'medium';
   }
 
   static override styles = css`
@@ -122,7 +153,41 @@ class EpisodeDetailView extends LitElement {
       font-size: 0.9rem;
       cursor: pointer;
     }
+    button.manual-evidence {
+      padding: 0.4rem 0.9rem;
+      background: #fff;
+      color: #1a1a1a;
+      border: 1px solid #1a1a1a;
+      border-radius: 0.3rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
     button:disabled { opacity: 0.5; cursor: default; }
+    .manual-form {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 0.4rem;
+      background: #fafafa;
+    }
+    .manual-form h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+      color: #1a1a1a;
+    }
+    .manual-form .row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+    .manual-form select {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.9rem;
+      border: 1px solid #ccc;
+      border-radius: 0.3rem;
+      background: #fff;
+    }
     .extract-result { margin-top: 0.75rem; font-size: 0.85rem; color: #2563eb; }
     .message { margin-top: 0.75rem; font-size: 0.85rem; }
     .message.ok { color: #060; }
@@ -247,8 +312,119 @@ class EpisodeDetailView extends LitElement {
     }
   }
 
+  private toggleManualEvidenceForm() {
+    this.showManualEvidenceForm = !this.showManualEvidenceForm;
+    if (!this.showManualEvidenceForm) {
+      this.resetManualEvidenceForm();
+    }
+  }
+
+  private resetManualEvidenceForm() {
+    this.manualLabel = '';
+    this.manualDescription = '';
+    this.manualReproducibility = '';
+    this.manualEvaluatedContext = '';
+    this.manualConfidence = 'medium';
+  }
+
+  private async handleCreateManualEvidence() {
+    if (!this.episode) return;
+    if (!this.manualLabel.trim() || !this.manualDescription.trim()) {
+      this.status = 'error';
+      this.message = '強みのラベルと説明は必須です';
+      return;
+    }
+    this.status = 'creating-evidence';
+    this.message = '';
+    try {
+      const args: CreateManualEvidenceArgs = {
+        strengthLabel: this.manualLabel,
+        description: this.manualDescription,
+        evidenceEpisodeIds: [this.episode.id],
+        confidence: this.manualConfidence,
+      };
+      if (this.manualReproducibility) args.reproducibility = this.manualReproducibility;
+      if (this.manualEvaluatedContext) args.evaluatedContext = this.manualEvaluatedContext;
+      await createSkillEvidenceManual(args);
+      this.resetManualEvidenceForm();
+      this.showManualEvidenceForm = false;
+      this.status = 'saved';
+      this.message = '手書き Evidence を作成しました。「Evidence」タブで確認してください。';
+    } catch (e) {
+      this.status = 'error';
+      this.message = String(e);
+    }
+  }
+
   private handleBack() {
     this.dispatchEvent(new CustomEvent('back', { bubbles: true, composed: true }));
+  }
+
+  private renderManualEvidenceForm(busy: boolean) {
+    return html`
+      <div class="manual-form">
+        <h3>手書き Evidence を追加</h3>
+        <div class="field">
+          <label>強みのラベル（必須・10〜20 文字目安）</label>
+          <input
+            type="text"
+            .value=${this.manualLabel}
+            @input=${(e: Event) => {
+              this.manualLabel = (e.target as HTMLInputElement).value;
+            }}
+          />
+        </div>
+        <div class="field">
+          <label>説明（必須・2〜3 文）</label>
+          <textarea
+            .value=${this.manualDescription}
+            @input=${(e: Event) => {
+              this.manualDescription = (e.target as HTMLTextAreaElement).value;
+            }}
+          ></textarea>
+        </div>
+        <div class="field">
+          <label>再現性（任意・どんな状況でも再現できるか）</label>
+          <textarea
+            .value=${this.manualReproducibility}
+            @input=${(e: Event) => {
+              this.manualReproducibility = (e.target as HTMLTextAreaElement).value;
+            }}
+          ></textarea>
+        </div>
+        <div class="field">
+          <label>評価された文脈（任意・この強みが評価された場面）</label>
+          <textarea
+            .value=${this.manualEvaluatedContext}
+            @input=${(e: Event) => {
+              this.manualEvaluatedContext = (e.target as HTMLTextAreaElement).value;
+            }}
+          ></textarea>
+        </div>
+        <div class="row">
+          <label>確信度</label>
+          <select
+            .value=${this.manualConfidence}
+            @change=${(e: Event) => {
+              this.manualConfidence = (e.target as HTMLSelectElement).value as Confidence;
+            }}
+          >
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+          </select>
+        </div>
+        <div class="actions">
+          <button
+            class="primary"
+            @click=${this.handleCreateManualEvidence}
+            ?disabled=${busy || !this.manualLabel.trim() || !this.manualDescription.trim()}
+          >
+            ${this.status === 'creating-evidence' ? '作成中...' : 'Evidence を作成'}
+          </button>
+        </div>
+      </div>
+    `;
   }
 
   private renderText(label: string, key: keyof Episode, multiline = true) {
@@ -287,7 +463,10 @@ class EpisodeDetailView extends LitElement {
     }
     const ep = this.episode;
     const busy =
-      this.status === 'saving' || this.status === 'deleting' || this.status === 'extracting';
+      this.status === 'saving' ||
+      this.status === 'deleting' ||
+      this.status === 'extracting' ||
+      this.status === 'creating-evidence';
 
     return html`
       <div class="header">
@@ -342,6 +521,13 @@ class EpisodeDetailView extends LitElement {
       <div class="actions">
         <button class="primary" @click=${this.handleSave} ?disabled=${busy || this.confirmDelete}>保存</button>
         <button class="extract" @click=${this.handleExtract} ?disabled=${busy || this.confirmDelete}>Evidence 生成</button>
+        <button
+          class="manual-evidence"
+          @click=${this.toggleManualEvidenceForm}
+          ?disabled=${busy || this.confirmDelete}
+        >
+          ${this.showManualEvidenceForm ? '手書き Evidence の入力をやめる' : '手書き Evidence を追加'}
+        </button>
         ${
           this.confirmDelete
             ? html`
@@ -353,6 +539,8 @@ class EpisodeDetailView extends LitElement {
           `
         }
       </div>
+
+      ${this.showManualEvidenceForm ? this.renderManualEvidenceForm(busy) : ''}
 
       ${
         this.message

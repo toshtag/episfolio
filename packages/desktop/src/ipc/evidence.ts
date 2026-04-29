@@ -30,6 +30,21 @@ export async function extractEvidence(
   });
 }
 
+export type CreateManualEvidenceArgs = {
+  strengthLabel: string;
+  description: string;
+  evidenceEpisodeIds: string[];
+  reproducibility?: string;
+  evaluatedContext?: string;
+  confidence?: 'low' | 'medium' | 'high';
+};
+
+export async function createSkillEvidenceManual(
+  args: CreateManualEvidenceArgs,
+): Promise<SkillEvidenceRow> {
+  return invoke<SkillEvidenceRow>('create_skill_evidence_manual', { args });
+}
+
 export async function listSkillEvidence(): Promise<SkillEvidenceRow[]> {
   return invoke<SkillEvidenceRow[]>('list_skill_evidence');
 }
