@@ -13,6 +13,7 @@ import {
 import {
   ExtractEvidenceOutputSchema,
   type ExtractEvidenceInput,
+  type ExtractEvidenceOutput,
 } from '../contracts/extract-evidence.js';
 
 export type ExtractEvidenceDeps = {
@@ -70,7 +71,7 @@ export async function extractEvidence(
   const promptHash = await deps.hashFn(PROMPT_TEMPLATE);
   const inputs = buildPrompt(episodes);
 
-  const response = await deps.aiProvider.generate<ExtractEvidenceInput, typeof ExtractEvidenceOutputSchema._type>({
+  const response = await deps.aiProvider.generate<ExtractEvidenceInput, ExtractEvidenceOutput>({
     promptId: PROMPT_ID,
     promptVersion: PROMPT_VERSION,
     promptHash,
