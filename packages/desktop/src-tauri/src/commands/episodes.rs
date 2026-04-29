@@ -106,7 +106,8 @@ pub fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<EpisodeRow> {
     })
 }
 
-const SELECT_COLUMNS: &str = "id, title, background, problem, action, ingenuity, result, metrics, \
+pub const SELECT_COLUMNS: &str =
+    "id, title, background, problem, action, ingenuity, result, metrics, \
      before_after, reproducibility, related_skills, personal_feeling, \
      external_feedback, remote_llm_allowed, tags, created_at, updated_at";
 

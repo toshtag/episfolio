@@ -27,6 +27,9 @@ pub fn run() {
             commands::settings::load_api_key,
             commands::settings::delete_api_key,
             commands::settings::test_openai_connection,
+            commands::evidence::extract_evidence,
+            commands::evidence::list_skill_evidence,
+            commands::evidence::update_skill_evidence_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
