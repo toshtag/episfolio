@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { SettingsStoragePort } from '../../src/ports/settings-storage-port.js';
 import { DEFAULT_SETTINGS, type Settings } from '../../src/domain/settings.js';
+import type { SettingsStoragePort } from '../../src/ports/settings-storage-port.js';
 
 class InMemorySettingsStorage implements SettingsStoragePort {
   private data: Settings = { ...DEFAULT_SETTINGS };
