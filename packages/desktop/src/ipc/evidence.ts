@@ -9,6 +9,7 @@ export type SkillEvidenceRow = {
   evaluatedContext: string;
   confidence: 'low' | 'medium' | 'high';
   status: 'candidate' | 'accepted' | 'rejected';
+  source: 'manual' | 'ai-generated';
   createdBy: 'human' | 'ai';
   sourceAiRunId: string | null;
   createdAt: string;

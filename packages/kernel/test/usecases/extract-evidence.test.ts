@@ -153,6 +153,7 @@ describe('extractEvidence usecase', () => {
     expect(result).toHaveLength(1);
     expect(result[0].strengthLabel).toBe('課題解決力');
     expect(result[0].status).toBe('candidate');
+    expect(result[0].source).toBe('ai-generated');
     expect(result[0].createdBy).toBe('ai');
     expect(result[0].sourceAIRunId).toBe('run-id-001');
     expect(deps.evidenceStorage.saveMany).toHaveBeenCalledOnce();

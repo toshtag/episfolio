@@ -34,6 +34,7 @@ export { DEFAULT_SETTINGS } from './domain/settings.js';
 export type {
   SkillEvidence,
   SkillEvidenceConfidence,
+  SkillEvidenceSource,
   SkillEvidenceStatus,
 } from './domain/skill-evidence.js';
 // errors
@@ -79,6 +80,7 @@ export type { SkillEvidenceInput, SkillEvidenceUpdate } from './schemas/skill-ev
 export {
   SkillEvidenceConfidenceSchema,
   SkillEvidenceSchema,
+  SkillEvidenceSourceSchema,
   SkillEvidenceStatusSchema,
   SkillEvidenceUpdateSchema,
 } from './schemas/skill-evidence.js';

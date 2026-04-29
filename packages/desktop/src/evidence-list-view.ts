@@ -80,8 +80,8 @@ class EvidenceListView extends LitElement {
     .badge-candidate { background: #e2e8f0; color: #475569; }
     .badge-accepted  { background: #bbf7d0; color: #166534; }
     .badge-rejected  { background: #fecaca; color: #991b1b; }
-    .badge-source-human { background: #1a1a1a; color: #fff; }
-    .badge-source-ai    { background: #2563eb; color: #fff; }
+    .badge-source-manual       { background: #1a1a1a; color: #fff; }
+    .badge-source-ai-generated { background: #2563eb; color: #fff; }
     .description { font-size: 0.9rem; color: #333; margin-bottom: 0.5rem; }
     .detail { font-size: 0.8rem; color: #666; margin-bottom: 0.4rem; }
     .episode-ids { font-size: 0.75rem; color: #999; margin-bottom: 0.6rem; font-family: monospace; }
@@ -157,8 +157,8 @@ class EvidenceListView extends LitElement {
         <div class="card-header">
           <span class="label">${ev.strengthLabel}</span>
           <span class="badges">
-            <span class="badge badge-source-${ev.createdBy}">
-              ${ev.createdBy === 'human' ? '手書き' : 'AI 抽出'}
+            <span class="badge badge-source-${ev.source}">
+              ${ev.source === 'manual' ? '手書き' : 'AI 抽出'}
             </span>
             <span class="badge badge-${ev.confidence}">${ev.confidence}</span>
             <span class="badge badge-${ev.status}">

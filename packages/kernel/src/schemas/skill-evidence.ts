@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const SkillEvidenceConfidenceSchema = z.enum(['low', 'medium', 'high']);
 export const SkillEvidenceStatusSchema = z.enum(['candidate', 'accepted', 'rejected']);
+export const SkillEvidenceSourceSchema = z.enum(['manual', 'ai-generated']);
 
 export const SkillEvidenceSchema = z.object({
   id: z.string().min(1),
@@ -12,6 +13,7 @@ export const SkillEvidenceSchema = z.object({
   evaluatedContext: z.string(),
   confidence: SkillEvidenceConfidenceSchema,
   status: SkillEvidenceStatusSchema,
+  source: SkillEvidenceSourceSchema,
   createdBy: z.enum(['human', 'ai']),
   sourceAIRunId: z.string().nullable(),
   createdAt: z.string().min(1),

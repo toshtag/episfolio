@@ -28,6 +28,7 @@ pub struct SkillEvidenceRow {
     pub evaluated_context: String,
     pub confidence: String,
     pub status: String,
+    pub source: String,
     pub created_by: String,
     pub source_ai_run_id: Option<String>,
     pub created_at: String,
@@ -45,16 +46,17 @@ fn evidence_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<SkillEvidenceR
         evaluated_context: row.get(5)?,
         confidence: row.get(6)?,
         status: row.get(7)?,
-        created_by: row.get(8)?,
-        source_ai_run_id: row.get(9)?,
-        created_at: row.get(10)?,
-        updated_at: row.get(11)?,
+        source: row.get(8)?,
+        created_by: row.get(9)?,
+        source_ai_run_id: row.get(10)?,
+        created_at: row.get(11)?,
+        updated_at: row.get(12)?,
     })
 }
 
 const EVIDENCE_COLUMNS: &str =
     "id, strength_label, description, evidence_episode_ids, reproducibility, \
-     evaluated_context, confidence, status, created_by, source_ai_run_id, \
+     evaluated_context, confidence, status, source, created_by, source_ai_run_id, \
      created_at, updated_at";
 
 // ──────────────────────────────────────────────
@@ -259,9 +261,9 @@ pub async fn extract_evidence(
             conn.execute(
                 "INSERT INTO skill_evidence \
                  (id, strength_label, description, evidence_episode_ids, reproducibility, \
-                  evaluated_context, confidence, status, created_by, source_ai_run_id, \
+                  evaluated_context, confidence, status, source, created_by, source_ai_run_id, \
                   created_at, updated_at) \
-                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)",
                 rusqlite::params![
                     ev_id,
                     strength_label,
@@ -271,6 +273,7 @@ pub async fn extract_evidence(
                     evaluated_context,
                     confidence,
                     "candidate",
+                    "ai-generated",
                     "ai",
                     ai_run_id,
                     now,
@@ -288,6 +291,7 @@ pub async fn extract_evidence(
                 evaluated_context,
                 confidence,
                 status: "candidate".to_string(),
+                source: "ai-generated".to_string(),
                 created_by: "ai".to_string(),
                 source_ai_run_id: Some(ai_run_id.clone()),
                 created_at: now.clone(),
@@ -346,9 +350,9 @@ pub fn create_skill_evidence_manual(
         conn.execute(
             "INSERT INTO skill_evidence \
              (id, strength_label, description, evidence_episode_ids, reproducibility, \
-              evaluated_context, confidence, status, created_by, source_ai_run_id, \
+              evaluated_context, confidence, status, source, created_by, source_ai_run_id, \
               created_at, updated_at) \
-             VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
+             VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)",
             rusqlite::params![
                 id,
                 args.strength_label.trim(),
@@ -358,6 +362,7 @@ pub fn create_skill_evidence_manual(
                 evaluated_context,
                 confidence,
                 "accepted",
+                "manual",
                 "human",
                 None::<String>,
                 now,
@@ -376,6 +381,7 @@ pub fn create_skill_evidence_manual(
         evaluated_context,
         confidence,
         status: "accepted".to_string(),
+        source: "manual".to_string(),
         created_by: "human".to_string(),
         source_ai_run_id: None,
         created_at: now.clone(),
