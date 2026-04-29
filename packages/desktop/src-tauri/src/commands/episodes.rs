@@ -81,7 +81,7 @@ pub struct EpisodePatch {
     pub tags: Option<Vec<String>>,
 }
 
-fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<EpisodeRow> {
+pub fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<EpisodeRow> {
     let related_skills_json: String = row.get(10)?;
     let tags_json: String = row.get(14)?;
     let remote_llm_allowed: i64 = row.get(13)?;

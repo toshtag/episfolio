@@ -2,6 +2,7 @@ use rusqlite::{Connection, Result};
 use std::path::PathBuf;
 
 const MIGRATION_001: &str = include_str!("../../migrations/0001_init.sql");
+const MIGRATION_002: &str = include_str!("../../migrations/0002_add_skill_evidence_ai_runs.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -18,17 +19,24 @@ fn run_migrations(conn: &Connection) -> Result<()> {
          );",
     )?;
 
+    apply_migration(conn, "0001", MIGRATION_001)?;
+    apply_migration(conn, "0002", MIGRATION_002)?;
+
+    Ok(())
+}
+
+fn apply_migration(conn: &Connection, version: &str, sql: &str) -> Result<()> {
     let applied: bool = conn.query_row(
-        "SELECT COUNT(*) FROM schema_migrations WHERE version = '0001'",
-        [],
+        "SELECT COUNT(*) FROM schema_migrations WHERE version = ?1",
+        rusqlite::params![version],
         |row| row.get::<_, i64>(0),
     )? > 0;
 
     if !applied {
-        conn.execute_batch(MIGRATION_001)?;
+        conn.execute_batch(sql)?;
         conn.execute(
-            "INSERT INTO schema_migrations (version, applied_at) VALUES ('0001', datetime('now'))",
-            [],
+            "INSERT INTO schema_migrations (version, applied_at) VALUES (?1, datetime('now'))",
+            rusqlite::params![version],
         )?;
     }
 
