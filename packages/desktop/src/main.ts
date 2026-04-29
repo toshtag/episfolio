@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit';
 import type { Episode } from '@episfolio/kernel';
 import { createEpisode, listEpisodes } from './ipc/episodes.js';
 import './settings-view.js';
+import './episode-detail-view.js';
 
 type Tab = 'episodes' | 'settings';
 
@@ -12,6 +13,7 @@ class EpisodeApp extends LitElement {
     saving: { state: true },
     error: { state: true },
     tab: { state: true },
+    selectedId: { state: true },
   };
 
   declare episodes: Episode[];
@@ -19,6 +21,7 @@ class EpisodeApp extends LitElement {
   declare saving: boolean;
   declare error: string;
   declare tab: Tab;
+  declare selectedId: string;
 
   constructor() {
     super();
@@ -27,6 +30,7 @@ class EpisodeApp extends LitElement {
     this.saving = false;
     this.error = '';
     this.tab = 'episodes';
+    this.selectedId = '';
   }
 
   static override styles = css`
@@ -81,6 +85,8 @@ class EpisodeApp extends LitElement {
     table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid #ddd; }
     td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #eee; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover td { background: #f6f6f6; }
     .empty { color: #888; font-size: 0.9rem; }
   `;
 
@@ -117,12 +123,26 @@ class EpisodeApp extends LitElement {
     if (e.key === 'Enter') this.handleSave();
   }
 
+  private handleSelect(id: string) {
+    this.selectedId = id;
+  }
+
+  private async handleBack() {
+    this.selectedId = '';
+    await this.loadEpisodes();
+  }
+
+  private async handleDeleted() {
+    this.selectedId = '';
+    await this.loadEpisodes();
+  }
+
   override render() {
     return html`
       <nav>
         <button
           class=${this.tab === 'episodes' ? 'active' : ''}
-          @click=${() => { this.tab = 'episodes'; }}
+          @click=${() => { this.tab = 'episodes'; this.selectedId = ''; }}
         >エピソード</button>
         <button
           class=${this.tab === 'settings' ? 'active' : ''}
@@ -130,7 +150,16 @@ class EpisodeApp extends LitElement {
         >設定</button>
       </nav>
 
-      ${this.tab === 'episodes' ? html`
+      ${this.tab === 'episodes'
+        ? this.selectedId
+          ? html`
+            <episode-detail-view
+              episode-id=${this.selectedId}
+              @back=${this.handleBack}
+              @episode-deleted=${this.handleDeleted}
+            ></episode-detail-view>
+          `
+          : html`
         <div class="panel">
           <h1>エピソード</h1>
           <div class="form">
@@ -152,7 +181,7 @@ class EpisodeApp extends LitElement {
                 <thead><tr><th>タイトル</th><th>作成日時</th></tr></thead>
                 <tbody>
                   ${this.episodes.map(ep => html`
-                    <tr>
+                    <tr @click=${() => this.handleSelect(ep.id)}>
                       <td>${ep.title}</td>
                       <td>${ep.createdAt.replace('T', ' ').replace('Z', '')}</td>
                     </tr>
@@ -161,7 +190,8 @@ class EpisodeApp extends LitElement {
               </table>
             `}
         </div>
-      ` : html`
+        `
+        : html`
         <settings-view></settings-view>
       `}
     `;
