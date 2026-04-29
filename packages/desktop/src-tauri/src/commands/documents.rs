@@ -283,7 +283,7 @@ pub fn get_document(
     let mut stmt2 = conn
         .prepare(
             "SELECT id, document_id, content, source_evidence_ids, source_ai_run_id, \
-             created_by, created_at \
+             created_by, revision_reason, target_memo, previous_revision_id, created_at \
              FROM document_revisions WHERE document_id = ?1 ORDER BY created_at DESC",
         )
         .map_err(|e| e.to_string())?;
@@ -351,6 +351,9 @@ pub fn create_document_manual(
             source_evidence_ids: args.source_evidence_ids,
             source_ai_run_id: None,
             created_by: "human".to_string(),
+            revision_reason: String::new(),
+            target_memo: String::new(),
+            previous_revision_id: None,
             created_at: now,
         }
     };
@@ -418,6 +421,9 @@ fn save_revision(
         source_evidence_ids: source_evidence_ids.to_vec(),
         source_ai_run_id: source_ai_run_id.map(|s| s.to_string()),
         created_by: "ai".to_string(),
+        revision_reason: String::new(),
+        target_memo: String::new(),
+        previous_revision_id: None,
         created_at: now.to_string(),
     })
 }
