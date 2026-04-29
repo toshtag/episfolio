@@ -20,6 +20,10 @@ pub struct EpisodeRow {
     pub related_skills: Vec<String>,
     pub personal_feeling: String,
     pub external_feedback: String,
+    // serde の camelCase 自動変換は remote_llm_allowed → remoteLlmAllowed と
+    // 頭字語を Title Case 化するが、kernel 側 TypeScript 型は remoteLLMAllowed
+    // (LLM を頭字語のまま) で定義されている。以下の rename で kernel と整合させる。
+    #[serde(rename = "remoteLLMAllowed")]
     pub remote_llm_allowed: bool,
     pub tags: Vec<String>,
     pub created_at: String,
@@ -77,6 +81,7 @@ pub struct EpisodePatch {
     pub related_skills: Option<Vec<String>>,
     pub personal_feeling: Option<String>,
     pub external_feedback: Option<String>,
+    #[serde(rename = "remoteLLMAllowed")]
     pub remote_llm_allowed: Option<bool>,
     pub tags: Option<Vec<String>>,
 }
@@ -262,4 +267,77 @@ fn epoch_to_parts(secs: u64) -> (u64, u64, u64, u64, u64, u64) {
 
 fn is_leap(y: u64) -> bool {
     (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // serde の rename_all = "camelCase" は頭字語 (LLM, API, ID 等) を
+    // Title Case 化する仕様で、kernel 側 TypeScript 型 (remoteLLMAllowed) と
+    // 食い違う。EpisodeRow / EpisodePatch では rename で個別に整合させているが、
+    // 同じ罠を将来再発させないよう round-trip テストで挙動を固定する。
+
+    #[test]
+    fn episode_row_serializes_with_remote_llm_allowed_camel_acronym() {
+        let row = EpisodeRow {
+            id: "01ABC".into(),
+            title: String::new(),
+            background: String::new(),
+            problem: String::new(),
+            action: String::new(),
+            ingenuity: String::new(),
+            result: String::new(),
+            metrics: String::new(),
+            before_after: String::new(),
+            reproducibility: String::new(),
+            related_skills: vec![],
+            personal_feeling: String::new(),
+            external_feedback: String::new(),
+            remote_llm_allowed: true,
+            tags: vec![],
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        let json = serde_json::to_string(&row).expect("serialize");
+        assert!(
+            json.contains("\"remoteLLMAllowed\":true"),
+            "expected remoteLLMAllowed (LLM uppercase) in JSON, got: {json}"
+        );
+        assert!(
+            !json.contains("remoteLlmAllowed"),
+            "must not emit serde-default Title Case form, got: {json}"
+        );
+    }
+
+    #[test]
+    fn episode_row_deserializes_remote_llm_allowed_from_camel_acronym() {
+        let json = r#"{
+            "id":"01ABC","title":"","background":"","problem":"","action":"",
+            "ingenuity":"","result":"","metrics":"","beforeAfter":"",
+            "reproducibility":"","relatedSkills":[],"personalFeeling":"",
+            "externalFeedback":"","remoteLLMAllowed":true,"tags":[],
+            "createdAt":"","updatedAt":""
+        }"#;
+        let row: EpisodeRow = serde_json::from_str(json).expect("deserialize");
+        assert!(row.remote_llm_allowed);
+    }
+
+    #[test]
+    fn episode_patch_deserializes_remote_llm_allowed_from_camel_acronym() {
+        let json = r#"{"remoteLLMAllowed":true}"#;
+        let patch: EpisodePatch = serde_json::from_str(json).expect("deserialize");
+        assert_eq!(patch.remote_llm_allowed, Some(true));
+    }
+
+    #[test]
+    fn episode_patch_ignores_serde_default_form_to_prevent_silent_writes() {
+        // 旧バグ: フロントが正しく remoteLLMAllowed を送っているにも関わらず、
+        // Rust 側が remoteLlmAllowed を期待して unknown field 扱いで黙って無視
+        // していた。rename を入れた今、逆に旧形式 (remoteLlmAllowed) は
+        // unknown field として無視されることを確認しておく。
+        let json = r#"{"remoteLlmAllowed":true}"#;
+        let patch: EpisodePatch = serde_json::from_str(json).expect("deserialize");
+        assert_eq!(patch.remote_llm_allowed, None);
+    }
 }
