@@ -1,8 +1,8 @@
-import { LitElement, css, html } from 'lit';
+import { css, html, LitElement } from 'lit';
 import type { CareerDocumentRow, DocumentRevisionRow } from './ipc/documents.js';
-import { generateDocument, listDocuments, getDocument } from './ipc/documents.js';
-import { listSkillEvidence } from './ipc/evidence.js';
+import { generateDocument, getDocument, listDocuments } from './ipc/documents.js';
 import type { SkillEvidenceRow } from './ipc/evidence.js';
+import { listSkillEvidence } from './ipc/evidence.js';
 
 type ViewState = 'list' | 'detail' | 'generating';
 
@@ -113,10 +113,7 @@ class DocumentView extends LitElement {
 
   private async loadAll() {
     try {
-      const [docs, evidences] = await Promise.all([
-        listDocuments(),
-        listSkillEvidence(),
-      ]);
+      const [docs, evidences] = await Promise.all([listDocuments(), listSkillEvidence()]);
       this.documents = docs;
       this.acceptedEvidences = evidences.filter((ev) => ev.status === 'accepted');
     } catch (e) {
@@ -162,15 +159,21 @@ class DocumentView extends LitElement {
       ${this.error ? html`<p class="error">${this.error}</p>` : ''}
       <p class="evidence-count">
         採用済みエビデンス: <strong>${this.acceptedEvidences.length} 件</strong>
-        ${this.acceptedEvidences.length === 0
-          ? html`<span>（Evidence タブで採用してからドキュメントを生成してください）</span>`
-          : ''}
+        ${
+          this.acceptedEvidences.length === 0
+            ? html`<span>（Evidence タブで採用してからドキュメントを生成してください）</span>`
+            : ''
+        }
       </p>
       <div class="form-row">
         <input
           .value=${this.jobTarget}
-          @input=${(e: Event) => { this.jobTarget = (e.target as HTMLInputElement).value; }}
-          @keydown=${(e: KeyboardEvent) => { if (e.key === 'Enter') this.handleGenerate(); }}
+          @input=${(e: Event) => {
+            this.jobTarget = (e.target as HTMLInputElement).value;
+          }}
+          @keydown=${(e: KeyboardEvent) => {
+            if (e.key === 'Enter') this.handleGenerate();
+          }}
           placeholder="応募先・職種（例: バックエンドエンジニア）"
         />
         <button
@@ -179,22 +182,26 @@ class DocumentView extends LitElement {
           @click=${this.handleGenerate}
         >ドキュメント生成</button>
       </div>
-      ${this.documents.length === 0
-        ? html`<p class="empty">まだドキュメントがありません。</p>`
-        : html`
+      ${
+        this.documents.length === 0
+          ? html`<p class="empty">まだドキュメントがありません。</p>`
+          : html`
           <table>
             <thead><tr><th>タイトル</th><th>ステータス</th><th>作成日時</th></tr></thead>
             <tbody>
-              ${this.documents.map((doc) => html`
+              ${this.documents.map(
+                (doc) => html`
                 <tr @click=${() => this.openDocument(doc.id)}>
                   <td>${doc.title}</td>
                   <td>${doc.status === 'draft' ? '下書き' : '確定'}</td>
                   <td>${doc.createdAt.replace('T', ' ').replace('Z', '')}</td>
                 </tr>
-              `)}
+              `,
+              )}
             </tbody>
           </table>
-        `}
+        `
+      }
     `;
   }
 
@@ -205,14 +212,16 @@ class DocumentView extends LitElement {
   }
 
   private renderDetail() {
-    const doc = this.selected!;
+    if (!this.selected) return html``;
+    const doc = this.selected;
     const latest = this.revisions[0] ?? null;
     return html`
       <span class="back-link" @click=${this.handleBack}>← ドキュメント一覧</span>
       <h2>${doc.title}</h2>
       ${this.error ? html`<p class="error">${this.error}</p>` : ''}
-      ${latest
-        ? html`
+      ${
+        latest
+          ? html`
           <p class="revision-meta">
             生成日時: ${latest.createdAt.replace('T', ' ').replace('Z', '')}
             &nbsp;|&nbsp;
@@ -220,7 +229,8 @@ class DocumentView extends LitElement {
           </p>
           <div class="markdown-content">${latest.content || '（コンテンツなし）'}</div>
         `
-        : html`<p class="empty">リビジョンがありません。</p>`}
+          : html`<p class="empty">リビジョンがありません。</p>`
+      }
     `;
   }
 

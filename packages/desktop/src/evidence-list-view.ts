@@ -1,4 +1,4 @@
-import { LitElement, css, html } from 'lit';
+import { css, html, LitElement } from 'lit';
 import type { SkillEvidenceRow } from './ipc/evidence.js';
 import { listSkillEvidence, updateSkillEvidenceStatus } from './ipc/evidence.js';
 
@@ -162,25 +162,37 @@ class EvidenceListView extends LitElement {
           </span>
         </div>
         <p class="description">${ev.description}</p>
-        ${ev.reproducibility
-          ? html`<p class="detail"><strong>再現性:</strong> ${ev.reproducibility}</p>`
-          : ''}
-        ${ev.evaluatedContext
-          ? html`<p class="detail"><strong>評価文脈:</strong> ${ev.evaluatedContext}</p>`
-          : ''}
-        ${ev.evidenceEpisodeIds.length > 0
-          ? html`<p class="episode-ids">根拠エピソード: ${ev.evidenceEpisodeIds.join(', ')}</p>`
-          : ''}
+        ${
+          ev.reproducibility
+            ? html`<p class="detail"><strong>再現性:</strong> ${ev.reproducibility}</p>`
+            : ''
+        }
+        ${
+          ev.evaluatedContext
+            ? html`<p class="detail"><strong>評価文脈:</strong> ${ev.evaluatedContext}</p>`
+            : ''
+        }
+        ${
+          ev.evidenceEpisodeIds.length > 0
+            ? html`<p class="episode-ids">根拠エピソード: ${ev.evidenceEpisodeIds.join(', ')}</p>`
+            : ''
+        }
         <div class="actions">
-          ${ev.status !== 'accepted'
-            ? html`<button class="accept" ?disabled=${busy} @click=${() => this.handleStatusChange(ev.id, 'accepted')}>採用</button>`
-            : ''}
-          ${ev.status !== 'rejected'
-            ? html`<button class="reject" ?disabled=${busy} @click=${() => this.handleStatusChange(ev.id, 'rejected')}>却下</button>`
-            : ''}
-          ${ev.status !== 'candidate'
-            ? html`<button class="restore" ?disabled=${busy} @click=${() => this.handleStatusChange(ev.id, 'candidate')}>候補に戻す</button>`
-            : ''}
+          ${
+            ev.status !== 'accepted'
+              ? html`<button class="accept" ?disabled=${busy} @click=${() => this.handleStatusChange(ev.id, 'accepted')}>採用</button>`
+              : ''
+          }
+          ${
+            ev.status !== 'rejected'
+              ? html`<button class="reject" ?disabled=${busy} @click=${() => this.handleStatusChange(ev.id, 'rejected')}>却下</button>`
+              : ''
+          }
+          ${
+            ev.status !== 'candidate'
+              ? html`<button class="restore" ?disabled=${busy} @click=${() => this.handleStatusChange(ev.id, 'candidate')}>候補に戻す</button>`
+              : ''
+          }
         </div>
       </div>
     `;
@@ -196,16 +208,20 @@ class EvidenceListView extends LitElement {
           (f) => html`
             <button
               class=${this.filter === f ? 'active' : ''}
-              @click=${() => { this.filter = f; }}
+              @click=${() => {
+                this.filter = f;
+              }}
             >${{ all: 'すべて', candidate: '候補', accepted: '採用', rejected: '却下' }[f]}</button>
           `,
         )}
       </div>
-      ${this.status === 'loading'
-        ? html`<p>読み込み中...</p>`
-        : list.length === 0
-          ? html`<p class="empty">まだ候補がありません。エピソード画面から Evidence を生成してください。</p>`
-          : list.map((ev) => this.renderCard(ev))}
+      ${
+        this.status === 'loading'
+          ? html`<p>読み込み中...</p>`
+          : list.length === 0
+            ? html`<p class="empty">まだ候補がありません。エピソード画面から Evidence を生成してください。</p>`
+            : list.map((ev) => this.renderCard(ev))
+      }
     `;
   }
 }

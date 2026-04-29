@@ -1,21 +1,17 @@
-import type { SkillEvidence } from '../domain/skill-evidence.js';
-import type { CareerDocument, DocumentRevision } from '../domain/career-document.js';
-import type { AIRun } from '../domain/ai-run.js';
-import type { ULID, ISO8601 } from '../domain/episode.js';
-import type { AIProviderPort } from '../ports/ai-provider-port.js';
-import type { CareerDocumentStoragePort } from '../ports/career-document-storage-port.js';
-import type { DocumentRevisionStoragePort } from '../ports/document-revision-storage-port.js';
-import type { AIRunStoragePort } from '../ports/ai-run-storage-port.js';
 import {
-  PROMPT_ID,
-  PROMPT_VERSION,
-  PROMPT_TEMPLATE,
-} from '../prompts/generate-document-v1.js';
-import {
-  GenerateDocumentOutputSchema,
   type GenerateDocumentInput,
   type GenerateDocumentOutput,
+  GenerateDocumentOutputSchema,
 } from '../contracts/generate-document.js';
+import type { AIRun } from '../domain/ai-run.js';
+import type { CareerDocument, DocumentRevision } from '../domain/career-document.js';
+import type { ISO8601, ULID } from '../domain/episode.js';
+import type { SkillEvidence } from '../domain/skill-evidence.js';
+import type { AIProviderPort } from '../ports/ai-provider-port.js';
+import type { AIRunStoragePort } from '../ports/ai-run-storage-port.js';
+import type { CareerDocumentStoragePort } from '../ports/career-document-storage-port.js';
+import type { DocumentRevisionStoragePort } from '../ports/document-revision-storage-port.js';
+import { PROMPT_ID, PROMPT_TEMPLATE, PROMPT_VERSION } from '../prompts/generate-document-v1.js';
 
 export type GenerateDocumentDeps = {
   aiProvider: AIProviderPort;
@@ -47,8 +43,7 @@ function formatEvidences(evidences: SkillEvidence[]): string {
 
 function buildPrompt(evidences: SkillEvidence[], jobTarget: string): GenerateDocumentInput {
   const evidencesText = evidences.length > 0 ? formatEvidences(evidences) : '（エビデンスなし）';
-  const systemPrompt = PROMPT_TEMPLATE
-    .replace('{{evidenceCount}}', String(evidences.length))
+  const systemPrompt = PROMPT_TEMPLATE.replace('{{evidenceCount}}', String(evidences.length))
     .replace('{{jobTarget}}', jobTarget)
     .replace('{{evidences}}', evidencesText);
   return {
@@ -122,9 +117,7 @@ export async function generateDocument(
   const savedRun = await deps.aiRunStorage.save(aiRun);
 
   const content =
-    response.parseError !== null || response.parsed === null
-      ? ''
-      : buildMarkdown(response.parsed);
+    response.parseError !== null || response.parsed === null ? '' : buildMarkdown(response.parsed);
 
   const document: CareerDocument = {
     id: documentId,
@@ -151,8 +144,6 @@ export async function generateDocument(
 }
 
 function buildMarkdown(output: GenerateDocumentOutput): string {
-  const sections = output.sections
-    .map((s) => `## ${s.heading}\n\n${s.body}`)
-    .join('\n\n');
+  const sections = output.sections.map((s) => `## ${s.heading}\n\n${s.body}`).join('\n\n');
   return `${sections}\n\n---\n\n${output.summary}`;
 }

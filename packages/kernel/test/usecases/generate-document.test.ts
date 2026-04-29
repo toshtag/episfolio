@@ -1,14 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import { generateDocument } from '../../src/usecases/generate-document.js';
-import type { GenerateDocumentDeps } from '../../src/usecases/generate-document.js';
-import type { AIProviderPort, AIRequest, AIResponse, ProviderConfig } from '../../src/ports/ai-provider-port.js';
+import type { GenerateDocumentOutput } from '../../src/contracts/generate-document.js';
+import type { AIRun } from '../../src/domain/ai-run.js';
+import type { CareerDocument, DocumentRevision } from '../../src/domain/career-document.js';
+import type { SkillEvidence } from '../../src/domain/skill-evidence.js';
+import type {
+  AIProviderPort,
+  AIRequest,
+  AIResponse,
+  ProviderConfig,
+} from '../../src/ports/ai-provider-port.js';
+import type { AIRunStoragePort } from '../../src/ports/ai-run-storage-port.js';
 import type { CareerDocumentStoragePort } from '../../src/ports/career-document-storage-port.js';
 import type { DocumentRevisionStoragePort } from '../../src/ports/document-revision-storage-port.js';
-import type { AIRunStoragePort } from '../../src/ports/ai-run-storage-port.js';
-import type { SkillEvidence } from '../../src/domain/skill-evidence.js';
-import type { CareerDocument, DocumentRevision } from '../../src/domain/career-document.js';
-import type { AIRun } from '../../src/domain/ai-run.js';
-import type { GenerateDocumentOutput } from '../../src/contracts/generate-document.js';
+import type { GenerateDocumentDeps } from '../../src/usecases/generate-document.js';
+import { generateDocument } from '../../src/usecases/generate-document.js';
 
 const remoteConfig: ProviderConfig = {
   id: 'openai',
@@ -56,18 +61,22 @@ function makeDeps(): GenerateDocumentDeps {
 
   const aiProvider: AIProviderPort = {
     config: remoteConfig,
-    generate: vi.fn().mockImplementation(async <TIn, TOut>(req: AIRequest<TIn, TOut>): Promise<AIResponse<TOut>> => {
-      const raw = JSON.stringify(mockOutput);
-      const parsed = req.outputSchema.parse(mockOutput) as TOut;
-      return {
-        parsed,
-        raw,
-        parseError: null,
-        usage: { input: 200, output: 100, total: 300 },
-        costEstimateUSD: 0.00004,
-        modelUsed: remoteConfig.defaultModel,
-      };
-    }),
+    generate: vi
+      .fn()
+      .mockImplementation(
+        async <TIn, TOut>(req: AIRequest<TIn, TOut>): Promise<AIResponse<TOut>> => {
+          const raw = JSON.stringify(mockOutput);
+          const parsed = req.outputSchema.parse(mockOutput) as TOut;
+          return {
+            parsed,
+            raw,
+            parseError: null,
+            usage: { input: 200, output: 100, total: 300 },
+            costEstimateUSD: 0.00004,
+            modelUsed: remoteConfig.defaultModel,
+          };
+        },
+      ),
     testConnection: vi.fn(),
   };
 

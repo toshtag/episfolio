@@ -1,14 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import { extractEvidence } from '../../src/usecases/extract-evidence.js';
+import type { ExtractEvidenceOutputSchema } from '../../src/contracts/extract-evidence.js';
+import type { AIRun } from '../../src/domain/ai-run.js';
+import type { Episode } from '../../src/domain/episode.js';
+import type { SkillEvidence } from '../../src/domain/skill-evidence.js';
 import { RemoteLLMBlockedError } from '../../src/errors.js';
-import { ExtractEvidenceOutputSchema } from '../../src/contracts/extract-evidence.js';
-import type { AIProviderPort, AIRequest, AIResponse, ProviderConfig } from '../../src/ports/ai-provider-port.js';
+import type {
+  AIProviderPort,
+  AIRequest,
+  AIResponse,
+  ProviderConfig,
+} from '../../src/ports/ai-provider-port.js';
 import type { AIRunStoragePort } from '../../src/ports/ai-run-storage-port.js';
 import type { SkillEvidenceStoragePort } from '../../src/ports/skill-evidence-storage-port.js';
-import type { Episode } from '../../src/domain/episode.js';
-import type { AIRun } from '../../src/domain/ai-run.js';
-import type { SkillEvidence } from '../../src/domain/skill-evidence.js';
 import type { ExtractEvidenceDeps } from '../../src/usecases/extract-evidence.js';
+import { extractEvidence } from '../../src/usecases/extract-evidence.js';
 
 const remoteConfig: ProviderConfig = {
   id: 'openai',
@@ -89,18 +94,22 @@ function makeDeps(providerConfig: ProviderConfig = remoteConfig): ExtractEvidenc
 
   const aiProvider: AIProviderPort = {
     config: providerConfig,
-    generate: vi.fn().mockImplementation(async <TIn, TOut>(req: AIRequest<TIn, TOut>): Promise<AIResponse<TOut>> => {
-      const raw = JSON.stringify(mockOutput);
-      const parsed = req.outputSchema.parse(mockOutput) as TOut;
-      return {
-        parsed,
-        raw,
-        parseError: null,
-        usage: { input: 100, output: 50, total: 150 },
-        costEstimateUSD: 0.00002,
-        modelUsed: providerConfig.defaultModel,
-      };
-    }),
+    generate: vi
+      .fn()
+      .mockImplementation(
+        async <TIn, TOut>(req: AIRequest<TIn, TOut>): Promise<AIResponse<TOut>> => {
+          const raw = JSON.stringify(mockOutput);
+          const parsed = req.outputSchema.parse(mockOutput) as TOut;
+          return {
+            parsed,
+            raw,
+            parseError: null,
+            usage: { input: 100, output: 50, total: 150 },
+            costEstimateUSD: 0.00002,
+            modelUsed: providerConfig.defaultModel,
+          };
+        },
+      ),
     testConnection: vi.fn(),
   };
 

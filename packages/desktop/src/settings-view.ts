@@ -1,4 +1,4 @@
-import { LitElement, css, html } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { deleteApiKey, loadApiKey, saveApiKey, testOpenaiConnection } from './ipc/settings.js';
 
 type Status = 'idle' | 'saving' | 'testing' | 'ok' | 'error';
@@ -142,7 +142,9 @@ class SettingsView extends LitElement {
         <input
           type="password"
           .value=${this.apiKey}
-          @input=${(e: Event) => { this.apiKey = (e.target as HTMLInputElement).value; }}
+          @input=${(e: Event) => {
+            this.apiKey = (e.target as HTMLInputElement).value;
+          }}
           placeholder="${this.hasStoredKey ? '新しい key で上書きする場合は入力' : 'sk-...'}"
           ?disabled=${this.busy}
         />
@@ -163,7 +165,9 @@ class SettingsView extends LitElement {
         >
           ${this.status === 'testing' ? '確認中...' : '接続テスト'}
         </button>
-        ${this.hasStoredKey ? html`
+        ${
+          this.hasStoredKey
+            ? html`
           <button
             class="btn-danger"
             @click=${this.handleDelete}
@@ -171,14 +175,20 @@ class SettingsView extends LitElement {
           >
             削除
           </button>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
-      ${this.message ? html`
+      ${
+        this.message
+          ? html`
         <div class="message ${this.status === 'ok' ? 'ok' : 'error'}">
           ${this.message}
         </div>
-      ` : ''}
+      `
+          : ''
+      }
     `;
   }
 }

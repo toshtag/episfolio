@@ -1,4 +1,4 @@
-import type { ULID, ISO8601 } from './episode.js';
+import type { ISO8601, ULID } from './episode.js';
 
 export type CareerDocumentStatus = 'draft' | 'finalized';
 
