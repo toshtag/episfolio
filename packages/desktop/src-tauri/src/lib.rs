@@ -28,6 +28,7 @@ pub fn run() {
             commands::settings::delete_api_key,
             commands::settings::test_openai_connection,
             commands::evidence::extract_evidence,
+            commands::evidence::create_skill_evidence_manual,
             commands::evidence::list_skill_evidence,
             commands::evidence::update_skill_evidence_status,
             commands::documents::generate_document,
