@@ -37,6 +37,9 @@ pub struct DocumentRevisionRow {
     pub source_evidence_ids: Vec<String>,
     pub source_ai_run_id: Option<String>,
     pub created_by: String,
+    pub revision_reason: String,
+    pub target_memo: String,
+    pub previous_revision_id: Option<String>,
     pub created_at: String,
 }
 
@@ -60,7 +63,10 @@ fn revision_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DocumentRevisi
         source_evidence_ids: serde_json::from_str(&ids_json).unwrap_or_default(),
         source_ai_run_id: row.get(4)?,
         created_by: row.get(5)?,
-        created_at: row.get(6)?,
+        revision_reason: row.get(6).unwrap_or_default(),
+        target_memo: row.get(7).unwrap_or_default(),
+        previous_revision_id: row.get(8).unwrap_or(None),
+        created_at: row.get(9)?,
     })
 }
 
