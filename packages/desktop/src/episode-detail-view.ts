@@ -422,9 +422,7 @@ class EpisodeDetailView extends LitElement {
     }
     const ep = this.episode;
     const busy =
-      this.status === 'saving' ||
-      this.status === 'deleting' ||
-      this.status === 'creating-evidence';
+      this.status === 'saving' || this.status === 'deleting' || this.status === 'creating-evidence';
 
     return html`
       <div class="header">

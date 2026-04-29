@@ -276,7 +276,9 @@ class DocumentView extends LitElement {
         <input
           type="text"
           .value=${this.newTitle}
-          @input=${(e: Event) => { this.newTitle = (e.target as HTMLInputElement).value; }}
+          @input=${(e: Event) => {
+            this.newTitle = (e.target as HTMLInputElement).value;
+          }}
           placeholder="例: バックエンドエンジニア 職務経歴書"
         />
       </div>
@@ -284,7 +286,9 @@ class DocumentView extends LitElement {
         <label>テンプレート</label>
         <select
           .value=${this.newTemplate}
-          @change=${(e: Event) => { this.newTemplate = (e.target as HTMLSelectElement).value as Template; }}
+          @change=${(e: Event) => {
+            this.newTemplate = (e.target as HTMLSelectElement).value as Template;
+          }}
         >
           ${TEMPLATES.map((t) => html`<option value=${t.value}>${t.label}</option>`)}
         </select>
@@ -295,7 +299,9 @@ class DocumentView extends LitElement {
         <textarea
           class="editor"
           .value=${this.editContent}
-          @input=${(e: Event) => { this.editContent = (e.target as HTMLTextAreaElement).value; }}
+          @input=${(e: Event) => {
+            this.editContent = (e.target as HTMLTextAreaElement).value;
+          }}
         ></textarea>
       </div>
       <div class="actions">
@@ -315,20 +321,26 @@ class DocumentView extends LitElement {
       <span class="back-link" @click=${this.handleBackToList}>← ドキュメント一覧</span>
       <h2>${doc.title}</h2>
       ${this.error ? html`<p class="error">${this.error}</p>` : ''}
-      ${latest ? html`
+      ${
+        latest
+          ? html`
         <p class="revision-meta">
           最終更新: ${latest.createdAt.replace('T', ' ').replace('Z', '')}
           &nbsp;|&nbsp;
           作成者: ${latest.createdBy === 'human' ? '手動' : 'AI'}
         </p>
-      ` : ''}
+      `
+          : ''
+      }
       ${this.renderInsertRow()}
       <div class="field">
         <label>本文（Markdown）</label>
         <textarea
           class="editor"
           .value=${this.editContent}
-          @input=${(e: Event) => { this.editContent = (e.target as HTMLTextAreaElement).value; }}
+          @input=${(e: Event) => {
+            this.editContent = (e.target as HTMLTextAreaElement).value;
+          }}
         ></textarea>
       </div>
       <div class="actions">
@@ -345,7 +357,9 @@ class DocumentView extends LitElement {
       <div class="insert-row">
         <select
           .value=${this.selectedEvidenceId}
-          @change=${(e: Event) => { this.selectedEvidenceId = (e.target as HTMLSelectElement).value; }}
+          @change=${(e: Event) => {
+            this.selectedEvidenceId = (e.target as HTMLSelectElement).value;
+          }}
         >
           <option value="">— Evidence を選択して挿入 —</option>
           ${this.acceptedEvidences.map(
