@@ -212,7 +212,8 @@ class DocumentView extends LitElement {
   }
 
   private renderDetail() {
-    const doc = this.selected!;
+    if (!this.selected) return html``;
+    const doc = this.selected;
     const latest = this.revisions[0] ?? null;
     return html`
       <span class="back-link" @click=${this.handleBack}>← ドキュメント一覧</span>
