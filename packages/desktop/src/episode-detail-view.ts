@@ -1,8 +1,9 @@
 import { LitElement, css, html } from 'lit';
 import type { Episode, EpisodeUpdate } from '@episfolio/kernel';
 import { deleteEpisode, getEpisode, updateEpisode } from './ipc/episodes.js';
+import { extractEvidence } from './ipc/evidence.js';
 
-type Status = 'idle' | 'loading' | 'saving' | 'deleting' | 'saved' | 'error';
+type Status = 'idle' | 'loading' | 'saving' | 'deleting' | 'saved' | 'extracting' | 'error';
 
 class EpisodeDetailView extends LitElement {
   static override properties = {
@@ -112,7 +113,17 @@ class EpisodeDetailView extends LitElement {
       font-size: 0.9rem;
       cursor: pointer;
     }
+    button.extract {
+      padding: 0.4rem 0.9rem;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 0.3rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
     button:disabled { opacity: 0.5; cursor: default; }
+    .extract-result { margin-top: 0.75rem; font-size: 0.85rem; color: #2563eb; }
     .message { margin-top: 0.75rem; font-size: 0.85rem; }
     .message.ok { color: #060; }
     .message.error { color: #c00; }
@@ -217,6 +228,25 @@ class EpisodeDetailView extends LitElement {
     }
   }
 
+  private async handleExtract() {
+    if (!this.episode) return;
+    this.status = 'extracting';
+    this.message = '';
+    try {
+      const result = await extractEvidence([this.episode.id]);
+      if (result.parseError) {
+        this.status = 'error';
+        this.message = `Evidence 生成エラー: ${result.parseError}`;
+      } else {
+        this.status = 'saved';
+        this.message = `Evidence を ${result.evidences.length} 件生成しました。「Evidence」タブで確認してください。`;
+      }
+    } catch (e) {
+      this.status = 'error';
+      this.message = String(e);
+    }
+  }
+
   private handleBack() {
     this.dispatchEvent(new CustomEvent('back', { bubbles: true, composed: true }));
   }
@@ -254,7 +284,7 @@ class EpisodeDetailView extends LitElement {
       `;
     }
     const ep = this.episode;
-    const busy = this.status === 'saving' || this.status === 'deleting';
+    const busy = this.status === 'saving' || this.status === 'deleting' || this.status === 'extracting';
 
     return html`
       <div class="header">
@@ -304,6 +334,7 @@ class EpisodeDetailView extends LitElement {
 
       <div class="actions">
         <button class="primary" @click=${this.handleSave} ?disabled=${busy || this.confirmDelete}>保存</button>
+        <button class="extract" @click=${this.handleExtract} ?disabled=${busy || this.confirmDelete}>Evidence 生成</button>
         ${this.confirmDelete
           ? html`
             <button class="danger-confirm" @click=${this.handleDeleteConfirm} ?disabled=${busy}>本当に削除する</button>
