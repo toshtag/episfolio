@@ -111,6 +111,7 @@ export async function extractEvidence(
     evaluatedContext: c.evaluatedContext,
     confidence: c.confidence,
     status: 'candidate' as const,
+    source: 'ai-generated' as const,
     createdBy: 'ai' as const,
     sourceAIRunId: savedRun.id,
     createdAt: now,
