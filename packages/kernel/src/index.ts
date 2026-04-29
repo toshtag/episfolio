@@ -29,6 +29,10 @@ export type {
 } from './domain/career-document.js';
 // domain
 export type { Episode, ISO8601, ULID } from './domain/episode.js';
+export type {
+  LifeTimelineCategory,
+  LifeTimelineEntry,
+} from './domain/life-timeline-entry.js';
 export type { AIProvider, Settings } from './domain/settings.js';
 export { DEFAULT_SETTINGS } from './domain/settings.js';
 export type {
@@ -39,6 +43,10 @@ export type {
 } from './domain/skill-evidence.js';
 // errors
 export { RemoteLLMBlockedError } from './errors.js';
+// exporters
+export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
+export type { DiffHunk } from './exporters/revision-diff.js';
+export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
 // ports
 export type {
   AIProviderPort,
@@ -50,6 +58,7 @@ export type {
 export type { AIRunStoragePort } from './ports/ai-run-storage-port.js';
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
 export type { DocumentRevisionStoragePort } from './ports/document-revision-storage-port.js';
+export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
 export type { SkillEvidenceStoragePort } from './ports/skill-evidence-storage-port.js';
 export type { EpisodeStoragePort } from './ports/storage-port.js';
@@ -73,9 +82,18 @@ export {
   CareerDocumentUpdateSchema,
   DocumentRevisionSchema,
 } from './schemas/career-document.js';
-// schemas
 export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
 export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
+// schemas
+export type {
+  LifeTimelineEntryInput,
+  LifeTimelineEntryUpdate,
+} from './schemas/life-timeline-entry.js';
+export {
+  LifeTimelineCategorySchema,
+  LifeTimelineEntrySchema,
+  LifeTimelineEntryUpdateSchema,
+} from './schemas/life-timeline-entry.js';
 export type { SkillEvidenceInput, SkillEvidenceUpdate } from './schemas/skill-evidence.js';
 export {
   SkillEvidenceConfidenceSchema,

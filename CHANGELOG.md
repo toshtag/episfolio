@@ -5,6 +5,14 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ## [Unreleased]
 
+### Added
+- **LifeTimelineEntry ドメイン層**: `LifeTimelineEntry` 型・Zod スキーマ・`LifeTimelineStoragePort`（ADR-0007）
+- **自分大全エクスポーター**: `toJibunTaizenMarkdown()` — 年齢順 Markdown テーブル生成
+- **revision-diff エクスポーター**: `computeUnifiedDiff()` / `formatUnifiedDiff()` — LCS ベースの行単位 unified diff
+- **自分大全テンプレート**: `templates/jibun-taizen.md` — 骨格テンプレート
+- **DocumentRevision 拡張**: `revisionReason`（必須）/ `targetMemo` / `previousRevisionId` フィールドを追加
+- **ADR-0007**: LifeTimelineEntry を Episode と分離する判断を記録
+
 ---
 
 ## [0.1.0] - 2026-04-29
