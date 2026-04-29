@@ -20,6 +20,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::episodes::create_episode,
             commands::episodes::list_episodes,
+            commands::episodes::get_episode,
+            commands::episodes::update_episode,
+            commands::episodes::delete_episode,
             commands::settings::save_api_key,
             commands::settings::load_api_key,
             commands::settings::delete_api_key,
