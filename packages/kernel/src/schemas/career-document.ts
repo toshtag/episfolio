@@ -28,6 +28,9 @@ export const DocumentRevisionSchema = z.object({
   sourceEvidenceIds: z.array(z.string()),
   sourceAIRunId: z.string().nullable(),
   createdBy: z.enum(['human', 'ai']),
+  revisionReason: z.string().min(1),
+  targetMemo: z.string(),
+  previousRevisionId: z.string().nullable(),
   createdAt: z.string().min(1),
 });
 

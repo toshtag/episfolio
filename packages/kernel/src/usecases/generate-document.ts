@@ -76,6 +76,9 @@ export async function generateDocument(
       sourceEvidenceIds: [],
       sourceAIRunId: null,
       createdBy: 'ai',
+      revisionReason: '自動生成（エビデンスなし）',
+      targetMemo: '',
+      previousRevisionId: null,
       createdAt: now,
     };
     const savedDoc = await deps.documentStorage.save(emptyDoc);
@@ -135,6 +138,9 @@ export async function generateDocument(
     sourceEvidenceIds: evidences.map((ev) => ev.id),
     sourceAIRunId: savedRun.id,
     createdBy: 'ai',
+    revisionReason: 'AI 生成',
+    targetMemo: '',
+    previousRevisionId: null,
     createdAt: now,
   };
 
