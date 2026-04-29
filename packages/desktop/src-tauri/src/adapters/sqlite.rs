@@ -5,6 +5,8 @@ const MIGRATION_001: &str = include_str!("../../migrations/0001_init.sql");
 const MIGRATION_002: &str = include_str!("../../migrations/0002_add_skill_evidence_ai_runs.sql");
 const MIGRATION_003: &str = include_str!("../../migrations/0003_add_career_documents.sql");
 const MIGRATION_004: &str = include_str!("../../migrations/0004_add_skill_evidence_source.sql");
+const MIGRATION_005: &str = include_str!("../../migrations/0005_add_life_timeline.sql");
+const MIGRATION_006: &str = include_str!("../../migrations/0006_add_document_revision_fields.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -25,6 +27,8 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0002", MIGRATION_002)?;
     apply_migration(conn, "0003", MIGRATION_003)?;
     apply_migration(conn, "0004", MIGRATION_004)?;
+    apply_migration(conn, "0005", MIGRATION_005)?;
+    apply_migration(conn, "0006", MIGRATION_006)?;
 
     Ok(())
 }

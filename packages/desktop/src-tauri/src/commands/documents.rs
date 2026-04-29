@@ -37,6 +37,9 @@ pub struct DocumentRevisionRow {
     pub source_evidence_ids: Vec<String>,
     pub source_ai_run_id: Option<String>,
     pub created_by: String,
+    pub revision_reason: String,
+    pub target_memo: String,
+    pub previous_revision_id: Option<String>,
     pub created_at: String,
 }
 
@@ -60,7 +63,10 @@ fn revision_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DocumentRevisi
         source_evidence_ids: serde_json::from_str(&ids_json).unwrap_or_default(),
         source_ai_run_id: row.get(4)?,
         created_by: row.get(5)?,
-        created_at: row.get(6)?,
+        revision_reason: row.get(6).unwrap_or_default(),
+        target_memo: row.get(7).unwrap_or_default(),
+        previous_revision_id: row.get(8).unwrap_or(None),
+        created_at: row.get(9)?,
     })
 }
 
@@ -277,7 +283,7 @@ pub fn get_document(
     let mut stmt2 = conn
         .prepare(
             "SELECT id, document_id, content, source_evidence_ids, source_ai_run_id, \
-             created_by, created_at \
+             created_by, revision_reason, target_memo, previous_revision_id, created_at \
              FROM document_revisions WHERE document_id = ?1 ORDER BY created_at DESC",
         )
         .map_err(|e| e.to_string())?;
@@ -345,6 +351,9 @@ pub fn create_document_manual(
             source_evidence_ids: args.source_evidence_ids,
             source_ai_run_id: None,
             created_by: "human".to_string(),
+            revision_reason: String::new(),
+            target_memo: String::new(),
+            previous_revision_id: None,
             created_at: now,
         }
     };
@@ -412,6 +421,9 @@ fn save_revision(
         source_evidence_ids: source_evidence_ids.to_vec(),
         source_ai_run_id: source_ai_run_id.map(|s| s.to_string()),
         created_by: "ai".to_string(),
+        revision_reason: String::new(),
+        target_memo: String::new(),
+        previous_revision_id: None,
         created_at: now.to_string(),
     })
 }

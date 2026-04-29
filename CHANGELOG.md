@@ -12,6 +12,8 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 - **自分大全テンプレート**: `templates/jibun-taizen.md` — 骨格テンプレート
 - **DocumentRevision 拡張**: `revisionReason`（必須）/ `targetMemo` / `previousRevisionId` フィールドを追加
 - **ADR-0007**: LifeTimelineEntry を Episode と分離する判断を記録
+- **年表タブ（desktop）**: `life_timeline_entries` SQLite テーブル（migration 0005）、Tauri CRUD コマンド 5 本、IPC wrapper、Lit UI（フォーム + カード一覧 + インライン 2 ステップ削除確認）
+- **DocumentRevision DB 拡張（migration 0006）**: `revision_reason` / `target_memo` / `previous_revision_id` カラムを既存テーブルに追加
 
 ---
 

@@ -35,6 +35,11 @@ pub fn run() {
             commands::documents::list_documents,
             commands::documents::get_document,
             commands::documents::create_document_manual,
+            commands::life_timeline::create_life_timeline_entry,
+            commands::life_timeline::list_life_timeline_entries,
+            commands::life_timeline::get_life_timeline_entry,
+            commands::life_timeline::update_life_timeline_entry,
+            commands::life_timeline::delete_life_timeline_entry,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
