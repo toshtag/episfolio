@@ -1,5 +1,5 @@
-import { LitElement, css, html } from 'lit';
 import type { Episode, EpisodeUpdate } from '@episfolio/kernel';
+import { css, html, LitElement } from 'lit';
 import { deleteEpisode, getEpisode, updateEpisode } from './ipc/episodes.js';
 import { extractEvidence } from './ipc/evidence.js';
 
@@ -257,16 +257,18 @@ class EpisodeDetailView extends LitElement {
     return html`
       <div class="field">
         <label>${label}</label>
-        ${multiline
-          ? html`<textarea
+        ${
+          multiline
+            ? html`<textarea
               .value=${value}
               @input=${(e: Event) => this.updateField(key, (e.target as HTMLTextAreaElement).value as never)}
             ></textarea>`
-          : html`<input
+            : html`<input
               type="text"
               .value=${value}
               @input=${(e: Event) => this.updateField(key, (e.target as HTMLInputElement).value as never)}
-            />`}
+            />`
+        }
       </div>
     `;
   }
@@ -284,7 +286,8 @@ class EpisodeDetailView extends LitElement {
       `;
     }
     const ep = this.episode;
-    const busy = this.status === 'saving' || this.status === 'deleting' || this.status === 'extracting';
+    const busy =
+      this.status === 'saving' || this.status === 'deleting' || this.status === 'extracting';
 
     return html`
       <div class="header">
@@ -306,7 +309,9 @@ class EpisodeDetailView extends LitElement {
         <label>関連スキル（1 行 1 件）</label>
         <textarea
           .value=${this.relatedSkillsText}
-          @input=${(e: Event) => { this.relatedSkillsText = (e.target as HTMLTextAreaElement).value; }}
+          @input=${(e: Event) => {
+            this.relatedSkillsText = (e.target as HTMLTextAreaElement).value;
+          }}
         ></textarea>
       </div>
 
@@ -317,7 +322,9 @@ class EpisodeDetailView extends LitElement {
         <label>タグ（1 行 1 件）</label>
         <textarea
           .value=${this.tagsText}
-          @input=${(e: Event) => { this.tagsText = (e.target as HTMLTextAreaElement).value; }}
+          @input=${(e: Event) => {
+            this.tagsText = (e.target as HTMLTextAreaElement).value;
+          }}
         ></textarea>
       </div>
 
@@ -335,19 +342,23 @@ class EpisodeDetailView extends LitElement {
       <div class="actions">
         <button class="primary" @click=${this.handleSave} ?disabled=${busy || this.confirmDelete}>保存</button>
         <button class="extract" @click=${this.handleExtract} ?disabled=${busy || this.confirmDelete}>Evidence 生成</button>
-        ${this.confirmDelete
-          ? html`
+        ${
+          this.confirmDelete
+            ? html`
             <button class="danger-confirm" @click=${this.handleDeleteConfirm} ?disabled=${busy}>本当に削除する</button>
             <button class="cancel" @click=${this.handleDeleteCancel} ?disabled=${busy}>キャンセル</button>
           `
-          : html`
+            : html`
             <button class="danger" @click=${this.handleDeleteRequest} ?disabled=${busy}>削除</button>
-          `}
+          `
+        }
       </div>
 
-      ${this.message
-        ? html`<p class="message ${this.status === 'error' ? 'error' : 'ok'}">${this.message}</p>`
-        : ''}
+      ${
+        this.message
+          ? html`<p class="message ${this.status === 'error' ? 'error' : 'ok'}">${this.message}</p>`
+          : ''
+      }
 
       <p class="meta">
         ID: ${ep.id}<br />

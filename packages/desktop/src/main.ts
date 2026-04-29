@@ -1,5 +1,5 @@
-import { LitElement, css, html } from 'lit';
 import type { Episode } from '@episfolio/kernel';
+import { css, html, LitElement } from 'lit';
 import { createEpisode, listEpisodes } from './ipc/episodes.js';
 import './settings-view.js';
 import './episode-detail-view.js';
@@ -144,38 +144,50 @@ class EpisodeApp extends LitElement {
       <nav>
         <button
           class=${this.tab === 'episodes' ? 'active' : ''}
-          @click=${() => { this.tab = 'episodes'; this.selectedId = ''; }}
+          @click=${() => {
+            this.tab = 'episodes';
+            this.selectedId = '';
+          }}
         >エピソード</button>
         <button
           class=${this.tab === 'evidence' ? 'active' : ''}
-          @click=${() => { this.tab = 'evidence'; }}
+          @click=${() => {
+            this.tab = 'evidence';
+          }}
         >Evidence</button>
         <button
           class=${this.tab === 'documents' ? 'active' : ''}
-          @click=${() => { this.tab = 'documents'; }}
+          @click=${() => {
+            this.tab = 'documents';
+          }}
         >ドキュメント</button>
         <button
           class=${this.tab === 'settings' ? 'active' : ''}
-          @click=${() => { this.tab = 'settings'; }}
+          @click=${() => {
+            this.tab = 'settings';
+          }}
         >設定</button>
       </nav>
 
-      ${this.tab === 'episodes'
-        ? this.selectedId
-          ? html`
+      ${
+        this.tab === 'episodes'
+          ? this.selectedId
+            ? html`
             <episode-detail-view
               episode-id=${this.selectedId}
               @back=${this.handleBack}
               @episode-deleted=${this.handleDeleted}
             ></episode-detail-view>
           `
-          : html`
+            : html`
         <div class="panel">
           <h1>エピソード</h1>
           <div class="form">
             <input
               .value=${this.newTitle}
-              @input=${(e: Event) => { this.newTitle = (e.target as HTMLInputElement).value; }}
+              @input=${(e: Event) => {
+                this.newTitle = (e.target as HTMLInputElement).value;
+              }}
               @keydown=${this.handleKeydown}
               placeholder="エピソードのタイトルを入力"
             />
@@ -184,28 +196,33 @@ class EpisodeApp extends LitElement {
             </button>
           </div>
           ${this.error ? html`<p class="error">${this.error}</p>` : ''}
-          ${this.episodes.length === 0
-            ? html`<p class="empty">エピソードはまだありません</p>`
-            : html`
+          ${
+            this.episodes.length === 0
+              ? html`<p class="empty">エピソードはまだありません</p>`
+              : html`
               <table>
                 <thead><tr><th>タイトル</th><th>作成日時</th></tr></thead>
                 <tbody>
-                  ${this.episodes.map(ep => html`
+                  ${this.episodes.map(
+                    (ep) => html`
                     <tr @click=${() => this.handleSelect(ep.id)}>
                       <td>${ep.title}</td>
                       <td>${ep.createdAt.replace('T', ' ').replace('Z', '')}</td>
                     </tr>
-                  `)}
+                  `,
+                  )}
                 </tbody>
               </table>
-            `}
+            `
+          }
         </div>
         `
-        : this.tab === 'evidence'
-          ? html`<evidence-list-view></evidence-list-view>`
-          : this.tab === 'documents'
-            ? html`<document-view></document-view>`
-            : html`<settings-view></settings-view>`}
+          : this.tab === 'evidence'
+            ? html`<evidence-list-view></evidence-list-view>`
+            : this.tab === 'documents'
+              ? html`<document-view></document-view>`
+              : html`<settings-view></settings-view>`
+      }
     `;
   }
 }
