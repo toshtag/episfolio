@@ -1,7 +1,4 @@
-import type {
-  LifeTimelineEntry,
-  LifeTimelineEntryUpdate,
-} from '@episfolio/kernel';
+import type { LifeTimelineEntry, LifeTimelineEntryUpdate } from '@episfolio/kernel';
 import { invoke } from '@tauri-apps/api/core';
 
 export type CreateLifeTimelineEntryArgs = {
@@ -26,9 +23,7 @@ export async function listLifeTimelineEntries(): Promise<LifeTimelineEntry[]> {
   return invoke<LifeTimelineEntry[]>('list_life_timeline_entries');
 }
 
-export async function getLifeTimelineEntry(
-  id: string,
-): Promise<LifeTimelineEntry | null> {
+export async function getLifeTimelineEntry(id: string): Promise<LifeTimelineEntry | null> {
   return invoke<LifeTimelineEntry | null>('get_life_timeline_entry', { id });
 }
 
