@@ -12,6 +12,7 @@ class EpisodeDetailView extends LitElement {
     message: { state: true },
     relatedSkillsText: { state: true },
     tagsText: { state: true },
+    confirmDelete: { state: true },
   };
 
   declare episodeId: string;
@@ -20,6 +21,7 @@ class EpisodeDetailView extends LitElement {
   declare message: string;
   declare relatedSkillsText: string;
   declare tagsText: string;
+  declare confirmDelete: boolean;
 
   constructor() {
     super();
@@ -29,6 +31,7 @@ class EpisodeDetailView extends LitElement {
     this.message = '';
     this.relatedSkillsText = '';
     this.tagsText = '';
+    this.confirmDelete = false;
   }
 
   static override styles = css`
@@ -87,6 +90,24 @@ class EpisodeDetailView extends LitElement {
       background: #fff;
       color: #c00;
       border: 1px solid #c00;
+      border-radius: 0.3rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    button.danger-confirm {
+      padding: 0.4rem 0.9rem;
+      background: #c00;
+      color: #fff;
+      border: none;
+      border-radius: 0.3rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    button.cancel {
+      padding: 0.4rem 0.9rem;
+      background: #fff;
+      color: #555;
+      border: 1px solid #ccc;
       border-radius: 0.3rem;
       font-size: 0.9rem;
       cursor: pointer;
@@ -174,10 +195,17 @@ class EpisodeDetailView extends LitElement {
     }
   }
 
-  private async handleDelete() {
+  private handleDeleteRequest() {
+    this.confirmDelete = true;
+  }
+
+  private handleDeleteCancel() {
+    this.confirmDelete = false;
+  }
+
+  private async handleDeleteConfirm() {
     if (!this.episode) return;
-    const ok = window.confirm(`「${this.episode.title}」を削除しますか？この操作は取り消せません。`);
-    if (!ok) return;
+    this.confirmDelete = false;
     this.status = 'deleting';
     this.message = '';
     try {
@@ -275,8 +303,15 @@ class EpisodeDetailView extends LitElement {
       </div>
 
       <div class="actions">
-        <button class="primary" @click=${this.handleSave} ?disabled=${busy}>保存</button>
-        <button class="danger" @click=${this.handleDelete} ?disabled=${busy}>削除</button>
+        <button class="primary" @click=${this.handleSave} ?disabled=${busy || this.confirmDelete}>保存</button>
+        ${this.confirmDelete
+          ? html`
+            <button class="danger-confirm" @click=${this.handleDeleteConfirm} ?disabled=${busy}>本当に削除する</button>
+            <button class="cancel" @click=${this.handleDeleteCancel} ?disabled=${busy}>キャンセル</button>
+          `
+          : html`
+            <button class="danger" @click=${this.handleDeleteRequest} ?disabled=${busy}>削除</button>
+          `}
       </div>
 
       ${this.message
