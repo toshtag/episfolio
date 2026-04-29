@@ -18,5 +18,8 @@ export type DocumentRevision = {
   sourceEvidenceIds: ULID[];
   sourceAIRunId: ULID | null;
   createdBy: 'human' | 'ai';
+  revisionReason: string;
+  targetMemo: string;
+  previousRevisionId: ULID | null;
   createdAt: ISO8601;
 };
