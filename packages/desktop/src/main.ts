@@ -3,8 +3,9 @@ import type { Episode } from '@episfolio/kernel';
 import { createEpisode, listEpisodes } from './ipc/episodes.js';
 import './settings-view.js';
 import './episode-detail-view.js';
+import './evidence-list-view.js';
 
-type Tab = 'episodes' | 'settings';
+type Tab = 'episodes' | 'evidence' | 'settings';
 
 class EpisodeApp extends LitElement {
   static override properties = {
@@ -145,6 +146,10 @@ class EpisodeApp extends LitElement {
           @click=${() => { this.tab = 'episodes'; this.selectedId = ''; }}
         >エピソード</button>
         <button
+          class=${this.tab === 'evidence' ? 'active' : ''}
+          @click=${() => { this.tab = 'evidence'; }}
+        >Evidence</button>
+        <button
           class=${this.tab === 'settings' ? 'active' : ''}
           @click=${() => { this.tab = 'settings'; }}
         >設定</button>
@@ -191,9 +196,9 @@ class EpisodeApp extends LitElement {
             `}
         </div>
         `
-        : html`
-        <settings-view></settings-view>
-      `}
+        : this.tab === 'evidence'
+          ? html`<evidence-list-view></evidence-list-view>`
+          : html`<settings-view></settings-view>`}
     `;
   }
 }

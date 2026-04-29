@@ -6,6 +6,14 @@ struct ChatRequest {
     model: String,
     messages: Vec<ChatMessage>,
     max_tokens: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    response_format: Option<ResponseFormat>,
+}
+
+#[derive(Serialize)]
+struct ResponseFormat {
+    #[serde(rename = "type")]
+    format_type: String,
 }
 
 #[derive(Serialize)]
@@ -18,6 +26,7 @@ struct ChatMessage {
 struct ChatResponse {
     choices: Vec<Choice>,
     usage: Usage,
+    model: String,
 }
 
 #[derive(Deserialize)]
@@ -34,6 +43,7 @@ struct ResponseMessage {
 struct Usage {
     prompt_tokens: u32,
     completion_tokens: u32,
+    total_tokens: u32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -42,6 +52,8 @@ pub struct GenerateResult {
     pub text: String,
     pub input_tokens: u32,
     pub output_tokens: u32,
+    pub total_tokens: u32,
+    pub model_used: String,
 }
 
 pub async fn generate(
@@ -49,6 +61,7 @@ pub async fn generate(
     model: &str,
     system_prompt: Option<&str>,
     user_prompt: &str,
+    json_mode: bool,
 ) -> Result<GenerateResult, String> {
     let client = Client::new();
 
@@ -64,10 +77,19 @@ pub async fn generate(
         content: user_prompt.to_string(),
     });
 
+    let response_format = if json_mode {
+        Some(ResponseFormat {
+            format_type: "json_object".to_string(),
+        })
+    } else {
+        None
+    };
+
     let request = ChatRequest {
         model: model.to_string(),
         messages,
-        max_tokens: 1024,
+        max_tokens: 4096,
+        response_format,
     };
 
     let response = client
@@ -96,10 +118,12 @@ pub async fn generate(
         text,
         input_tokens: chat.usage.prompt_tokens,
         output_tokens: chat.usage.completion_tokens,
+        total_tokens: chat.usage.total_tokens,
+        model_used: chat.model,
     })
 }
 
 pub async fn test_connection(api_key: &str) -> Result<(), String> {
-    generate(api_key, "gpt-4o-mini", None, "ping").await?;
+    generate(api_key, "gpt-4o-mini", None, "ping", false).await?;
     Ok(())
 }
