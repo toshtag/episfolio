@@ -154,7 +154,7 @@ class EpisodeApp extends LitElement {
           @click=${() => {
             this.tab = 'evidence';
           }}
-        >Evidence</button>
+        >エビデンス</button>
         <button
           class=${this.tab === 'documents' ? 'active' : ''}
           @click=${() => {
