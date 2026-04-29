@@ -1,12 +1,6 @@
 import type { ISO8601, ULID } from './episode.js';
 
-export type LifeTimelineCategory =
-  | 'education'
-  | 'work'
-  | 'family'
-  | 'health'
-  | 'hobby'
-  | 'other';
+export type LifeTimelineCategory = 'education' | 'work' | 'family' | 'health' | 'hobby' | 'other';
 
 export type LifeTimelineEntry = {
   id: ULID;

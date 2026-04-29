@@ -30,5 +30,5 @@ export function toJibunTaizenMarkdown(entries: LifeTimelineEntry[]): string {
     return `| ${age} | ${year} | ${category} | ${e.summary} | ${tags} |`;
   });
 
-  return header + rows.join('\n') + '\n';
+  return `${header}${rows.join('\n')}\n`;
 }
