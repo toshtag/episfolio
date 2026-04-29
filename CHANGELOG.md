@@ -5,6 +5,10 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-04-29
+
 ### Added
 - **LifeTimelineEntry ドメイン層**: `LifeTimelineEntry` 型・Zod スキーマ・`LifeTimelineStoragePort`（ADR-0007）
 - **自分大全エクスポーター**: `toJibunTaizenMarkdown()` — 年齢順 Markdown テーブル生成
