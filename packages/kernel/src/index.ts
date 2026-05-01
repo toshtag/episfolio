@@ -30,6 +30,7 @@ export type {
 } from './domain/career-document.js';
 // domain
 export type { Episode, ISO8601, ULID } from './domain/episode.js';
+export type { JobRequirementMapping } from './domain/job-requirement-mapping.js';
 export type { JobTarget, JobTargetStatus, SkillItem } from './domain/job-target.js';
 export type {
   LifeTimelineCategory,
@@ -88,6 +89,14 @@ export {
 } from './schemas/career-document.js';
 export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
 export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
+export type {
+  JobRequirementMappingInput,
+  JobRequirementMappingUpdate,
+} from './schemas/job-requirement-mapping.js';
+export {
+  JobRequirementMappingSchema,
+  JobRequirementMappingUpdateSchema,
+} from './schemas/job-requirement-mapping.js';
 export type { JobTargetInput, JobTargetUpdate } from './schemas/job-target.js';
 export {
   JobTargetSchema,
