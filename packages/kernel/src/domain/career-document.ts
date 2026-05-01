@@ -24,6 +24,7 @@ export type DocumentRevision = {
   createdBy: 'human' | 'ai';
   revisionReason: string;
   targetMemo: string;
+  jobTargetId: ULID | null;
   previousRevisionId: ULID | null;
   createdAt: ISO8601;
 };
