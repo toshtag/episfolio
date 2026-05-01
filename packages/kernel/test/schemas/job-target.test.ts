@@ -21,12 +21,16 @@ const baseTarget = {
 };
 
 describe('JobTargetStatusSchema', () => {
-  it.each(['researching', 'applying', 'interviewing', 'offered', 'rejected', 'withdrawn'])(
-    '%s を受理',
-    (status) => {
-      expect(JobTargetStatusSchema.safeParse(status).success).toBe(true);
-    },
-  );
+  it.each([
+    'researching',
+    'applying',
+    'interviewing',
+    'offered',
+    'rejected',
+    'withdrawn',
+  ])('%s を受理', (status) => {
+    expect(JobTargetStatusSchema.safeParse(status).success).toBe(true);
+  });
 
   it('未知の値を拒否', () => {
     expect(JobTargetStatusSchema.safeParse('archived').success).toBe(false);
@@ -110,8 +114,8 @@ describe('JobTargetUpdateSchema', () => {
   });
 
   it('未知の status を拒否', () => {
-    expect(
-      JobTargetUpdateSchema.safeParse({ status: 'unknown' as 'researching' }).success,
-    ).toBe(false);
+    expect(JobTargetUpdateSchema.safeParse({ status: 'unknown' as 'researching' }).success).toBe(
+      false,
+    );
   });
 });

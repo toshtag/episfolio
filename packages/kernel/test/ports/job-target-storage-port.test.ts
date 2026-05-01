@@ -84,7 +84,9 @@ describe('JobTargetStoragePort contract', () => {
 
   describe('update', () => {
     it('指定したフィールドだけ更新される', async () => {
-      await storage.create(buildTarget('01HJOB1', { status: 'researching', jobTitle: '元タイトル' }));
+      await storage.create(
+        buildTarget('01HJOB1', { status: 'researching', jobTitle: '元タイトル' }),
+      );
       const updated = await storage.update('01HJOB1', { status: 'applying' });
       expect(updated.status).toBe('applying');
       expect(updated.jobTitle).toBe('元タイトル');

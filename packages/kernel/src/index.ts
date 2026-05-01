@@ -86,6 +86,8 @@ export {
   CareerDocumentUpdateSchema,
   DocumentRevisionSchema,
 } from './schemas/career-document.js';
+export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
+export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
 export type { JobTargetInput, JobTargetUpdate } from './schemas/job-target.js';
 export {
   JobTargetSchema,
@@ -93,8 +95,6 @@ export {
   JobTargetUpdateSchema,
   SkillItemSchema,
 } from './schemas/job-target.js';
-export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
-export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
 // schemas
 export type {
   LifeTimelineEntryInput,

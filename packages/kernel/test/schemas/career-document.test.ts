@@ -89,9 +89,9 @@ describe('CareerDocumentSchema', () => {
   });
 
   it('jobTargetId に ULID 文字列は許可', () => {
-    expect(
-      CareerDocumentSchema.safeParse({ ...baseDoc, jobTargetId: '01HJOB1' }).success,
-    ).toBe(true);
+    expect(CareerDocumentSchema.safeParse({ ...baseDoc, jobTargetId: '01HJOB1' }).success).toBe(
+      true,
+    );
   });
 
   it('jobTargetId 省略時は null にデフォルト', () => {
@@ -115,9 +115,9 @@ describe('CareerDocumentUpdateSchema', () => {
   });
 
   it('documentType の更新が可能', () => {
-    expect(
-      CareerDocumentUpdateSchema.safeParse({ documentType: 'career_digest' }).success,
-    ).toBe(true);
+    expect(CareerDocumentUpdateSchema.safeParse({ documentType: 'career_digest' }).success).toBe(
+      true,
+    );
   });
 
   it('jobTargetId null で更新可能', () => {
