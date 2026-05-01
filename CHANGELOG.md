@@ -7,6 +7,25 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.2.2] - 2026-05-01
+
+Codex レビュー P1 全件解消の data integrity / test coverage patch。挙動変更なし、新機能なし、データ整合性とテストカバレッジ強化のみ。
+
+### Added
+- **DB CHECK 制約**（migration `0007_enum_check_constraints.sql`）: `skill_evidence.{confidence,status,source,created_by}` / `career_documents.status` / `document_revisions.created_by` / `life_timeline_entries.category` の各 enum カラムに CHECK を追加。`life_timeline_entries` には `CHECK (age_range_start <= age_range_end)` も追加。SQLite が ALTER で CHECK 追加できないためテーブル再作成パターンで実装
+- **kernel schema refine**: `LifeTimelineEntrySchema` に `ageRangeStart <= ageRangeEnd` の refine を追加
+- **kernel schema test 網羅** (+37 件、90 → 127): `SkillEvidence` / `CareerDocument` / `DocumentRevision` / `AIRun` / `LifeTimelineEntry` の各 schema を test で守る
+- **Rust 統合テスト** (+16 件、4 → 20): in-memory SQLite ハーネス `open_in_memory_with_migrations()`、migration 適用 / CHECK 違反 / FK orphan / `previous_revision_id` 接続を網羅
+
+### Changed
+- `LifeTimelineEntryUpdateSchema` を partial 専用に再構築（両端の関係性 refine は持たず、merge 後の検証は Rust 側で行う方針。片方だけ更新する正当なケースを許可するため）
+- 全パッケージの version を 0.2.2 に揃える
+
+### Fixed
+- 不正な enum 値が DB に入る経路を CHECK 制約で物理的に閉じた（直 SQL や Rust command バグでも入らない）
+
+---
+
 ## [0.2.1] - 2026-05-01
 
 v0.2.0 の security / integrity hotfix。Codex レビュー（内部）の P0 5 件への対応。
