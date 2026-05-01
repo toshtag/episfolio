@@ -25,10 +25,12 @@ export type { AIRun, AIRunInputSnapshotMode, AIRunPurpose } from './domain/ai-ru
 export type {
   CareerDocument,
   CareerDocumentStatus,
+  CareerDocumentType,
   DocumentRevision,
 } from './domain/career-document.js';
 // domain
 export type { Episode, ISO8601, ULID } from './domain/episode.js';
+export type { JobTarget, JobTargetStatus, SkillItem } from './domain/job-target.js';
 export type {
   LifeTimelineCategory,
   LifeTimelineEntry,
@@ -58,6 +60,7 @@ export type {
 export type { AIRunStoragePort } from './ports/ai-run-storage-port.js';
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
 export type { DocumentRevisionStoragePort } from './ports/document-revision-storage-port.js';
+export type { JobTargetStoragePort } from './ports/job-target-storage-port.js';
 export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
 export type { SkillEvidenceStoragePort } from './ports/skill-evidence-storage-port.js';
@@ -79,9 +82,17 @@ export type {
 export {
   CareerDocumentSchema,
   CareerDocumentStatusSchema,
+  CareerDocumentTypeSchema,
   CareerDocumentUpdateSchema,
   DocumentRevisionSchema,
 } from './schemas/career-document.js';
+export type { JobTargetInput, JobTargetUpdate } from './schemas/job-target.js';
+export {
+  JobTargetSchema,
+  JobTargetStatusSchema,
+  JobTargetUpdateSchema,
+  SkillItemSchema,
+} from './schemas/job-target.js';
 export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
 export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
 // schemas
