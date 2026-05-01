@@ -30,6 +30,7 @@ pub struct DocumentRevisionRow {
     pub created_by: String,
     pub revision_reason: String,
     pub target_memo: String,
+    pub job_target_id: Option<String>,
     pub previous_revision_id: Option<String>,
     pub created_at: String,
 }
@@ -56,10 +57,15 @@ fn revision_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DocumentRevisi
         created_by: row.get(5)?,
         revision_reason: row.get(6).unwrap_or_default(),
         target_memo: row.get(7).unwrap_or_default(),
-        previous_revision_id: row.get(8).unwrap_or(None),
-        created_at: row.get(9)?,
+        job_target_id: row.get(8).unwrap_or(None),
+        previous_revision_id: row.get(9).unwrap_or(None),
+        created_at: row.get(10)?,
     })
 }
+
+const REVISION_SELECT_COLUMNS: &str =
+    "id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, \
+     revision_reason, target_memo, job_target_id, previous_revision_id, created_at";
 
 // ──────────────────────────────────────────────
 // list_documents
@@ -118,13 +124,11 @@ pub fn get_document(
         .query_row(rusqlite::params![args.document_id], doc_from_row)
         .map_err(|_| format!("ドキュメントが見つかりません: {}", args.document_id))?;
 
-    let mut stmt2 = conn
-        .prepare(
-            "SELECT id, document_id, content, source_evidence_ids, source_ai_run_id, \
-             created_by, revision_reason, target_memo, previous_revision_id, created_at \
-             FROM document_revisions WHERE document_id = ?1 ORDER BY created_at DESC",
-        )
-        .map_err(|e| e.to_string())?;
+    let select_sql = format!(
+        "SELECT {REVISION_SELECT_COLUMNS} FROM document_revisions \
+         WHERE document_id = ?1 ORDER BY created_at DESC"
+    );
+    let mut stmt2 = conn.prepare(&select_sql).map_err(|e| e.to_string())?;
     let revisions = stmt2
         .query_map(rusqlite::params![args.document_id], revision_from_row)
         .map_err(|e| e.to_string())?
@@ -149,6 +153,8 @@ pub struct CreateDocumentManualArgs {
     pub revision_reason: Option<String>,
     #[serde(default)]
     pub target_memo: Option<String>,
+    #[serde(default)]
+    pub job_target_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -181,6 +187,7 @@ pub fn create_document_manual(
         .filter(|s| !s.is_empty())
         .unwrap_or_else(|| "初版".to_string());
     let target_memo = args.target_memo.unwrap_or_default();
+    let job_target_id = args.job_target_id.filter(|s| !s.is_empty());
     let doc = save_document(&db, &doc_id, &title, "", &now)?;
     let ids_json = serde_json::to_string(&args.source_evidence_ids).unwrap_or_default();
     let rev = {
@@ -188,8 +195,8 @@ pub fn create_document_manual(
         conn.execute(
             "INSERT INTO document_revisions \
              (id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, \
-              revision_reason, target_memo, previous_revision_id, created_at) \
-             VALUES (?1, ?2, ?3, ?4, NULL, 'human', ?5, ?6, NULL, ?7)",
+              revision_reason, target_memo, job_target_id, previous_revision_id, created_at) \
+             VALUES (?1, ?2, ?3, ?4, NULL, 'human', ?5, ?6, ?7, NULL, ?8)",
             rusqlite::params![
                 rev_id,
                 doc_id,
@@ -197,6 +204,7 @@ pub fn create_document_manual(
                 ids_json,
                 revision_reason,
                 target_memo,
+                job_target_id,
                 now,
             ],
         )
@@ -210,6 +218,7 @@ pub fn create_document_manual(
             created_by: "human".to_string(),
             revision_reason,
             target_memo,
+            job_target_id,
             previous_revision_id: None,
             created_at: now,
         }
@@ -230,6 +239,8 @@ pub struct CreateRevisionManualArgs {
     pub revision_reason: String,
     #[serde(default)]
     pub target_memo: Option<String>,
+    #[serde(default)]
+    pub job_target_id: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -249,6 +260,7 @@ pub fn create_document_revision_manual(
         return Err("改訂理由は必須です".to_string());
     }
     let target_memo = args.target_memo.unwrap_or_default();
+    let job_target_id = args.job_target_id.filter(|s| !s.is_empty());
     let now = chrono_now();
     let rev_id = Ulid::new().to_string();
     let ids_json = serde_json::to_string(&args.source_evidence_ids).unwrap_or_default();
@@ -280,8 +292,8 @@ pub fn create_document_revision_manual(
     conn.execute(
         "INSERT INTO document_revisions \
          (id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, \
-          revision_reason, target_memo, previous_revision_id, created_at) \
-         VALUES (?1, ?2, ?3, ?4, NULL, 'human', ?5, ?6, ?7, ?8)",
+          revision_reason, target_memo, job_target_id, previous_revision_id, created_at) \
+         VALUES (?1, ?2, ?3, ?4, NULL, 'human', ?5, ?6, ?7, ?8, ?9)",
         rusqlite::params![
             rev_id,
             args.document_id,
@@ -289,6 +301,7 @@ pub fn create_document_revision_manual(
             ids_json,
             revision_reason,
             target_memo,
+            job_target_id,
             previous_revision_id,
             now,
         ],
@@ -312,6 +325,7 @@ pub fn create_document_revision_manual(
         created_by: "human".to_string(),
         revision_reason,
         target_memo,
+        job_target_id,
         previous_revision_id,
         created_at: now,
     };
