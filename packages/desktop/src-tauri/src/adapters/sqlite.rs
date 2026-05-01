@@ -11,6 +11,8 @@ const MIGRATION_007: &str = include_str!("../../migrations/0007_enum_check_const
 const MIGRATION_008: &str = include_str!("../../migrations/0008_add_job_targets.sql");
 const MIGRATION_009: &str =
     include_str!("../../migrations/0009_add_job_requirement_mappings.sql");
+const MIGRATION_010: &str =
+    include_str!("../../migrations/0010_add_revision_job_target_id.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -36,6 +38,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0007", MIGRATION_007)?;
     apply_migration(conn, "0008", MIGRATION_008)?;
     apply_migration(conn, "0009", MIGRATION_009)?;
+    apply_migration(conn, "0010", MIGRATION_010)?;
 
     Ok(())
 }
@@ -84,12 +87,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0009_apply_to_fresh_db() {
+    fn migrations_0001_through_0010_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 9);
+        assert_eq!(count, 10);
     }
 
     // ──────────────────────────────────────────────
@@ -371,6 +374,72 @@ mod tests {
             .unwrap();
         assert_eq!(req_out, required);
         assert_eq!(pref_out, preferred);
+    }
+
+    // ──────────────────────────────────────────────
+    // document_revisions.job_target_id (migration 0010)
+    // ──────────────────────────────────────────────
+
+    #[test]
+    fn document_revisions_job_target_id_column_exists_after_0010() {
+        let conn = db();
+        // PRAGMA table_info で job_target_id 列が存在することを確認
+        let mut stmt = conn
+            .prepare("PRAGMA table_info(document_revisions)")
+            .unwrap();
+        let cols: Vec<String> = stmt
+            .query_map([], |r| r.get::<_, String>(1))
+            .unwrap()
+            .filter_map(|r| r.ok())
+            .collect();
+        assert!(
+            cols.iter().any(|c| c == "job_target_id"),
+            "document_revisions に job_target_id 列があるべき: {cols:?}"
+        );
+    }
+
+    #[test]
+    fn document_revisions_job_target_id_accepts_null_and_ulid() {
+        let conn = db();
+        insert_document(&conn, "doc1", "draft").unwrap();
+
+        // NULL を受理（既存 row 互換）
+        conn.execute(
+            "INSERT INTO document_revisions \
+             (id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, \
+              revision_reason, target_memo, job_target_id, previous_revision_id, created_at) \
+             VALUES ('rev_null', 'doc1', '', '[]', NULL, 'human', 'r', '', NULL, NULL, ?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+
+        // ULID を受理
+        conn.execute(
+            "INSERT INTO document_revisions \
+             (id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, \
+              revision_reason, target_memo, job_target_id, previous_revision_id, created_at) \
+             VALUES ('rev_jt', 'doc1', '', '[]', NULL, 'human', 'r', '', '01HJOB1', NULL, ?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+
+        let jt: Option<String> = conn
+            .query_row(
+                "SELECT job_target_id FROM document_revisions WHERE id = 'rev_jt'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(jt, Some("01HJOB1".to_string()));
+
+        let null_jt: Option<String> = conn
+            .query_row(
+                "SELECT job_target_id FROM document_revisions WHERE id = 'rev_null'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(null_jt, None);
     }
 
     // ──────────────────────────────────────────────
