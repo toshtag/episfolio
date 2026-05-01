@@ -26,9 +26,7 @@ export async function listJobRequirementMappingsByJobTarget(
   });
 }
 
-export async function getJobRequirementMapping(
-  id: string,
-): Promise<JobRequirementMapping | null> {
+export async function getJobRequirementMapping(id: string): Promise<JobRequirementMapping | null> {
   return invoke<JobRequirementMapping | null>('get_job_requirement_mapping', { id });
 }
 
