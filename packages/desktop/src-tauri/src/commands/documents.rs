@@ -135,7 +135,7 @@ pub fn get_document(
 }
 
 // ──────────────────────────────────────────────
-// create_document_manual
+// create_document_manual（新規 document + 初版 revision）
 // ──────────────────────────────────────────────
 
 #[derive(Debug, Deserialize)]
@@ -145,6 +145,10 @@ pub struct CreateDocumentManualArgs {
     pub template: String,
     pub content: String,
     pub source_evidence_ids: Vec<String>,
+    #[serde(default)]
+    pub revision_reason: Option<String>,
+    #[serde(default)]
+    pub target_memo: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -171,15 +175,30 @@ pub fn create_document_manual(
     } else {
         args.content.clone()
     };
+    let revision_reason = args
+        .revision_reason
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "初版".to_string());
+    let target_memo = args.target_memo.unwrap_or_default();
     let doc = save_document(&db, &doc_id, &title, "", &now)?;
     let ids_json = serde_json::to_string(&args.source_evidence_ids).unwrap_or_default();
     let rev = {
         let conn = db.lock().map_err(|e| e.to_string())?;
         conn.execute(
             "INSERT INTO document_revisions \
-             (id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, created_at) \
-             VALUES (?1, ?2, ?3, ?4, NULL, 'human', ?5)",
-            rusqlite::params![rev_id, doc_id, content, ids_json, now],
+             (id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, \
+              revision_reason, target_memo, previous_revision_id, created_at) \
+             VALUES (?1, ?2, ?3, ?4, NULL, 'human', ?5, ?6, NULL, ?7)",
+            rusqlite::params![
+                rev_id,
+                doc_id,
+                content,
+                ids_json,
+                revision_reason,
+                target_memo,
+                now,
+            ],
         )
         .map_err(|e| e.to_string())?;
         DocumentRevisionRow {
@@ -189,13 +208,115 @@ pub fn create_document_manual(
             source_evidence_ids: args.source_evidence_ids,
             source_ai_run_id: None,
             created_by: "human".to_string(),
-            revision_reason: String::new(),
-            target_memo: String::new(),
+            revision_reason,
+            target_memo,
             previous_revision_id: None,
             created_at: now,
         }
     };
     Ok(CreateDocumentManualResult { document: doc, revision: rev })
+}
+
+// ──────────────────────────────────────────────
+// create_document_revision_manual（既存 document に新 revision を追加）
+// ──────────────────────────────────────────────
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateRevisionManualArgs {
+    pub document_id: String,
+    pub content: String,
+    pub source_evidence_ids: Vec<String>,
+    pub revision_reason: String,
+    #[serde(default)]
+    pub target_memo: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateRevisionManualResult {
+    pub document: CareerDocumentRow,
+    pub revision: DocumentRevisionRow,
+}
+
+#[tauri::command]
+pub fn create_document_revision_manual(
+    db: State<'_, Mutex<Connection>>,
+    args: CreateRevisionManualArgs,
+) -> Result<CreateRevisionManualResult, String> {
+    let revision_reason = args.revision_reason.trim().to_string();
+    if revision_reason.is_empty() {
+        return Err("改訂理由は必須です".to_string());
+    }
+    let target_memo = args.target_memo.unwrap_or_default();
+    let now = chrono_now();
+    let rev_id = Ulid::new().to_string();
+    let ids_json = serde_json::to_string(&args.source_evidence_ids).unwrap_or_default();
+
+    let conn = db.lock().map_err(|e| e.to_string())?;
+
+    // document の存在確認 + 取得
+    let mut doc_stmt = conn
+        .prepare(
+            "SELECT id, title, job_target, status, created_at, updated_at \
+             FROM career_documents WHERE id = ?1",
+        )
+        .map_err(|e| e.to_string())?;
+    let mut doc = doc_stmt
+        .query_row(rusqlite::params![args.document_id], doc_from_row)
+        .map_err(|_| format!("ドキュメントが見つかりません: {}", args.document_id))?;
+    drop(doc_stmt);
+
+    // 直前の revision を取得（previous_revision_id 用）
+    let previous_revision_id: Option<String> = conn
+        .query_row(
+            "SELECT id FROM document_revisions WHERE document_id = ?1 \
+             ORDER BY created_at DESC LIMIT 1",
+            rusqlite::params![args.document_id],
+            |row| row.get::<_, String>(0),
+        )
+        .ok();
+
+    conn.execute(
+        "INSERT INTO document_revisions \
+         (id, document_id, content, source_evidence_ids, source_ai_run_id, created_by, \
+          revision_reason, target_memo, previous_revision_id, created_at) \
+         VALUES (?1, ?2, ?3, ?4, NULL, 'human', ?5, ?6, ?7, ?8)",
+        rusqlite::params![
+            rev_id,
+            args.document_id,
+            args.content,
+            ids_json,
+            revision_reason,
+            target_memo,
+            previous_revision_id,
+            now,
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    // document.updated_at を更新
+    conn.execute(
+        "UPDATE career_documents SET updated_at = ?1 WHERE id = ?2",
+        rusqlite::params![now, args.document_id],
+    )
+    .map_err(|e| e.to_string())?;
+    doc.updated_at = now.clone();
+
+    let revision = DocumentRevisionRow {
+        id: rev_id,
+        document_id: args.document_id,
+        content: args.content,
+        source_evidence_ids: args.source_evidence_ids,
+        source_ai_run_id: None,
+        created_by: "human".to_string(),
+        revision_reason,
+        target_memo,
+        previous_revision_id,
+        created_at: now,
+    };
+
+    Ok(CreateRevisionManualResult { document: doc, revision })
 }
 
 fn template_content(template: &str) -> String {
