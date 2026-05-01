@@ -6,8 +6,9 @@ import './episode-detail-view.js';
 import './evidence-list-view.js';
 import './document-view.js';
 import './life-timeline-view.js';
+import './job-target-view.js';
 
-type Tab = 'episodes' | 'evidence' | 'documents' | 'timeline' | 'settings';
+type Tab = 'episodes' | 'evidence' | 'documents' | 'timeline' | 'job-targets' | 'settings';
 
 class EpisodeApp extends LitElement {
   static override properties = {
@@ -169,6 +170,12 @@ class EpisodeApp extends LitElement {
           }}
         >年表</button>
         <button
+          class=${this.tab === 'job-targets' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'job-targets';
+          }}
+        >求人</button>
+        <button
           class=${this.tab === 'settings' ? 'active' : ''}
           @click=${() => {
             this.tab = 'settings';
@@ -230,7 +237,9 @@ class EpisodeApp extends LitElement {
               ? html`<document-view></document-view>`
               : this.tab === 'timeline'
                 ? html`<life-timeline-view></life-timeline-view>`
-                : html`<settings-view></settings-view>`
+                : this.tab === 'job-targets'
+                  ? html`<job-target-view></job-target-view>`
+                  : html`<settings-view></settings-view>`
       }
     `;
   }

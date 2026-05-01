@@ -24,10 +24,7 @@ export async function getJobTarget(id: string): Promise<JobTarget | null> {
   return invoke<JobTarget | null>('get_job_target', { id });
 }
 
-export async function updateJobTarget(
-  id: string,
-  patch: JobTargetUpdate,
-): Promise<JobTarget> {
+export async function updateJobTarget(id: string, patch: JobTargetUpdate): Promise<JobTarget> {
   return invoke<JobTarget>('update_job_target', { id, patch });
 }
 
