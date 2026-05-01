@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CareerDocumentSchema,
   CareerDocumentStatusSchema,
+  CareerDocumentTypeSchema,
   CareerDocumentUpdateSchema,
   DocumentRevisionSchema,
 } from '../../src/schemas/career-document.js';
@@ -10,6 +11,8 @@ const baseDoc = {
   id: '01HDOC',
   title: 'バックエンドエンジニア 職務経歴書',
   jobTarget: '',
+  documentType: 'free_form' as const,
+  jobTargetId: null,
   status: 'draft' as const,
   createdAt: '2026-04-30T00:00:00Z',
   updatedAt: '2026-04-30T00:00:00Z',
@@ -27,6 +30,16 @@ const baseRevision = {
   previousRevisionId: null,
   createdAt: '2026-04-30T00:00:00Z',
 };
+
+describe('CareerDocumentTypeSchema', () => {
+  it.each(['free_form', 'jibun_taizen', 'career_digest'])('%s を受理', (t) => {
+    expect(CareerDocumentTypeSchema.safeParse(t).success).toBe(true);
+  });
+
+  it('未知の type を拒否', () => {
+    expect(CareerDocumentTypeSchema.safeParse('custom').success).toBe(false);
+  });
+});
 
 describe('CareerDocumentStatusSchema', () => {
   it('draft/finalized を受理', () => {
@@ -52,6 +65,42 @@ describe('CareerDocumentSchema', () => {
     expect(CareerDocumentSchema.safeParse({ ...baseDoc, jobTarget: '' }).success).toBe(true);
   });
 
+  it('documentType 省略時は free_form にデフォルト', () => {
+    const { documentType: _, ...withoutType } = baseDoc;
+    const result = CareerDocumentSchema.safeParse(withoutType);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.documentType).toBe('free_form');
+  });
+
+  it('documentType に有効な値を受理', () => {
+    expect(
+      CareerDocumentSchema.safeParse({ ...baseDoc, documentType: 'career_digest' }).success,
+    ).toBe(true);
+  });
+
+  it('未知の documentType を拒否', () => {
+    expect(
+      CareerDocumentSchema.safeParse({ ...baseDoc, documentType: 'custom' as 'free_form' }).success,
+    ).toBe(false);
+  });
+
+  it('jobTargetId null は許可', () => {
+    expect(CareerDocumentSchema.safeParse({ ...baseDoc, jobTargetId: null }).success).toBe(true);
+  });
+
+  it('jobTargetId に ULID 文字列は許可', () => {
+    expect(CareerDocumentSchema.safeParse({ ...baseDoc, jobTargetId: '01HJOB1' }).success).toBe(
+      true,
+    );
+  });
+
+  it('jobTargetId 省略時は null にデフォルト', () => {
+    const { jobTargetId: _, ...withoutId } = baseDoc;
+    const result = CareerDocumentSchema.safeParse(withoutId);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.jobTargetId).toBeNull();
+  });
+
   it('未知の status を拒否', () => {
     expect(
       CareerDocumentSchema.safeParse({ ...baseDoc, status: 'archived' as 'draft' }).success,
@@ -63,6 +112,20 @@ describe('CareerDocumentUpdateSchema', () => {
   it('partial: 一部だけ送れる', () => {
     expect(CareerDocumentUpdateSchema.safeParse({}).success).toBe(true);
     expect(CareerDocumentUpdateSchema.safeParse({ title: '更新' }).success).toBe(true);
+  });
+
+  it('documentType の更新が可能', () => {
+    expect(CareerDocumentUpdateSchema.safeParse({ documentType: 'career_digest' }).success).toBe(
+      true,
+    );
+  });
+
+  it('jobTargetId null で更新可能', () => {
+    expect(CareerDocumentUpdateSchema.safeParse({ jobTargetId: null }).success).toBe(true);
+  });
+
+  it('jobTargetId に ULID で更新可能', () => {
+    expect(CareerDocumentUpdateSchema.safeParse({ jobTargetId: '01HJOB1' }).success).toBe(true);
   });
 });
 
