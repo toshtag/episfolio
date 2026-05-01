@@ -16,21 +16,6 @@ export type SkillEvidenceRow = {
   updatedAt: string;
 };
 
-export type ExtractEvidenceResult = {
-  evidences: SkillEvidenceRow[];
-  aiRunId: string;
-  parseError: string | null;
-};
-
-export async function extractEvidence(
-  episodeIds: string[],
-  model?: string,
-): Promise<ExtractEvidenceResult> {
-  return invoke<ExtractEvidenceResult>('extract_evidence', {
-    args: { episodeIds, model },
-  });
-}
-
 export type CreateManualEvidenceArgs = {
   strengthLabel: string;
   description: string;

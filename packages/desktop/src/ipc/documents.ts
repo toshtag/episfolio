@@ -19,25 +19,10 @@ export type DocumentRevisionRow = {
   createdAt: string;
 };
 
-export type GenerateDocumentResult = {
-  document: CareerDocumentRow;
-  revision: DocumentRevisionRow;
-};
-
 export type GetDocumentResult = {
   document: CareerDocumentRow;
   revisions: DocumentRevisionRow[];
 };
-
-export async function generateDocument(
-  evidenceIds: string[],
-  jobTarget: string,
-  model?: string,
-): Promise<GenerateDocumentResult> {
-  return invoke<GenerateDocumentResult>('generate_document', {
-    args: { evidenceIds, jobTarget, model },
-  });
-}
 
 export async function listDocuments(): Promise<CareerDocumentRow[]> {
   return invoke<CareerDocumentRow[]>('list_documents');
