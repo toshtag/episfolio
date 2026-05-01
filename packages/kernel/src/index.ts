@@ -61,6 +61,7 @@ export type {
 export type { AIRunStoragePort } from './ports/ai-run-storage-port.js';
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
 export type { DocumentRevisionStoragePort } from './ports/document-revision-storage-port.js';
+export type { JobRequirementMappingStoragePort } from './ports/job-requirement-mapping-storage-port.js';
 export type { JobTargetStoragePort } from './ports/job-target-storage-port.js';
 export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
