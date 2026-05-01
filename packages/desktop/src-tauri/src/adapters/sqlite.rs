@@ -7,6 +7,7 @@ const MIGRATION_003: &str = include_str!("../../migrations/0003_add_career_docum
 const MIGRATION_004: &str = include_str!("../../migrations/0004_add_skill_evidence_source.sql");
 const MIGRATION_005: &str = include_str!("../../migrations/0005_add_life_timeline.sql");
 const MIGRATION_006: &str = include_str!("../../migrations/0006_add_document_revision_fields.sql");
+const MIGRATION_007: &str = include_str!("../../migrations/0007_enum_check_constraints.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -29,6 +30,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0004", MIGRATION_004)?;
     apply_migration(conn, "0005", MIGRATION_005)?;
     apply_migration(conn, "0006", MIGRATION_006)?;
+    apply_migration(conn, "0007", MIGRATION_007)?;
 
     Ok(())
 }
