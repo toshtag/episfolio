@@ -4,9 +4,9 @@
 
 ## ステータス
 
-🟢 **v0.2.1 リリース済（2026-05-01）** — `pnpm tauri dev` での開発ビルド動作確認済み。署名済の配布バイナリは未配布（v1.0 で対応予定）。
+🟢 **v0.2.2 リリース済（2026-05-01）** — `pnpm tauri dev` での開発ビルド動作確認済み。署名済の配布バイナリは未配布（v1.0 で対応予定）。
 
-v0.2.1 は v0.2.0 のセキュリティ / 整合性 hotfix です。詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
+v0.2.1 は v0.2.0 のセキュリティ / 整合性 hotfix、v0.2.2 は data integrity / test coverage patch（DB CHECK 制約 + kernel schema test 網羅 + Rust 統合テスト）。詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
 
 次フェーズは **v0.3（JobTarget + 職務経歴ダイジェスト）**。
 

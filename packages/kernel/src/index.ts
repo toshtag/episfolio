@@ -1,4 +1,4 @@
-export const KERNEL_VERSION = '0.2.1';
+export const KERNEL_VERSION = '0.2.2';
 
 // contracts
 export type {
