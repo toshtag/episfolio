@@ -9,6 +9,8 @@ const MIGRATION_005: &str = include_str!("../../migrations/0005_add_life_timelin
 const MIGRATION_006: &str = include_str!("../../migrations/0006_add_document_revision_fields.sql");
 const MIGRATION_007: &str = include_str!("../../migrations/0007_enum_check_constraints.sql");
 const MIGRATION_008: &str = include_str!("../../migrations/0008_add_job_targets.sql");
+const MIGRATION_009: &str =
+    include_str!("../../migrations/0009_add_job_requirement_mappings.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -33,6 +35,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0006", MIGRATION_006)?;
     apply_migration(conn, "0007", MIGRATION_007)?;
     apply_migration(conn, "0008", MIGRATION_008)?;
+    apply_migration(conn, "0009", MIGRATION_009)?;
 
     Ok(())
 }
@@ -81,12 +84,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0008_apply_to_fresh_db() {
+    fn migrations_0001_through_0009_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 8);
+        assert_eq!(count, 9);
     }
 
     // ──────────────────────────────────────────────
@@ -368,6 +371,88 @@ mod tests {
             .unwrap();
         assert_eq!(req_out, required);
         assert_eq!(pref_out, preferred);
+    }
+
+    // ──────────────────────────────────────────────
+    // job_requirement_mappings (migration 0009)
+    // ──────────────────────────────────────────────
+
+    fn insert_job_requirement_mapping(
+        conn: &Connection,
+        id: &str,
+        job_target_id: &str,
+        requirement_skill_id: &str,
+        episode_ids_json: &str,
+    ) -> rusqlite::Result<usize> {
+        conn.execute(
+            "INSERT INTO job_requirement_mappings \
+             (id, job_target_id, requirement_skill_id, episode_ids, user_note, created_at, updated_at) \
+             VALUES (?1, ?2, ?3, ?4, '', ?5, ?5)",
+            rusqlite::params![id, job_target_id, requirement_skill_id, episode_ids_json, TS],
+        )
+    }
+
+    #[test]
+    fn job_requirement_mappings_smoke_insert_and_select() {
+        let conn = db();
+        insert_job_target(&conn, "jt1", "Acme", "researching").unwrap();
+        insert_job_requirement_mapping(
+            &conn,
+            "jrm1",
+            "jt1",
+            "skill_1",
+            r#"["ep1","ep2"]"#,
+        )
+        .unwrap();
+
+        let (req_skill, eps_json): (String, String) = conn
+            .query_row(
+                "SELECT requirement_skill_id, episode_ids FROM job_requirement_mappings WHERE id = 'jrm1'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(req_skill, "skill_1");
+        assert_eq!(eps_json, r#"["ep1","ep2"]"#);
+    }
+
+    #[test]
+    fn job_requirement_mappings_cascade_on_job_target_delete() {
+        let conn = db();
+        insert_job_target(&conn, "jt_cascade", "Acme", "researching").unwrap();
+        insert_job_requirement_mapping(&conn, "jrm_a", "jt_cascade", "skill_a", "[]").unwrap();
+        insert_job_requirement_mapping(&conn, "jrm_b", "jt_cascade", "skill_b", "[]").unwrap();
+
+        conn.execute(
+            "DELETE FROM job_targets WHERE id = ?1",
+            rusqlite::params!["jt_cascade"],
+        )
+        .unwrap();
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM job_requirement_mappings WHERE job_target_id = 'jt_cascade'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 0, "JobTarget 削除でマッピングが CASCADE 削除される");
+    }
+
+    #[test]
+    fn job_requirement_mappings_foreign_key_rejects_orphan_job_target_id() {
+        let conn = db();
+        let result = insert_job_requirement_mapping(
+            &conn,
+            "jrm_orphan",
+            "jt_missing",
+            "skill_1",
+            "[]",
+        );
+        assert!(
+            result.is_err(),
+            "存在しない job_target_id を参照するマッピングは FK で拒否される"
+        );
     }
 
     #[test]

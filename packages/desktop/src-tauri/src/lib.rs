@@ -40,6 +40,11 @@ pub fn run() {
             commands::job_targets::get_job_target,
             commands::job_targets::update_job_target,
             commands::job_targets::delete_job_target,
+            commands::job_requirement_mappings::save_job_requirement_mapping,
+            commands::job_requirement_mappings::list_job_requirement_mappings_by_job_target,
+            commands::job_requirement_mappings::get_job_requirement_mapping,
+            commands::job_requirement_mappings::update_job_requirement_mapping,
+            commands::job_requirement_mappings::delete_job_requirement_mapping,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
