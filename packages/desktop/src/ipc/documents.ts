@@ -18,6 +18,7 @@ export type DocumentRevisionRow = {
   createdBy: 'human' | 'ai';
   revisionReason: string;
   targetMemo: string;
+  jobTargetId: string | null;
   previousRevisionId: string | null;
   createdAt: string;
 };
@@ -42,6 +43,7 @@ export type CreateDocumentManualArgs = {
   sourceEvidenceIds: string[];
   revisionReason?: string;
   targetMemo?: string;
+  jobTargetId?: string;
 };
 
 export type CreateDocumentManualResult = {
@@ -61,6 +63,7 @@ export type CreateRevisionManualArgs = {
   sourceEvidenceIds: string[];
   revisionReason: string;
   targetMemo?: string;
+  jobTargetId?: string;
 };
 
 export type CreateRevisionManualResult = {

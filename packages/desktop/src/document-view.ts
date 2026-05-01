@@ -1,3 +1,4 @@
+import type { JobTarget } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
 import type { CareerDocumentRow, DocumentRevisionRow } from './ipc/documents.js';
 import {
@@ -10,6 +11,7 @@ import {
 } from './ipc/documents.js';
 import type { SkillEvidenceRow } from './ipc/evidence.js';
 import { listSkillEvidence } from './ipc/evidence.js';
+import { listJobTargets } from './ipc/job-targets.js';
 
 type Template = 'resume' | 'skill-summary' | 'blank';
 type ViewState = 'list' | 'new' | 'edit';
@@ -26,14 +28,17 @@ class DocumentView extends LitElement {
     selected: { state: true },
     revisions: { state: true },
     acceptedEvidences: { state: true },
+    jobTargets: { state: true },
     viewState: { state: true },
     newTitle: { state: true },
     newTemplate: { state: true },
     newRevisionReason: { state: true },
     newTargetMemo: { state: true },
+    newJobTargetId: { state: true },
     editContent: { state: true },
     editRevisionReason: { state: true },
     editTargetMemo: { state: true },
+    editJobTargetId: { state: true },
     selectedEvidenceId: { state: true },
     isSaving: { state: true },
     error: { state: true },
@@ -43,14 +48,17 @@ class DocumentView extends LitElement {
   declare selected: CareerDocumentRow | null;
   declare revisions: DocumentRevisionRow[];
   declare acceptedEvidences: SkillEvidenceRow[];
+  declare jobTargets: JobTarget[];
   declare viewState: ViewState;
   declare newTitle: string;
   declare newTemplate: Template;
   declare newRevisionReason: string;
   declare newTargetMemo: string;
+  declare newJobTargetId: string;
   declare editContent: string;
   declare editRevisionReason: string;
   declare editTargetMemo: string;
+  declare editJobTargetId: string;
   declare selectedEvidenceId: string;
   declare isSaving: boolean;
   declare error: string;
@@ -61,14 +69,17 @@ class DocumentView extends LitElement {
     this.selected = null;
     this.revisions = [];
     this.acceptedEvidences = [];
+    this.jobTargets = [];
     this.viewState = 'list';
     this.newTitle = '';
     this.newTemplate = 'resume';
     this.newRevisionReason = '';
     this.newTargetMemo = '';
+    this.newJobTargetId = '';
     this.editContent = '';
     this.editRevisionReason = '';
     this.editTargetMemo = '';
+    this.editJobTargetId = '';
     this.selectedEvidenceId = '';
     this.isSaving = false;
     this.error = '';
@@ -112,6 +123,7 @@ class DocumentView extends LitElement {
       font-family: inherit;
     }
     textarea.editor { min-height: 18rem; resize: vertical; font-family: monospace; font-size: 0.9rem; }
+    .ghost-target { color: #999; font-style: italic; }
     .insert-row {
       display: flex;
       gap: 0.5rem;
@@ -166,9 +178,14 @@ class DocumentView extends LitElement {
 
   private async loadAll() {
     try {
-      const [docs, evidences] = await Promise.all([listDocuments(), listSkillEvidence()]);
+      const [docs, evidences, targets] = await Promise.all([
+        listDocuments(),
+        listSkillEvidence(),
+        listJobTargets(),
+      ]);
       this.documents = docs;
       this.acceptedEvidences = evidences.filter((ev) => ev.status === 'accepted');
+      this.jobTargets = targets;
     } catch (e) {
       this.error = String(e);
     }
@@ -183,6 +200,7 @@ class DocumentView extends LitElement {
       this.editContent = latest?.content ?? '';
       this.editRevisionReason = '';
       this.editTargetMemo = latest?.targetMemo ?? '';
+      this.editJobTargetId = latest?.jobTargetId ?? '';
       this.viewState = 'edit';
       this.error = '';
     } catch (e) {
@@ -195,6 +213,7 @@ class DocumentView extends LitElement {
     this.newTemplate = 'resume';
     this.newRevisionReason = '';
     this.newTargetMemo = '';
+    this.newJobTargetId = '';
     this.editContent = '';
     this.error = '';
     this.viewState = 'new';
@@ -206,6 +225,7 @@ class DocumentView extends LitElement {
     this.editContent = '';
     this.editRevisionReason = '';
     this.editTargetMemo = '';
+    this.editJobTargetId = '';
     this.error = '';
     this.viewState = 'list';
   }
@@ -229,6 +249,7 @@ class DocumentView extends LitElement {
     try {
       const reason = this.newRevisionReason.trim();
       const memo = this.newTargetMemo.trim();
+      const jobTargetId = this.newJobTargetId.trim();
       const args: CreateDocumentManualArgs = {
         title,
         template: this.newTemplate,
@@ -236,6 +257,7 @@ class DocumentView extends LitElement {
         sourceEvidenceIds: [],
         ...(reason ? { revisionReason: reason } : {}),
         ...(memo ? { targetMemo: memo } : {}),
+        ...(jobTargetId ? { jobTargetId } : {}),
       };
       const result = await createDocumentManual(args);
       await this.loadAll();
@@ -258,12 +280,14 @@ class DocumentView extends LitElement {
     this.error = '';
     try {
       const memo = this.editTargetMemo.trim();
+      const jobTargetId = this.editJobTargetId.trim();
       const args: CreateRevisionManualArgs = {
         documentId: this.selected.id,
         content: this.editContent,
         sourceEvidenceIds: [],
         revisionReason: reason,
         ...(memo ? { targetMemo: memo } : {}),
+        ...(jobTargetId ? { jobTargetId } : {}),
       };
       await createDocumentRevisionManual(args);
       await this.loadAll();
@@ -344,6 +368,21 @@ class DocumentView extends LitElement {
         />
       </div>
       <div class="field">
+        <label>対象求人（任意）</label>
+        <select
+          .value=${this.newJobTargetId}
+          @change=${(e: Event) => {
+            this.newJobTargetId = (e.target as HTMLSelectElement).value;
+          }}
+        >
+          <option value="">— 求人を紐付けない —</option>
+          ${this.jobTargets.map(
+            (t) =>
+              html`<option value=${t.id} ?selected=${this.newJobTargetId === t.id}>${t.companyName} — ${t.jobTitle}</option>`,
+          )}
+        </select>
+      </div>
+      <div class="field">
         <label>宛先メモ（任意）</label>
         <input
           type="text"
@@ -391,6 +430,7 @@ class DocumentView extends LitElement {
           ${latest.createdAt.replace('T', ' ').replace('Z', '')}
           &nbsp;|&nbsp;
           ${latest.createdBy === 'human' ? '手動' : 'AI'}
+          ${this.renderJobTargetLabel(latest.jobTargetId)}
           ${latest.targetMemo ? html` &nbsp;|&nbsp; 宛先: ${latest.targetMemo}` : ''}
         </p>
       `
@@ -406,6 +446,21 @@ class DocumentView extends LitElement {
           }}
           placeholder="例: B 社向けに強み 3 つ目を再構成"
         />
+      </div>
+      <div class="field">
+        <label>対象求人（任意）</label>
+        <select
+          .value=${this.editJobTargetId}
+          @change=${(e: Event) => {
+            this.editJobTargetId = (e.target as HTMLSelectElement).value;
+          }}
+        >
+          <option value="">— 求人を紐付けない —</option>
+          ${this.jobTargets.map(
+            (t) =>
+              html`<option value=${t.id} ?selected=${this.editJobTargetId === t.id}>${t.companyName} — ${t.jobTitle}</option>`,
+          )}
+        </select>
       </div>
       <div class="field">
         <label>宛先メモ（任意）</label>
@@ -457,6 +512,7 @@ class DocumentView extends LitElement {
                 ${rev.createdAt.replace('T', ' ').replace('Z', '')}
                 &nbsp;|&nbsp;
                 ${rev.createdBy === 'human' ? '手動' : 'AI'}
+                ${this.renderJobTargetLabel(rev.jobTargetId)}
                 ${rev.targetMemo ? html` &nbsp;|&nbsp; 宛先: ${rev.targetMemo}` : ''}
                 ${
                   rev.previousRevisionId
@@ -469,6 +525,15 @@ class DocumentView extends LitElement {
         )}
       </div>
     `;
+  }
+
+  private renderJobTargetLabel(id: string | null) {
+    if (!id) return '';
+    const target = this.jobTargets.find((t) => t.id === id);
+    if (!target) {
+      return html` &nbsp;|&nbsp; 対象求人: <span class="ghost-target">削除済み (${id.slice(-6)})</span>`;
+    }
+    return html` &nbsp;|&nbsp; 対象求人: ${target.companyName} — ${target.jobTitle}`;
   }
 
   private renderInsertRow() {
