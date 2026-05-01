@@ -80,6 +80,7 @@ export async function generateDocument(
       createdBy: 'ai',
       revisionReason: '自動生成（エビデンスなし）',
       targetMemo: '',
+      jobTargetId: null,
       previousRevisionId: null,
       createdAt: now,
     };
@@ -144,6 +145,7 @@ export async function generateDocument(
     createdBy: 'ai',
     revisionReason: 'AI 生成',
     targetMemo: '',
+    jobTargetId: null,
     previousRevisionId: null,
     createdAt: now,
   };

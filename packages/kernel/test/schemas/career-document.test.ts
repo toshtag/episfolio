@@ -169,4 +169,28 @@ describe('DocumentRevisionSchema', () => {
       }).success,
     ).toBe(false);
   });
+
+  it('jobTargetId null を受理', () => {
+    const parsed = DocumentRevisionSchema.parse({ ...baseRevision, jobTargetId: null });
+    expect(parsed.jobTargetId).toBeNull();
+  });
+
+  it('jobTargetId に ULID 文字列を受理', () => {
+    const parsed = DocumentRevisionSchema.parse({ ...baseRevision, jobTargetId: '01HJOB1' });
+    expect(parsed.jobTargetId).toBe('01HJOB1');
+  });
+
+  it('jobTargetId 省略時は null にデフォルト（後方互換: 既存 row が jobTargetId カラムを持たない）', () => {
+    const parsed = DocumentRevisionSchema.parse(baseRevision);
+    expect(parsed.jobTargetId).toBeNull();
+  });
+
+  it('jobTargetId に数値など不正型を拒否', () => {
+    expect(
+      DocumentRevisionSchema.safeParse({
+        ...baseRevision,
+        jobTargetId: 123 as unknown as string,
+      }).success,
+    ).toBe(false);
+  });
 });

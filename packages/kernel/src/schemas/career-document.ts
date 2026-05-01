@@ -36,6 +36,7 @@ export const DocumentRevisionSchema = z.object({
   createdBy: z.enum(['human', 'ai']),
   revisionReason: z.string().min(1),
   targetMemo: z.string(),
+  jobTargetId: z.string().nullable().default(null),
   previousRevisionId: z.string().nullable(),
   createdAt: z.string().min(1),
 });
