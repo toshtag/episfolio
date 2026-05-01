@@ -36,9 +36,7 @@ describe('JobRequirementMappingSchema', () => {
   });
 
   it('requirementSkillId が空文字列だと拒否', () => {
-    expect(() =>
-      JobRequirementMappingSchema.parse({ ...valid, requirementSkillId: '' }),
-    ).toThrow();
+    expect(() => JobRequirementMappingSchema.parse({ ...valid, requirementSkillId: '' })).toThrow();
   });
 
   it('episodeIds に空文字列が混ざると拒否', () => {
@@ -54,9 +52,7 @@ describe('JobRequirementMappingSchema', () => {
 
 describe('JobRequirementMappingUpdateSchema', () => {
   it('episodeIds のみの partial を受理', () => {
-    expect(() =>
-      JobRequirementMappingUpdateSchema.parse({ episodeIds: ['01HEP1'] }),
-    ).not.toThrow();
+    expect(() => JobRequirementMappingUpdateSchema.parse({ episodeIds: ['01HEP1'] })).not.toThrow();
   });
 
   it('userNote のみの partial を受理', () => {
@@ -68,11 +64,8 @@ describe('JobRequirementMappingUpdateSchema', () => {
   });
 
   it('id を patch には含められない（不可変フィールド）', () => {
-    const parsed = JobRequirementMappingUpdateSchema.parse({
-      // biome-ignore lint/suspicious/noExplicitAny: 意図的に不正キーを渡す
-      id: 'X',
-      userNote: 'メモ',
-    } as any);
+    const input = { id: 'X', userNote: 'メモ' } as Record<string, unknown>;
+    const parsed = JobRequirementMappingUpdateSchema.parse(input);
     expect('id' in parsed).toBe(false);
   });
 });

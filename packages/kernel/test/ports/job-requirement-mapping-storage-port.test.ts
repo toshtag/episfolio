@@ -21,10 +21,7 @@ class InMemoryJobRequirementMappingStorage implements JobRequirementMappingStora
     return this.store.get(id) ?? null;
   }
 
-  async update(
-    id: string,
-    patch: JobRequirementMappingUpdate,
-  ): Promise<JobRequirementMapping> {
+  async update(id: string, patch: JobRequirementMappingUpdate): Promise<JobRequirementMapping> {
     const current = this.store.get(id);
     if (!current) throw new Error(`JobRequirementMapping not found: ${id}`);
     const updated: JobRequirementMapping = {
