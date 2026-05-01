@@ -2,7 +2,9 @@ import { css, html, LitElement } from 'lit';
 import type { CareerDocumentRow, DocumentRevisionRow } from './ipc/documents.js';
 import {
   type CreateDocumentManualArgs,
+  type CreateRevisionManualArgs,
   createDocumentManual,
+  createDocumentRevisionManual,
   getDocument,
   listDocuments,
 } from './ipc/documents.js';
@@ -27,7 +29,11 @@ class DocumentView extends LitElement {
     viewState: { state: true },
     newTitle: { state: true },
     newTemplate: { state: true },
+    newRevisionReason: { state: true },
+    newTargetMemo: { state: true },
     editContent: { state: true },
+    editRevisionReason: { state: true },
+    editTargetMemo: { state: true },
     selectedEvidenceId: { state: true },
     isSaving: { state: true },
     error: { state: true },
@@ -40,7 +46,11 @@ class DocumentView extends LitElement {
   declare viewState: ViewState;
   declare newTitle: string;
   declare newTemplate: Template;
+  declare newRevisionReason: string;
+  declare newTargetMemo: string;
   declare editContent: string;
+  declare editRevisionReason: string;
+  declare editTargetMemo: string;
   declare selectedEvidenceId: string;
   declare isSaving: boolean;
   declare error: string;
@@ -54,7 +64,11 @@ class DocumentView extends LitElement {
     this.viewState = 'list';
     this.newTitle = '';
     this.newTemplate = 'resume';
+    this.newRevisionReason = '';
+    this.newTargetMemo = '';
     this.editContent = '';
+    this.editRevisionReason = '';
+    this.editTargetMemo = '';
     this.selectedEvidenceId = '';
     this.isSaving = false;
     this.error = '';
@@ -69,6 +83,7 @@ class DocumentView extends LitElement {
       max-width: 720px;
     }
     h2 { margin: 0 0 1.25rem; font-size: 1.2rem; }
+    h3 { margin: 1.75rem 0 0.75rem; font-size: 1rem; color: #333; }
     .error { color: #c00; font-size: 0.85rem; margin-bottom: 0.75rem; }
     .empty { color: #888; font-size: 0.9rem; }
     .back-link {
@@ -86,6 +101,7 @@ class DocumentView extends LitElement {
     tbody tr:hover td { background: #f6f6f6; }
     .field { margin-bottom: 1rem; }
     label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 0.3rem; }
+    .required { color: #c00; }
     input[type="text"], select, textarea {
       width: 100%;
       box-sizing: border-box;
@@ -95,7 +111,7 @@ class DocumentView extends LitElement {
       border-radius: 0.3rem;
       font-family: inherit;
     }
-    textarea.editor { min-height: 20rem; resize: vertical; font-family: monospace; font-size: 0.9rem; }
+    textarea.editor { min-height: 18rem; resize: vertical; font-family: monospace; font-size: 0.9rem; }
     .insert-row {
       display: flex;
       gap: 0.5rem;
@@ -123,18 +139,24 @@ class DocumentView extends LitElement {
       cursor: pointer;
     }
     button:disabled { opacity: 0.5; cursor: default; }
-    .revision-meta { font-size: 0.78rem; color: #888; margin-bottom: 0.5rem; }
-    .markdown-content {
-      white-space: pre-wrap;
-      font-size: 0.9rem;
-      line-height: 1.7;
-      background: #f8f8f8;
-      border: 1px solid #e0e0e0;
-      border-radius: 0.4rem;
-      padding: 1.25rem;
-      margin-top: 0.75rem;
-    }
+    .doc-meta { font-size: 0.78rem; color: #888; margin-bottom: 1.25rem; }
     .new-btn-row { margin-bottom: 1.25rem; }
+    .history {
+      border-top: 1px solid #e0e0e0;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+    }
+    .history-item {
+      padding: 0.6rem 0.75rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 0.3rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      background: #fafafa;
+    }
+    .history-item.current { border-color: #1a1a1a; background: #fff; }
+    .history-reason { font-weight: 600; margin-bottom: 0.2rem; }
+    .history-meta { color: #888; font-size: 0.78rem; }
   `;
 
   override async connectedCallback() {
@@ -159,6 +181,8 @@ class DocumentView extends LitElement {
       this.revisions = result.revisions;
       const latest = result.revisions[0];
       this.editContent = latest?.content ?? '';
+      this.editRevisionReason = '';
+      this.editTargetMemo = latest?.targetMemo ?? '';
       this.viewState = 'edit';
       this.error = '';
     } catch (e) {
@@ -169,6 +193,8 @@ class DocumentView extends LitElement {
   private handleNewDocument() {
     this.newTitle = '';
     this.newTemplate = 'resume';
+    this.newRevisionReason = '';
+    this.newTargetMemo = '';
     this.editContent = '';
     this.error = '';
     this.viewState = 'new';
@@ -178,6 +204,8 @@ class DocumentView extends LitElement {
     this.selected = null;
     this.revisions = [];
     this.editContent = '';
+    this.editRevisionReason = '';
+    this.editTargetMemo = '';
     this.error = '';
     this.viewState = 'list';
   }
@@ -199,11 +227,15 @@ class DocumentView extends LitElement {
     this.isSaving = true;
     this.error = '';
     try {
+      const reason = this.newRevisionReason.trim();
+      const memo = this.newTargetMemo.trim();
       const args: CreateDocumentManualArgs = {
         title,
         template: this.newTemplate,
         content: this.editContent,
         sourceEvidenceIds: [],
+        ...(reason ? { revisionReason: reason } : {}),
+        ...(memo ? { targetMemo: memo } : {}),
       };
       const result = await createDocumentManual(args);
       await this.loadAll();
@@ -217,18 +249,25 @@ class DocumentView extends LitElement {
 
   private async handleSaveRevision() {
     if (!this.selected) return;
+    const reason = this.editRevisionReason.trim();
+    if (!reason) {
+      this.error = '改訂理由は必須です';
+      return;
+    }
     this.isSaving = true;
     this.error = '';
     try {
-      const args: CreateDocumentManualArgs = {
-        title: this.selected.title,
-        template: 'blank',
+      const memo = this.editTargetMemo.trim();
+      const args: CreateRevisionManualArgs = {
+        documentId: this.selected.id,
         content: this.editContent,
         sourceEvidenceIds: [],
+        revisionReason: reason,
+        ...(memo ? { targetMemo: memo } : {}),
       };
-      const result = await createDocumentManual(args);
+      await createDocumentRevisionManual(args);
       await this.loadAll();
-      await this.openDocument(result.document.id);
+      await this.openDocument(this.selected.id);
     } catch (e) {
       this.error = String(e);
     } finally {
@@ -248,14 +287,14 @@ class DocumentView extends LitElement {
           ? html`<p class="empty">まだドキュメントがありません。「新規作成」から作成してください。</p>`
           : html`
           <table>
-            <thead><tr><th>タイトル</th><th>ステータス</th><th>作成日時</th></tr></thead>
+            <thead><tr><th>タイトル</th><th>ステータス</th><th>更新日時</th></tr></thead>
             <tbody>
               ${this.documents.map(
                 (doc) => html`
                 <tr @click=${() => this.openDocument(doc.id)}>
                   <td>${doc.title}</td>
                   <td>${doc.status === 'draft' ? '下書き' : '確定'}</td>
-                  <td>${doc.createdAt.replace('T', ' ').replace('Z', '')}</td>
+                  <td>${doc.updatedAt.replace('T', ' ').replace('Z', '')}</td>
                 </tr>
               `,
               )}
@@ -272,7 +311,7 @@ class DocumentView extends LitElement {
       <h2>新規ドキュメント</h2>
       ${this.error ? html`<p class="error">${this.error}</p>` : ''}
       <div class="field">
-        <label>タイトル</label>
+        <label>タイトル <span class="required">*</span></label>
         <input
           type="text"
           .value=${this.newTitle}
@@ -292,6 +331,28 @@ class DocumentView extends LitElement {
         >
           ${TEMPLATES.map((t) => html`<option value=${t.value}>${t.label}</option>`)}
         </select>
+      </div>
+      <div class="field">
+        <label>初版の改訂理由（任意・未入力なら「初版」）</label>
+        <input
+          type="text"
+          .value=${this.newRevisionReason}
+          @input=${(e: Event) => {
+            this.newRevisionReason = (e.target as HTMLInputElement).value;
+          }}
+          placeholder="例: 初版（バックエンド向け）"
+        />
+      </div>
+      <div class="field">
+        <label>宛先メモ（任意）</label>
+        <input
+          type="text"
+          .value=${this.newTargetMemo}
+          @input=${(e: Event) => {
+            this.newTargetMemo = (e.target as HTMLInputElement).value;
+          }}
+          placeholder="例: A 社書類選考用"
+        />
       </div>
       ${this.renderInsertRow()}
       <div class="field">
@@ -324,14 +385,39 @@ class DocumentView extends LitElement {
       ${
         latest
           ? html`
-        <p class="revision-meta">
-          最終更新: ${latest.createdAt.replace('T', ' ').replace('Z', '')}
+        <p class="doc-meta">
+          最新改訂: ${latest.revisionReason || '(理由未記入)'}
           &nbsp;|&nbsp;
-          作成者: ${latest.createdBy === 'human' ? '手動' : 'AI'}
+          ${latest.createdAt.replace('T', ' ').replace('Z', '')}
+          &nbsp;|&nbsp;
+          ${latest.createdBy === 'human' ? '手動' : 'AI'}
+          ${latest.targetMemo ? html` &nbsp;|&nbsp; 宛先: ${latest.targetMemo}` : ''}
         </p>
       `
           : ''
       }
+      <div class="field">
+        <label>改訂理由 <span class="required">*</span></label>
+        <input
+          type="text"
+          .value=${this.editRevisionReason}
+          @input=${(e: Event) => {
+            this.editRevisionReason = (e.target as HTMLInputElement).value;
+          }}
+          placeholder="例: B 社向けに強み 3 つ目を再構成"
+        />
+      </div>
+      <div class="field">
+        <label>宛先メモ（任意）</label>
+        <input
+          type="text"
+          .value=${this.editTargetMemo}
+          @input=${(e: Event) => {
+            this.editTargetMemo = (e.target as HTMLInputElement).value;
+          }}
+          placeholder="例: B 社一次面接用"
+        />
+      </div>
       ${this.renderInsertRow()}
       <div class="field">
         <label>本文（Markdown）</label>
@@ -344,9 +430,43 @@ class DocumentView extends LitElement {
         ></textarea>
       </div>
       <div class="actions">
-        <button class="primary" @click=${this.handleSaveRevision} ?disabled=${this.isSaving}>
-          ${this.isSaving ? '保存中...' : '保存'}
+        <button
+          class="primary"
+          @click=${this.handleSaveRevision}
+          ?disabled=${this.isSaving || !this.editRevisionReason.trim()}
+        >
+          ${this.isSaving ? '保存中...' : '改訂を保存'}
         </button>
+      </div>
+      ${this.renderHistory()}
+    `;
+  }
+
+  private renderHistory() {
+    if (this.revisions.length === 0) return html``;
+    return html`
+      <div class="history">
+        <h3>改訂履歴（${this.revisions.length} 件）</h3>
+        ${this.revisions.map(
+          (rev, idx) => html`
+            <div class="history-item ${idx === 0 ? 'current' : ''}">
+              <div class="history-reason">
+                ${idx === 0 ? '【最新】' : ''}${rev.revisionReason || '(理由未記入)'}
+              </div>
+              <div class="history-meta">
+                ${rev.createdAt.replace('T', ' ').replace('Z', '')}
+                &nbsp;|&nbsp;
+                ${rev.createdBy === 'human' ? '手動' : 'AI'}
+                ${rev.targetMemo ? html` &nbsp;|&nbsp; 宛先: ${rev.targetMemo}` : ''}
+                ${
+                  rev.previousRevisionId
+                    ? html` &nbsp;|&nbsp; 前バージョン: ${rev.previousRevisionId.slice(-6)}`
+                    : ''
+                }
+              </div>
+            </div>
+          `,
+        )}
       </div>
     `;
   }
