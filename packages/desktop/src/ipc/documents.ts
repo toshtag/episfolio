@@ -16,6 +16,9 @@ export type DocumentRevisionRow = {
   sourceEvidenceIds: string[];
   sourceAiRunId: string | null;
   createdBy: 'human' | 'ai';
+  revisionReason: string;
+  targetMemo: string;
+  previousRevisionId: string | null;
   createdAt: string;
 };
 
@@ -37,6 +40,8 @@ export type CreateDocumentManualArgs = {
   template: 'resume' | 'skill-summary' | 'blank';
   content: string;
   sourceEvidenceIds: string[];
+  revisionReason?: string;
+  targetMemo?: string;
 };
 
 export type CreateDocumentManualResult = {
@@ -48,4 +53,23 @@ export async function createDocumentManual(
   args: CreateDocumentManualArgs,
 ): Promise<CreateDocumentManualResult> {
   return invoke<CreateDocumentManualResult>('create_document_manual', { args });
+}
+
+export type CreateRevisionManualArgs = {
+  documentId: string;
+  content: string;
+  sourceEvidenceIds: string[];
+  revisionReason: string;
+  targetMemo?: string;
+};
+
+export type CreateRevisionManualResult = {
+  document: CareerDocumentRow;
+  revision: DocumentRevisionRow;
+};
+
+export async function createDocumentRevisionManual(
+  args: CreateRevisionManualArgs,
+): Promise<CreateRevisionManualResult> {
+  return invoke<CreateRevisionManualResult>('create_document_revision_manual', { args });
 }
