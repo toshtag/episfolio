@@ -7,6 +7,33 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.3.0] - 2026-05-01
+
+JobTarget（求人連携）+ 職務経歴ダイジェスト（必須要件 × Episode マッピング）を追加した機能リリース。書籍 3-11 の「職務経歴ダイジェスト」が end-to-end で動作する状態になった。AI 機能は引き続き不在（v0.5 で復活予定）。
+
+### Added
+- **JobTarget ドメイン**（kernel）: 求人ターゲットを構造化する型・Zod schema・StoragePort を新設。`requiredSkills` / `preferredSkills` を文字列配列ではなく構造化配列（`{ name, weight }`）で保存
+- **CareerDocument の用途タイプ化**（kernel）: `documentType` / `jobTargetId` フィールドを後方互換で追加。求人別に Document を紐付けられるように
+- **JobRequirementMapping ドメイン**（kernel）: 必須要件 × Episode の紐付けを表現するドメイン型・Zod schema・StoragePort・契約テスト 13 件
+- **職務経歴ダイジェスト exporter**（kernel）: 書籍 3-11 を純関数で Markdown 化する `toCareerDigestMarkdown`（11 件のテストで挙動を固定）。`templates/career-digest.md` を追加
+- **DocumentRevision に jobTargetId を追加**（kernel）: 改訂単位で求人を切り替えられるよう、CareerDocument 側 `jobTargetId` と独立した両軸で運用。`targetMemo` は併存維持し、schema は nullable + default null で既存 row を後方互換受理
+- **JobTarget CRUD + 求人タブ UI**（desktop）: migration `0008_job_targets.sql`（`status` CHECK 制約付き）、create/list/get/update/delete の 5 Tauri command、`ipc/job-targets.ts` + `job-target-view.ts` で動的 SkillItem 配列 UI
+- **JobRequirementMapping IPC + マッピング UI**（desktop）: migration `0009_job_requirement_mappings.sql`（`job_targets` への FK CASCADE + index）、save (upsert) / listByJobTarget / get / update / delete の 5 Tauri command、`digest-view.ts` で求人 dropdown + 要件カード（userNote + Episode multi-select）+ リアルタイム Markdown プレビュー + クリップボードコピー
+- **DocumentRevision に job_target_id 列を追加**（desktop）: migration `0010_document_revisions_job_target.sql`、Tauri command と IPC 型を拡張、Document 新規/改訂フォームに JobTarget 選択 dropdown、改訂履歴に「対象求人: 会社名 — 職種」表示、削除済み求人参照は「削除済み (xxxxxx)」表示
+- **kernel schema test**: 173 → 213 件
+- **Rust 統合テスト**: 20 → 28 件（migration 0009/0010 の smoke / FK CASCADE / orphan / job_target_id NULL/ULID 受理）
+
+### Changed
+- `CareerDocument` は `documentType` を持ち、`jobTargetId` は CareerDocument と DocumentRevision の両軸で保持（用途別 Document と求人別 Revision を独立に運用）
+- `generate-document` usecase 2 箇所を `jobTargetId` 受け渡し対応に更新
+- 全パッケージの version を 0.3.0 に揃える
+
+### Notes
+- v0.3 は完全ローカル動作のまま（外部送信 surface は v0.2.1 で物理削除済、ADR-0009）
+- ダイジェスト UI の情報密度は v0.3.x で UX 整理予定（実機検証フィードバック）
+
+---
+
 ## [0.2.2] - 2026-05-01
 
 Codex レビュー P1 全件解消の data integrity / test coverage patch。挙動変更なし、新機能なし、データ整合性とテストカバレッジ強化のみ。
