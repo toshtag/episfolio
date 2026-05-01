@@ -8,6 +8,7 @@ const MIGRATION_004: &str = include_str!("../../migrations/0004_add_skill_eviden
 const MIGRATION_005: &str = include_str!("../../migrations/0005_add_life_timeline.sql");
 const MIGRATION_006: &str = include_str!("../../migrations/0006_add_document_revision_fields.sql");
 const MIGRATION_007: &str = include_str!("../../migrations/0007_enum_check_constraints.sql");
+const MIGRATION_008: &str = include_str!("../../migrations/0008_add_job_targets.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -31,6 +32,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0005", MIGRATION_005)?;
     apply_migration(conn, "0006", MIGRATION_006)?;
     apply_migration(conn, "0007", MIGRATION_007)?;
+    apply_migration(conn, "0008", MIGRATION_008)?;
 
     Ok(())
 }
@@ -79,12 +81,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0007_apply_to_fresh_db() {
+    fn migrations_0001_through_0008_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 7);
+        assert_eq!(count, 8);
     }
 
     // ──────────────────────────────────────────────
@@ -304,6 +306,68 @@ mod tests {
             rusqlite::params![TS],
         );
         assert!(result.is_err(), "存在しない document_id を参照する revision は FK で拒否される");
+    }
+
+    // ──────────────────────────────────────────────
+    // job_targets (migration 0008)
+    // ──────────────────────────────────────────────
+
+    fn insert_job_target(
+        conn: &Connection,
+        id: &str,
+        company: &str,
+        status: &str,
+    ) -> rusqlite::Result<usize> {
+        conn.execute(
+            "INSERT INTO job_targets \
+             (id, company_name, job_title, job_description, status, \
+              required_skills, preferred_skills, concerns, appeal_points, created_at, updated_at) \
+             VALUES (?1, ?2, 'engineer', '', ?3, '[]', '[]', '', '', ?4, ?4)",
+            rusqlite::params![id, company, status, TS],
+        )
+    }
+
+    #[test]
+    fn job_targets_status_check_accepts_known() {
+        let conn = db();
+        insert_job_target(&conn, "jt1", "Acme", "researching").unwrap();
+        insert_job_target(&conn, "jt2", "Acme", "applying").unwrap();
+        insert_job_target(&conn, "jt3", "Acme", "interviewing").unwrap();
+        insert_job_target(&conn, "jt4", "Acme", "offered").unwrap();
+        insert_job_target(&conn, "jt5", "Acme", "rejected").unwrap();
+        insert_job_target(&conn, "jt6", "Acme", "withdrawn").unwrap();
+    }
+
+    #[test]
+    fn job_targets_status_check_rejects_invalid() {
+        let conn = db();
+        let result = insert_job_target(&conn, "jt_bad", "Acme", "archived");
+        assert!(result.is_err(), "status='archived' must be rejected");
+    }
+
+    #[test]
+    fn job_targets_skills_json_round_trips() {
+        let conn = db();
+        let required = r#"[{"id":"s1","text":"Rust"},{"id":"s2","text":"TypeScript"}]"#;
+        let preferred = r#"[{"id":"s3","text":"Tauri"}]"#;
+        conn.execute(
+            "INSERT INTO job_targets \
+             (id, company_name, job_title, job_description, status, \
+              required_skills, preferred_skills, concerns, appeal_points, created_at, updated_at) \
+             VALUES ('jt_skills', 'Acme', 'eng', 'desc', 'researching', ?1, ?2, '', '', ?3, ?3)",
+            rusqlite::params![required, preferred, TS],
+        )
+        .unwrap();
+
+        let (req_out, pref_out): (String, String) = conn
+            .query_row(
+                "SELECT required_skills, preferred_skills FROM job_targets WHERE id = 'jt_skills'",
+                [],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(req_out, required);
+        assert_eq!(pref_out, preferred);
     }
 
     #[test]
