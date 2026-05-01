@@ -2,10 +2,14 @@ import { z } from 'zod';
 
 export const CareerDocumentStatusSchema = z.enum(['draft', 'finalized']);
 
+export const CareerDocumentTypeSchema = z.enum(['free_form', 'jibun_taizen', 'career_digest']);
+
 export const CareerDocumentSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   jobTarget: z.string(),
+  documentType: CareerDocumentTypeSchema.default('free_form'),
+  jobTargetId: z.string().nullable().default(null),
   status: CareerDocumentStatusSchema,
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
@@ -16,6 +20,8 @@ export type CareerDocumentInput = z.infer<typeof CareerDocumentSchema>;
 export const CareerDocumentUpdateSchema = CareerDocumentSchema.pick({
   title: true,
   jobTarget: true,
+  documentType: true,
+  jobTargetId: true,
   status: true,
 }).partial();
 
