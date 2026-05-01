@@ -7,6 +7,39 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.2.1] - 2026-05-01
+
+v0.2.0 の security / integrity hotfix。Codex レビュー（内部）の P0 5 件への対応。
+
+### Removed
+- **AI 送信 / API key Tauri command を物理削除**: `save_api_key` / `load_api_key` / `delete_api_key` / `test_openai_connection` / `extract_evidence` / `generate_document` の 6 command が `invoke_handler` に登録されたままだった。UI hide では Tauri の権限境界として無意味（WebView から `invoke()` で直接呼べる）状態を、コード自体を削除することで物理的に閉じる（ADR-0009）
+- **OpenAI adapter / settings.rs を削除**
+- **frontend の AI 系 IPC wrapper を削除**: `ipc/settings.ts` 全削除、`ipc/{evidence,documents}.ts` から `extractEvidence` / `generateDocument` 削除
+- **`Cargo.toml` から `keyring` / `reqwest` / `tokio` を削除**: v0.5 で AI 復活時に再追加
+- README v0.2 機能一覧から「Markdown / JSON エクスポート」「年齢順 Markdown エクスポート」を削除（実装が伴っていなかった、v0.7 へ統合）
+
+### Added
+- **`create_document_revision_manual` Tauri command**: 既存 document に対して新 revision を挿入し、`previous_revision_id` に直前 revision の ID をセットし、`career_documents.updated_at` を更新する
+- **DocumentRevision UI**: 改訂理由（必須）・宛先メモ（任意）入力欄、改訂履歴一覧セクション
+- **`.github/workflows/ci.yml`**: Node (typecheck / lint / test / build) と Rust (cargo test / clippy) の CI gate
+- **CSP strict policy**: `tauri.conf.json` の `csp: null` を `default-src 'self'; ...; connect-src 'self' ipc: http://ipc.localhost; ...` に変更
+- **ADR-0009**: AI 送信 / API key command を feature gate ではなくコード削除する判断と、v0.5 復活時の方針
+
+### Changed
+- **DocumentRevision の保存ロジック**: これまで保存ごとに新 document を作っていたが、既存 document への revision 追加に修正（document_id を保ったまま `document_revisions` テーブルに新行追加）
+- `DocumentRevisionRow` IPC 型に `revisionReason` / `targetMemo` / `previousRevisionId` を追加（kernel 型と整合）
+- `create_document_manual` の args に `revisionReason?` / `targetMemo?` を追加（初版用、未指定時は "初版" デフォルト）
+- 全パッケージの version を 0.2.1 に揃える（root package.json / kernel / desktop / Cargo.toml / tauri.conf.json / KERNEL_VERSION）
+
+### Fixed
+- **`pnpm build` が失敗していた**: Vite 8 の `transformWithEsbuild` deprecated 化により、`esbuild` を direct devDep に追加（packages/desktop/package.json）
+
+### Security
+- WebView 内で任意 JS が動いた場合に keychain の API key が抜ける経路（`load_api_key` が secret を frontend に返す）を、command 削除と CSP 強化で二重に閉じた
+- 外部 HTTPS への直接 fetch を CSP の `connect-src` 制限で遮断
+
+---
+
 ## [0.2.0] - 2026-04-29
 
 ### Added
