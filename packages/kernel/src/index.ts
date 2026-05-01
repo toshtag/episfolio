@@ -47,6 +47,7 @@ export type {
 // errors
 export { RemoteLLMBlockedError } from './errors.js';
 // exporters
+export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
