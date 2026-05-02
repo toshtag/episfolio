@@ -9,6 +9,7 @@ import './life-timeline-view.js';
 import './job-target-view.js';
 import './interview-qa-view.js';
 import './interview-report-view.js';
+import './agent-meeting-email-view.js';
 import './agent-track-record-view.js';
 import './digest-view.js';
 
@@ -21,6 +22,7 @@ type Tab =
   | 'interview-qa'
   | 'interview-report'
   | 'agent-track-records'
+  | 'agent-meeting-emails'
   | 'digest'
   | 'settings';
 
@@ -208,6 +210,12 @@ class EpisodeApp extends LitElement {
           }}
         >エージェント</button>
         <button
+          class=${this.tab === 'agent-meeting-emails' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'agent-meeting-emails';
+          }}
+        >面談メール</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -283,9 +291,11 @@ class EpisodeApp extends LitElement {
                       ? html`<interview-report-view></interview-report-view>`
                       : this.tab === 'agent-track-records'
                         ? html`<agent-track-record-view></agent-track-record-view>`
-                        : this.tab === 'digest'
-                          ? html`<digest-view></digest-view>`
-                          : html`<settings-view></settings-view>`
+                        : this.tab === 'agent-meeting-emails'
+                          ? html`<agent-meeting-email-view></agent-meeting-email-view>`
+                          : this.tab === 'digest'
+                            ? html`<digest-view></digest-view>`
+                            : html`<settings-view></settings-view>`
       }
     `;
   }
