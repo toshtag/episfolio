@@ -16,6 +16,7 @@ import './job-wish-sheet-view.js';
 import './application-motive-view.js';
 import './boss-reference-view.js';
 import './customer-reference-view.js';
+import './subordinate-summary-view.js';
 import './work-asset-summary-view.js';
 
 type Tab =
@@ -33,6 +34,7 @@ type Tab =
   | 'boss-references'
   | 'customer-references'
   | 'work-asset-summaries'
+  | 'subordinate-summaries'
   | 'digest'
   | 'settings';
 
@@ -256,6 +258,12 @@ class EpisodeApp extends LitElement {
           }}
         >仕事資料</button>
         <button
+          class=${this.tab === 'subordinate-summaries' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'subordinate-summaries';
+          }}
+        >部下まとめ</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -343,9 +351,11 @@ class EpisodeApp extends LitElement {
                                   ? html`<customer-reference-view></customer-reference-view>`
                                   : this.tab === 'work-asset-summaries'
                                     ? html`<work-asset-summary-view></work-asset-summary-view>`
-                                    : this.tab === 'digest'
-                                      ? html`<digest-view></digest-view>`
-                                      : html`<settings-view></settings-view>`
+                                    : this.tab === 'subordinate-summaries'
+                                      ? html`<subordinate-summary-view></subordinate-summary-view>`
+                                      : this.tab === 'digest'
+                                        ? html`<digest-view></digest-view>`
+                                        : html`<settings-view></settings-view>`
       }
     `;
   }
