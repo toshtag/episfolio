@@ -72,6 +72,17 @@ pub fn run() {
             commands::job_wish_sheets::get_job_wish_sheet,
             commands::job_wish_sheets::update_job_wish_sheet,
             commands::job_wish_sheets::delete_job_wish_sheet,
+            commands::resignation_motives::create_resignation_motive,
+            commands::resignation_motives::list_resignation_motives,
+            commands::resignation_motives::get_resignation_motive,
+            commands::resignation_motives::update_resignation_motive,
+            commands::resignation_motives::delete_resignation_motive,
+            commands::application_motives::create_application_motive,
+            commands::application_motives::list_application_motives,
+            commands::application_motives::list_application_motives_by_job_target,
+            commands::application_motives::get_application_motive,
+            commands::application_motives::update_application_motive,
+            commands::application_motives::delete_application_motive,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
