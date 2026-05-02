@@ -93,12 +93,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0012_apply_to_fresh_db() {
+    fn migrations_0001_through_0013_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 12);
+        assert_eq!(count, 13);
     }
 
     // ──────────────────────────────────────────────
@@ -549,5 +549,64 @@ mod tests {
             })
             .unwrap();
         assert_eq!(provider, "openai");
+    }
+
+    // ──────────────────────────────────────────────
+    // agent_track_records (migration 0013)
+    // ──────────────────────────────────────────────
+
+    fn insert_agent_track_record(
+        conn: &Connection,
+        id: &str,
+        company_name: &str,
+        status: &str,
+    ) -> rusqlite::Result<usize> {
+        conn.execute(
+            "INSERT INTO agent_track_records \
+             (id, company_name, contact_name, contact_email, contact_phone, \
+              first_contact_date, memo, status, created_at, updated_at) \
+             VALUES (?1, ?2, '', '', '', NULL, '', ?3, ?4, ?4)",
+            rusqlite::params![id, company_name, status, TS],
+        )
+    }
+
+    #[test]
+    fn agent_track_records_status_check_accepts_known() {
+        let conn = db();
+        insert_agent_track_record(&conn, "atr1", "リクルート", "active").unwrap();
+        insert_agent_track_record(&conn, "atr2", "パーソル", "archived").unwrap();
+    }
+
+    #[test]
+    fn agent_track_records_status_check_rejects_invalid() {
+        let conn = db();
+        let result = insert_agent_track_record(&conn, "atr_bad", "リクルート", "inactive");
+        assert!(result.is_err(), "status='inactive' must be rejected");
+    }
+
+    #[test]
+    fn agent_track_records_company_name_required() {
+        let conn = db();
+        let result = conn.execute(
+            "INSERT INTO agent_track_records \
+             (id, company_name, status, created_at, updated_at) \
+             VALUES ('atr_null', NULL, 'active', ?1, ?1)",
+            rusqlite::params![TS],
+        );
+        assert!(result.is_err(), "company_name NOT NULL must be enforced");
+    }
+
+    #[test]
+    fn agent_track_records_first_contact_date_nullable() {
+        let conn = db();
+        insert_agent_track_record(&conn, "atr3", "マイナビ", "active").unwrap();
+        let val: Option<String> = conn
+            .query_row(
+                "SELECT first_contact_date FROM agent_track_records WHERE id = 'atr3'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert!(val.is_none(), "first_contact_date should be NULL by default");
     }
 }
