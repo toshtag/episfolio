@@ -13,4 +13,5 @@ pub mod job_requirement_mappings;
 pub mod job_targets;
 pub mod job_wish_sheets;
 pub mod life_timeline;
+pub mod subordinate_summaries;
 pub mod work_asset_summaries;
