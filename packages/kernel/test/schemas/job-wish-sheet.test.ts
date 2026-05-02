@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  JobWishSheetSchema,
-  JobWishSheetUpdateSchema,
-} from '../../src/schemas/job-wish-sheet.js';
+import { JobWishSheetSchema, JobWishSheetUpdateSchema } from '../../src/schemas/job-wish-sheet.js';
 
 const baseSheet = {
   id: '01WISH001',
@@ -28,15 +25,13 @@ describe('JobWishSheetSchema', () => {
   });
 
   it('agentTrackRecordId が null でも受理', () => {
-    expect(
-      JobWishSheetSchema.safeParse({ ...baseSheet, agentTrackRecordId: null }).success,
-    ).toBe(true);
+    expect(JobWishSheetSchema.safeParse({ ...baseSheet, agentTrackRecordId: null }).success).toBe(
+      true,
+    );
   });
 
   it('groupACompanies が空配列でも受理', () => {
-    expect(
-      JobWishSheetSchema.safeParse({ ...baseSheet, groupACompanies: [] }).success,
-    ).toBe(true);
+    expect(JobWishSheetSchema.safeParse({ ...baseSheet, groupACompanies: [] }).success).toBe(true);
   });
 
   it('全 group が空配列でも受理', () => {
@@ -71,9 +66,9 @@ describe('JobWishSheetSchema', () => {
   });
 
   it('agentTrackRecordId 空文字を拒否（null か非空文字のみ）', () => {
-    expect(
-      JobWishSheetSchema.safeParse({ ...baseSheet, agentTrackRecordId: '' }).success,
-    ).toBe(false);
+    expect(JobWishSheetSchema.safeParse({ ...baseSheet, agentTrackRecordId: '' }).success).toBe(
+      false,
+    );
   });
 
   it('createdAt 空文字を拒否', () => {

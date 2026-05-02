@@ -43,6 +43,7 @@ export type {
 export type { InterviewReport, InterviewStage } from './domain/interview-report.js';
 export type { JobRequirementMapping } from './domain/job-requirement-mapping.js';
 export type { JobTarget, JobTargetStatus, SkillItem } from './domain/job-target.js';
+export type { JobWishCompany, JobWishSheet } from './domain/job-wish-sheet.js';
 export type {
   LifeTimelineCategory,
   LifeTimelineEntry,
@@ -60,6 +61,7 @@ export { RemoteLLMBlockedError } from './errors.js';
 // exporters
 export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
+export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
 export type { AgentMeetingEmailStoragePort } from './ports/agent-meeting-email-storage-port.js';
@@ -79,6 +81,7 @@ export type { InterviewQAStoragePort } from './ports/interview-qa-storage-port.j
 export type { InterviewReportStoragePort } from './ports/interview-report-storage-port.js';
 export type { JobRequirementMappingStoragePort } from './ports/job-requirement-mapping-storage-port.js';
 export type { JobTargetStoragePort } from './ports/job-target-storage-port.js';
+export type { JobWishSheetStoragePort } from './ports/job-wish-sheet-storage-port.js';
 export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
 export type { SkillEvidenceStoragePort } from './ports/skill-evidence-storage-port.js';
@@ -154,6 +157,18 @@ export {
   JobTargetUpdateSchema,
   SkillItemSchema,
 } from './schemas/job-target.js';
+export type {
+  JobWishCompanyInput,
+  JobWishSheetCreate,
+  JobWishSheetInput,
+  JobWishSheetUpdate,
+} from './schemas/job-wish-sheet.js';
+export {
+  JobWishCompanySchema,
+  JobWishSheetCreateSchema,
+  JobWishSheetSchema,
+  JobWishSheetUpdateSchema,
+} from './schemas/job-wish-sheet.js';
 // schemas
 export type {
   LifeTimelineEntryInput,
