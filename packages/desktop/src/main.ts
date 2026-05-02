@@ -13,6 +13,7 @@ import './agent-meeting-email-view.js';
 import './agent-track-record-view.js';
 import './digest-view.js';
 import './job-wish-sheet-view.js';
+import './application-motive-view.js';
 
 type Tab =
   | 'episodes'
@@ -25,6 +26,7 @@ type Tab =
   | 'agent-track-records'
   | 'agent-meeting-emails'
   | 'job-wish-sheets'
+  | 'application-motives'
   | 'digest'
   | 'settings';
 
@@ -224,6 +226,12 @@ class EpisodeApp extends LitElement {
           }}
         >希望シート</button>
         <button
+          class=${this.tab === 'application-motives' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'application-motives';
+          }}
+        >志望動機</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -303,9 +311,11 @@ class EpisodeApp extends LitElement {
                           ? html`<agent-meeting-email-view></agent-meeting-email-view>`
                           : this.tab === 'job-wish-sheets'
                             ? html`<job-wish-sheet-view></job-wish-sheet-view>`
-                            : this.tab === 'digest'
-                              ? html`<digest-view></digest-view>`
-                              : html`<settings-view></settings-view>`
+                            : this.tab === 'application-motives'
+                              ? html`<application-motive-view></application-motive-view>`
+                              : this.tab === 'digest'
+                                ? html`<digest-view></digest-view>`
+                                : html`<settings-view></settings-view>`
       }
     `;
   }
