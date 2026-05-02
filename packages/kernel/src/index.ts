@@ -39,6 +39,7 @@ export type {
   CareerDocumentType,
   DocumentRevision,
 } from './domain/career-document.js';
+export type { CustomerReference, CustomerType } from './domain/customer-reference.js';
 // domain
 export type { Episode, ISO8601, ULID } from './domain/episode.js';
 export type {
@@ -69,6 +70,7 @@ export { composeApplicationMotiveText } from './exporters/application-motive.js'
 // exporters
 export { toBossReferenceMarkdown } from './exporters/boss-reference.js';
 export { toCareerDigestMarkdown } from './exporters/career-digest.js';
+export { toCustomerReferenceMarkdown } from './exporters/customer-reference.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
@@ -87,6 +89,7 @@ export type { AIRunStoragePort } from './ports/ai-run-storage-port.js';
 export type { ApplicationMotiveStoragePort } from './ports/application-motive-storage-port.js';
 export type { BossReferenceStoragePort } from './ports/boss-reference-storage-port.js';
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
+export type { CustomerReferenceStoragePort } from './ports/customer-reference-storage-port.js';
 export type { DocumentRevisionStoragePort } from './ports/document-revision-storage-port.js';
 export type { InterviewQAStoragePort } from './ports/interview-qa-storage-port.js';
 export type { InterviewReportStoragePort } from './ports/interview-report-storage-port.js';
@@ -155,6 +158,15 @@ export {
   CareerDocumentUpdateSchema,
   DocumentRevisionSchema,
 } from './schemas/career-document.js';
+export type {
+  CustomerReferenceInput,
+  CustomerReferenceUpdate,
+} from './schemas/customer-reference.js';
+export {
+  CustomerReferenceSchema,
+  CustomerReferenceUpdateSchema,
+  CustomerTypeSchema,
+} from './schemas/customer-reference.js';
 export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
 export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
 export type { InterviewQAInput, InterviewQAUpdate } from './schemas/interview-qa.js';
