@@ -104,12 +104,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0017_apply_to_fresh_db() {
+    fn migrations_0001_through_0018_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 17);
+        assert_eq!(count, 18);
     }
 
     // ──────────────────────────────────────────────
@@ -880,6 +880,58 @@ mod tests {
             )
             .unwrap();
         assert!(name.is_none(), "boss_name は NULL を受理する");
+    }
+
+    #[test]
+    fn customer_references_smoke_insert_and_select() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO customer_references \
+             (id, customer_type, company_name, period, created_at, updated_at) \
+             VALUES ('cr1','b2b','テスト株式会社','2021〜2023',?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let name: String = conn
+            .query_row(
+                "SELECT company_name FROM customer_references WHERE id = 'cr1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(name, "テスト株式会社");
+    }
+
+    #[test]
+    fn customer_references_type_check_rejects_invalid() {
+        let conn = db();
+        let result = conn.execute(
+            "INSERT INTO customer_references \
+             (id, customer_type, company_name, period, created_at, updated_at) \
+             VALUES ('cr_err','invalid','会社','期間',?1,?1)",
+            rusqlite::params![TS],
+        );
+        assert!(result.is_err(), "customer_type は b2b/b2c のみ受理する");
+    }
+
+    #[test]
+    fn customer_references_customer_label_nullable() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO customer_references \
+             (id, customer_type, customer_label, company_name, period, created_at, updated_at) \
+             VALUES ('cr_nolabel','b2c',NULL,'会社','期間',?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let label: Option<String> = conn
+            .query_row(
+                "SELECT customer_label FROM customer_references WHERE id = 'cr_nolabel'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert!(label.is_none(), "customer_label は NULL を受理する");
     }
 
     #[test]
