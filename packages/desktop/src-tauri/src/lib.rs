@@ -93,6 +93,11 @@ pub fn run() {
             commands::customer_references::get_customer_reference,
             commands::customer_references::update_customer_reference,
             commands::customer_references::delete_customer_reference,
+            commands::work_asset_summaries::create_work_asset_summary,
+            commands::work_asset_summaries::list_work_asset_summaries,
+            commands::work_asset_summaries::get_work_asset_summary,
+            commands::work_asset_summaries::update_work_asset_summary,
+            commands::work_asset_summaries::delete_work_asset_summary,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
