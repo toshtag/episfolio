@@ -7,6 +7,34 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.6.0] - 2026-05-02
+
+応募書類拡充パックを追加した機能リリース。退職理由 + 志望動機ペア / 上司リファレンス / 顧客リファレンス / 仕事資料のまとめ / 部下まとめシート の 5 機能が end-to-end で動作する。これにより応募書類向けの「プラスアルファ書類」群（職務経歴ダイジェスト・自分大全・上司リファレンス・顧客リファレンス・仕事資料のまとめ・部下まとめシート）が UI レベルで完結した。AI 機能は引き続き不在（次フェーズで復活予定）。
+
+### Added
+- **ResignationMotive / ApplicationMotive ドメイン**（kernel）: 退職理由（本音）と志望動機（建前）をペアで構造化する 2 ドメイン型・Zod schema・StoragePort。`composeApplicationMotiveText` ヘルパで定型 4 段落の建前テキストを純関数生成
+- **BossReference ドメイン**（kernel）: 上司リファレンスの型・Zod schema・StoragePort・Markdown exporter。8 軸スコアリング（`axisValues`）+ 11 個の固定質問（q1〜q11）+ `strengthEpisode` を構造化保存
+- **CustomerReference ドメイン**（kernel）: 顧客リファレンスの型・Zod schema・StoragePort・Markdown exporter。`customerType`（b2b/b2c）で属性質問セットを切替、クレーム経験 3 項目 + 強み・間接転換 2 項目を保存。Markdown は customerType に応じて BtoB/BtoC 属性の片側のみ出力
+- **WorkAssetSummary ドメイン**（kernel）: 仕事資料のまとめの型・Zod schema・StoragePort・Markdown exporter。AssetType 列挙（提案書 / ソースコード / スライド / 議事録 / 週次報告 / 比較表 / 文書 / その他 の 8 種）+ `summary` / `strengthEpisode` / `talkingPoints` / `maskingNote` を保存
+- **SubordinateSummary ドメイン**（kernel）: 部下まとめシートの型・Zod schema・StoragePort・Markdown exporter。1 シート = 複数部下の構造（`subordinates: SubordinateRow[]`）、各部下行に強み / 実績 / 役割性格 / 課題 / 指導 / 変化 / 将来仕事 を保存。Markdown exporter に `maskNames` オプションを搭載（個人名を「部下 N」に置換）
+- **退職理由 + 志望動機 UI**（desktop）: migration `0016_add_resignation_application_motives.sql`、Rust CRUD 11 コマンド、`application-motive-view.ts`（本音警告バッジ + 建前フォーマットプレビュー）
+- **上司リファレンス UI**（desktop）: migration `0017_add_boss_references.sql`、Rust CRUD 5 コマンド、`boss-reference-view.ts`（8 軸スライダー + 11 質問フォーム + 強みエピソード）
+- **顧客リファレンス UI**（desktop）: migration `0018_add_customer_references.sql`、Rust CRUD 5 コマンド、`customer-reference-view.ts`（BtoB/BtoC ラジオ切替 + 属性フォーム + クレーム経験 + 強みエピソード + 転換アイデア + Markdown プレビュー）
+- **仕事資料のまとめ UI**（desktop）: migration `0019_add_work_asset_summaries.sql`、Rust CRUD 5 コマンド、`work-asset-summary-view.ts`（資料種別 select + 各テキスト欄 + Markdown プレビュー + 2 ステップ削除）
+- **部下まとめシート UI**（desktop）: migration `0020_add_subordinate_summaries.sql`、Rust CRUD 5 コマンド、`subordinate-summary-view.ts`（部下行の add / edit / delete / 並び替え + Markdown プレビュー + 名前伏字 ON/OFF トグル + 2 ステップ削除）
+- **kernel テスト**: 388 → 648 件（v0.6 で +260 件: ResignationMotive / ApplicationMotive / BossReference / CustomerReference / WorkAssetSummary / SubordinateSummary の schema・port・exporter）
+- **Rust 統合テスト**: 36 → 51 件（migration 0016〜0020 smoke / CHECK 制約 / nullable / JSON payload 保存）
+
+### Changed
+- 全パッケージの version を 0.6.0 に揃える（v0.5 は AI 復活フェーズとして欠番）
+
+### Notes
+- v0.6 は完全ローカル動作のまま（外部送信 surface は v0.2.1 で物理削除済、ADR-0009）
+- 各 UI の UX 細部改善は v0.6.x で対応予定
+- v0.5 のバージョン番号は AI 機能復活フェーズに予約済（信頼担保 UX 設計が完成してから着手、ADR-0007）
+
+---
+
 ## [0.4.0] - 2026-05-02
 
 面接準備資料 + エージェント連携書類テンプレ集を追加した機能リリース。面接の赤本（QA 集）・面接後報告シート・エージェント実績表・面談メール・求人希望条件シートが end-to-end で動作する。AI 機能は引き続き不在（v0.5 で復活予定）。
