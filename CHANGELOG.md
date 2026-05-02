@@ -7,6 +7,33 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.4.0] - 2026-05-02
+
+面接準備資料 + エージェント連携書類テンプレ集を追加した機能リリース。面接の赤本（QA 集）・面接後報告シート・エージェント実績表・面談メール・求人希望条件シートが end-to-end で動作する。AI 機能は引き続き不在（v0.5 で復活予定）。
+
+### Added
+- **InterviewQA ドメイン**（kernel）: 面接 Q&A を求人単位で構造化する型・Zod schema・StoragePort。`question` / `answer` / `category` / `source` / `confidence` フィールド、求人単位での並び替え（`displayOrder`）対応
+- **InterviewReport ドメイン**（kernel）: 面接後報告シートの型・Zod schema・StoragePort。`overallEvaluation` / `selfEvaluation` / `nextActions` 等の構造化フィールド
+- **AgentTrackRecord ドメイン**（kernel）: エージェント実績表の型・Zod schema・StoragePort。エージェント名・担当者・連絡先・評価・メモを構造化保存
+- **AgentMeetingEmail ドメイン**（kernel）: エージェントとの面談メールの型・Zod schema・StoragePort。`emailType` / `subject` / `body` / `sentAt` フィールド、AgentTrackRecord への FK
+- **JobWishSheet ドメイン**（kernel）: 求人希望条件シートの型・Zod schema・StoragePort・Markdown exporter（`toJobWishSheetMarkdown`）。A/B/C グループ別企業リスト（`JobWishCompany[]`）を構造化保存
+- **InterviewQA CRUD + 面接の赤本 UI**（desktop）: migration `0011_interview_qas.sql`（`job_targets` FK CASCADE + `display_order` index）、5 Tauri command、`interview-qa-view.ts`（求人ドロップダウン + QA カード + 並び替え）
+- **InterviewReport CRUD + 面接後報告 UI**（desktop）: migration `0012_interview_reports.sql`、5 Tauri command、`interview-report-view.ts`（求人別フォーム + 一覧）
+- **AgentTrackRecord CRUD + エージェントタブ UI**（desktop）: migration `0013_agent_track_records.sql`、5 Tauri command、`agent-track-record-view.ts`
+- **AgentMeetingEmail CRUD + 面談メール UI**（desktop）: migration `0014_agent_meeting_emails.sql`（`agent_track_records` FK CASCADE + index）、6 Tauri command（エージェント別 list 含む）、`agent-meeting-email-view.ts`（エージェント別フィルタリング）
+- **JobWishSheet CRUD + 希望シート UI**（desktop）: migration `0015_add_job_wish_sheets.sql`（`agent_track_records` FK `ON DELETE SET NULL` + index）、5 Tauri command、`job-wish-sheet-view.ts`（A/B/C グループ別企業リスト編集 + Markdown プレビュー + クリップボードコピー）
+- **kernel テスト**: 303 → 388 件（InterviewQA / InterviewReport / AgentTrackRecord / AgentMeetingEmail / JobWishSheet の schema・port・exporter）
+- **Rust 統合テスト**: 28 → 36 件（migration 0011〜0015 smoke / FK CASCADE / ON DELETE SET NULL）
+
+### Changed
+- 全パッケージの version を 0.4.0 に揃える
+
+### Notes
+- v0.4 は完全ローカル動作のまま（外部送信 surface は v0.2.1 で物理削除済、ADR-0009）
+- 各 UI の UX 細部改善は v0.4.x で対応予定
+
+---
+
 ## [0.3.0] - 2026-05-01
 
 JobTarget（求人連携）+ 職務経歴ダイジェスト（必須要件 × Episode マッピング）を追加した機能リリース。求人ごとの必須要件を Episode と紐付けてダイジェスト Markdown を出力するワークフローが end-to-end で動作する。AI 機能は引き続き不在（v0.5 で復活予定）。
