@@ -83,6 +83,11 @@ pub fn run() {
             commands::application_motives::get_application_motive,
             commands::application_motives::update_application_motive,
             commands::application_motives::delete_application_motive,
+            commands::boss_references::create_boss_reference,
+            commands::boss_references::list_boss_references,
+            commands::boss_references::get_boss_reference,
+            commands::boss_references::update_boss_reference,
+            commands::boss_references::delete_boss_reference,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

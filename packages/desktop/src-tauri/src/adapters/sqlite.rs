@@ -20,6 +20,7 @@ const MIGRATION_014: &str = include_str!("../../migrations/0014_add_agent_meetin
 const MIGRATION_015: &str = include_str!("../../migrations/0015_add_job_wish_sheets.sql");
 const MIGRATION_016: &str =
     include_str!("../../migrations/0016_add_resignation_application_motives.sql");
+const MIGRATION_017: &str = include_str!("../../migrations/0017_add_boss_references.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -52,6 +53,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0014", MIGRATION_014)?;
     apply_migration(conn, "0015", MIGRATION_015)?;
     apply_migration(conn, "0016", MIGRATION_016)?;
+    apply_migration(conn, "0017", MIGRATION_017)?;
 
     Ok(())
 }
@@ -100,12 +102,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0016_apply_to_fresh_db() {
+    fn migrations_0001_through_0017_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 16);
+        assert_eq!(count, 17);
     }
 
     // ──────────────────────────────────────────────
@@ -804,6 +806,78 @@ mod tests {
             )
             .unwrap();
         assert_eq!(count, 0, "JobTarget 削除で application_motives が CASCADE 削除される");
+    }
+
+    // ──────────────────────────────────────────────
+    // boss_references (migration 0017)
+    // ──────────────────────────────────────────────
+
+    #[test]
+    fn boss_references_smoke_insert_and_select() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO boss_references \
+             (id, boss_name, company_name, period, \
+              axis_logic_vs_emotion, axis_result_vs_process, axis_solo_vs_team, \
+              axis_future_vs_tradition, axis_shares_private, axis_teaching_skill, \
+              axis_listening, axis_busyness, \
+              q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, strength_episode, \
+              created_at, updated_at) \
+             VALUES ('br1','田中部長','株式会社サンプル','2020〜2023', \
+                     2,3,4,1,5,2,3,4, \
+                     'Q1回答',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, \
+                     ?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let company: String = conn
+            .query_row(
+                "SELECT company_name FROM boss_references WHERE id = 'br1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(company, "株式会社サンプル");
+    }
+
+    #[test]
+    fn boss_references_axis_check_rejects_out_of_range() {
+        let conn = db();
+        let result = conn.execute(
+            "INSERT INTO boss_references \
+             (id, company_name, period, \
+              axis_logic_vs_emotion, axis_result_vs_process, axis_solo_vs_team, \
+              axis_future_vs_tradition, axis_shares_private, axis_teaching_skill, \
+              axis_listening, axis_busyness, \
+              created_at, updated_at) \
+             VALUES ('br_bad','会社','期間', 6,3,3,3,3,3,3,3, ?1,?1)",
+            rusqlite::params![TS],
+        );
+        assert!(result.is_err(), "axis value=6 must be rejected by CHECK constraint");
+    }
+
+    #[test]
+    fn boss_references_boss_name_nullable() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO boss_references \
+             (id, boss_name, company_name, period, \
+              axis_logic_vs_emotion, axis_result_vs_process, axis_solo_vs_team, \
+              axis_future_vs_tradition, axis_shares_private, axis_teaching_skill, \
+              axis_listening, axis_busyness, \
+              created_at, updated_at) \
+             VALUES ('br_anon',NULL,'匿名会社','2020〜2021', 3,3,3,3,3,3,3,3, ?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let name: Option<String> = conn
+            .query_row(
+                "SELECT boss_name FROM boss_references WHERE id = 'br_anon'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert!(name.is_none(), "boss_name は NULL を受理する");
     }
 
     #[test]
