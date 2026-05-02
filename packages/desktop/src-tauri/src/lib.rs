@@ -88,6 +88,11 @@ pub fn run() {
             commands::boss_references::get_boss_reference,
             commands::boss_references::update_boss_reference,
             commands::boss_references::delete_boss_reference,
+            commands::customer_references::create_customer_reference,
+            commands::customer_references::list_customer_references,
+            commands::customer_references::get_customer_reference,
+            commands::customer_references::update_customer_reference,
+            commands::customer_references::delete_customer_reference,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
