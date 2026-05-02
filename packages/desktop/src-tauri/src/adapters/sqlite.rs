@@ -22,6 +22,7 @@ const MIGRATION_016: &str =
     include_str!("../../migrations/0016_add_resignation_application_motives.sql");
 const MIGRATION_017: &str = include_str!("../../migrations/0017_add_boss_references.sql");
 const MIGRATION_018: &str = include_str!("../../migrations/0018_add_customer_references.sql");
+const MIGRATION_019: &str = include_str!("../../migrations/0019_add_work_asset_summaries.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -56,6 +57,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0016", MIGRATION_016)?;
     apply_migration(conn, "0017", MIGRATION_017)?;
     apply_migration(conn, "0018", MIGRATION_018)?;
+    apply_migration(conn, "0019", MIGRATION_019)?;
 
     Ok(())
 }
@@ -104,12 +106,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0018_apply_to_fresh_db() {
+    fn migrations_0001_through_0019_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 18);
+        assert_eq!(count, 19);
     }
 
     // ──────────────────────────────────────────────
@@ -945,5 +947,62 @@ mod tests {
             rusqlite::params![TS],
         );
         assert!(result.is_err(), "存在しない job_target_id は FK で拒否される");
+    }
+
+    // ──────────────────────────────────────────────
+    // work_asset_summaries (migration 0019)
+    // ──────────────────────────────────────────────
+
+    #[test]
+    fn work_asset_summaries_smoke_insert_and_select() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO work_asset_summaries \
+             (id, title, asset_type, created_at, updated_at) \
+             VALUES ('was1','新規顧客向け提案書','proposal',?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let title: String = conn
+            .query_row(
+                "SELECT title FROM work_asset_summaries WHERE id = 'was1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(title, "新規顧客向け提案書");
+    }
+
+    #[test]
+    fn work_asset_summaries_asset_type_check_rejects_invalid() {
+        let conn = db();
+        let result = conn.execute(
+            "INSERT INTO work_asset_summaries \
+             (id, title, asset_type, created_at, updated_at) \
+             VALUES ('was_err','資料','spreadsheet',?1,?1)",
+            rusqlite::params![TS],
+        );
+        assert!(result.is_err(), "asset_type='spreadsheet' must be rejected");
+    }
+
+    #[test]
+    fn work_asset_summaries_nullable_fields_accept_null() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO work_asset_summaries \
+             (id, title, asset_type, job_context, period, role, summary, \
+              strength_episode, talking_points, masking_note, created_at, updated_at) \
+             VALUES ('was_null','タイトル','slide',NULL,NULL,NULL,NULL,NULL,NULL,NULL,?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let job_context: Option<String> = conn
+            .query_row(
+                "SELECT job_context FROM work_asset_summaries WHERE id = 'was_null'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert!(job_context.is_none(), "job_context は NULL を受理する");
     }
 }
