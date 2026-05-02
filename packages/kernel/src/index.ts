@@ -29,6 +29,11 @@ export type {
 export type { AIRun, AIRunInputSnapshotMode, AIRunPurpose } from './domain/ai-run.js';
 export type { ApplicationMotive } from './domain/application-motive.js';
 export type {
+  BossReference,
+  BossReferenceAxis,
+  BossReferenceAxisValues,
+} from './domain/boss-reference.js';
+export type {
   CareerDocument,
   CareerDocumentStatus,
   CareerDocumentType,
@@ -60,8 +65,9 @@ export type {
 } from './domain/skill-evidence.js';
 // errors
 export { RemoteLLMBlockedError } from './errors.js';
-// exporters
 export { composeApplicationMotiveText } from './exporters/application-motive.js';
+// exporters
+export { toBossReferenceMarkdown } from './exporters/boss-reference.js';
 export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
@@ -79,6 +85,7 @@ export type {
 } from './ports/ai-provider-port.js';
 export type { AIRunStoragePort } from './ports/ai-run-storage-port.js';
 export type { ApplicationMotiveStoragePort } from './ports/application-motive-storage-port.js';
+export type { BossReferenceStoragePort } from './ports/boss-reference-storage-port.js';
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
 export type { DocumentRevisionStoragePort } from './ports/document-revision-storage-port.js';
 export type { InterviewQAStoragePort } from './ports/interview-qa-storage-port.js';
@@ -127,6 +134,15 @@ export {
   ApplicationMotiveSchema,
   ApplicationMotiveUpdateSchema,
 } from './schemas/application-motive.js';
+export type {
+  BossReferenceInput,
+  BossReferenceUpdate,
+} from './schemas/boss-reference.js';
+export {
+  BossReferenceAxisValuesSchema,
+  BossReferenceSchema,
+  BossReferenceUpdateSchema,
+} from './schemas/boss-reference.js';
 export type {
   CareerDocumentInput,
   CareerDocumentUpdate,
