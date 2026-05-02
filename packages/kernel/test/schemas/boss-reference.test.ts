@@ -44,23 +44,33 @@ describe('BossReferenceAxisValuesSchema', () => {
   });
 
   it('値が 1 を受理', () => {
-    expect(BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 1 }).success).toBe(true);
+    expect(
+      BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 1 }).success,
+    ).toBe(true);
   });
 
   it('値が 5 を受理', () => {
-    expect(BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 5 }).success).toBe(true);
+    expect(
+      BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 5 }).success,
+    ).toBe(true);
   });
 
   it('値が 0 を拒否', () => {
-    expect(BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 0 }).success).toBe(false);
+    expect(
+      BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 0 }).success,
+    ).toBe(false);
   });
 
   it('値が 6 を拒否', () => {
-    expect(BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 6 }).success).toBe(false);
+    expect(
+      BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 6 }).success,
+    ).toBe(false);
   });
 
   it('小数値を拒否', () => {
-    expect(BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 2.5 }).success).toBe(false);
+    expect(
+      BossReferenceAxisValuesSchema.safeParse({ ...baseAxisValues, logicVsEmotion: 2.5 }).success,
+    ).toBe(false);
   });
 
   it('軸フィールドが欠けていると拒否', () => {
@@ -81,8 +91,17 @@ describe('BossReferenceSchema', () => {
   it('全 q フィールドと strengthEpisode に値があっても受理', () => {
     const allFilled = {
       ...baseRef,
-      q1: 'Q1回答', q2: 'Q2回答', q3: 'Q3回答', q4: 'Q4回答', q5: 'Q5回答',
-      q6: 'Q6回答', q7: 'Q7回答', q8: 'Q8回答', q9: 'Q9回答', q10: 'Q10回答', q11: 'Q11回答',
+      q1: 'Q1回答',
+      q2: 'Q2回答',
+      q3: 'Q3回答',
+      q4: 'Q4回答',
+      q5: 'Q5回答',
+      q6: 'Q6回答',
+      q7: 'Q7回答',
+      q8: 'Q8回答',
+      q9: 'Q9回答',
+      q10: 'Q10回答',
+      q11: 'Q11回答',
       strengthEpisode: '強みエピソード本文',
     };
     expect(BossReferenceSchema.safeParse(allFilled).success).toBe(true);
@@ -97,10 +116,12 @@ describe('BossReferenceSchema', () => {
   });
 
   it('axisValues の範囲外を拒否', () => {
-    expect(BossReferenceSchema.safeParse({
-      ...baseRef,
-      axisValues: { ...baseAxisValues, busyness: 6 },
-    }).success).toBe(false);
+    expect(
+      BossReferenceSchema.safeParse({
+        ...baseRef,
+        axisValues: { ...baseAxisValues, busyness: 6 },
+      }).success,
+    ).toBe(false);
   });
 });
 

@@ -36,25 +36,29 @@ function renderAxisChart(ref: BossReference): string {
     const bar = renderBar(ref.axisValues[key]);
     return `| ${left} | ${bar} | ${right} |`;
   });
-  return [
-    '| 左 | スケール | 右 |',
-    '|---|:---:|---|',
-    ...rows,
-  ].join('\n');
+  return ['| 左 | スケール | 右 |', '|---|:---:|---|', ...rows].join('\n');
 }
 
 function renderQuestionsTable(ref: BossReference): string {
   const qKeys = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11'] as const;
-  const timeLabels = ['過去', '過去', '過去', '過去', '過去', '現在', '現在', '現在', '未来', '未来', '未来'];
+  const timeLabels = [
+    '過去',
+    '過去',
+    '過去',
+    '過去',
+    '過去',
+    '現在',
+    '現在',
+    '現在',
+    '未来',
+    '未来',
+    '未来',
+  ];
   const rows = qKeys.map((key, i) => {
     const answer = ref[key] ?? '（未記入）';
     return `| ${timeLabels[i]} | ${Q_LABELS[i]} | ${answer} |`;
   });
-  return [
-    '| 時制 | 上司を分析する視点 | 回答 |',
-    '|---|---|---|',
-    ...rows,
-  ].join('\n');
+  return ['| 時制 | 上司を分析する視点 | 回答 |', '|---|---|---|', ...rows].join('\n');
 }
 
 export function toBossReferenceMarkdown(ref: BossReference): string {
