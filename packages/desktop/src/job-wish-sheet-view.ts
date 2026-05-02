@@ -74,6 +74,7 @@ class JobWishSheetView extends LitElement {
     agents: { state: true },
     form: { state: true },
     editingId: { state: true },
+    showingForm: { state: true },
     saving: { state: true },
     error: { state: true },
     confirmDeleteId: { state: true },
@@ -84,6 +85,7 @@ class JobWishSheetView extends LitElement {
   declare agents: AgentTrackRecord[];
   declare form: FormState;
   declare editingId: string;
+  declare showingForm: boolean;
   declare saving: boolean;
   declare error: string;
   declare confirmDeleteId: string;
@@ -95,6 +97,7 @@ class JobWishSheetView extends LitElement {
     this.agents = [];
     this.form = emptyForm();
     this.editingId = '';
+    this.showingForm = false;
     this.saving = false;
     this.error = '';
     this.confirmDeleteId = '';
@@ -207,18 +210,21 @@ class JobWishSheetView extends LitElement {
   private startNew() {
     this.editingId = '';
     this.form = emptyForm();
+    this.showingForm = true;
     this.error = '';
   }
 
   private startEdit(sheet: JobWishSheet) {
     this.editingId = sheet.id;
     this.form = sheetToForm(sheet);
+    this.showingForm = true;
     this.error = '';
   }
 
   private cancelEdit() {
     this.editingId = '';
     this.form = emptyForm();
+    this.showingForm = false;
     this.error = '';
   }
 
@@ -319,7 +325,10 @@ class JobWishSheetView extends LitElement {
         });
       }
       await this.load();
-      this.cancelEdit();
+      this.editingId = '';
+      this.form = emptyForm();
+      this.showingForm = false;
+      this.error = '';
     } catch (e) {
       this.error = String(e);
     } finally {
@@ -500,7 +509,7 @@ class JobWishSheetView extends LitElement {
         ${this.error && !this.editingId ? html`<p class="error">${this.error}</p>` : ''}
 
         ${
-          this.editingId || this.form.title !== '' || this.form.groupACompanies.length > 0
+          this.showingForm
             ? this.renderForm()
             : html`
               <button class="save-btn" @click=${this.startNew}>+ 新規作成</button>
