@@ -23,6 +23,7 @@ const MIGRATION_016: &str =
 const MIGRATION_017: &str = include_str!("../../migrations/0017_add_boss_references.sql");
 const MIGRATION_018: &str = include_str!("../../migrations/0018_add_customer_references.sql");
 const MIGRATION_019: &str = include_str!("../../migrations/0019_add_work_asset_summaries.sql");
+const MIGRATION_020: &str = include_str!("../../migrations/0020_add_subordinate_summaries.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -58,6 +59,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0017", MIGRATION_017)?;
     apply_migration(conn, "0018", MIGRATION_018)?;
     apply_migration(conn, "0019", MIGRATION_019)?;
+    apply_migration(conn, "0020", MIGRATION_020)?;
 
     Ok(())
 }
@@ -106,12 +108,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0019_apply_to_fresh_db() {
+    fn migrations_0001_through_0020_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 19);
+        assert_eq!(count, 20);
     }
 
     // ──────────────────────────────────────────────
@@ -1004,5 +1006,69 @@ mod tests {
             )
             .unwrap();
         assert!(job_context.is_none(), "job_context は NULL を受理する");
+    }
+
+    // ──────────────────────────────────────────────
+    // subordinate_summaries (migration 0020)
+    // ──────────────────────────────────────────────
+
+    #[test]
+    fn subordinate_summaries_smoke_insert_and_select() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO subordinate_summaries \
+             (id, title, subordinates, memo, created_at, updated_at) \
+             VALUES ('ss1','営業部 5 名','[]','',?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let title: String = conn
+            .query_row(
+                "SELECT title FROM subordinate_summaries WHERE id = 'ss1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(title, "営業部 5 名");
+    }
+
+    #[test]
+    fn subordinate_summaries_subordinates_default_is_empty_array() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO subordinate_summaries (id, created_at, updated_at) \
+             VALUES ('ss_default',?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let subs: String = conn
+            .query_row(
+                "SELECT subordinates FROM subordinate_summaries WHERE id = 'ss_default'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(subs, "[]");
+    }
+
+    #[test]
+    fn subordinate_summaries_subordinates_stores_json_payload() {
+        let conn = db();
+        let payload = r#"[{"id":"r1","name":"田中","strength":"言語化"}]"#;
+        conn.execute(
+            "INSERT INTO subordinate_summaries \
+             (id, title, subordinates, memo, created_at, updated_at) \
+             VALUES ('ss_json','title',?1,'',?2,?2)",
+            rusqlite::params![payload, TS],
+        )
+        .unwrap();
+        let stored: String = conn
+            .query_row(
+                "SELECT subordinates FROM subordinate_summaries WHERE id = 'ss_json'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(stored, payload);
     }
 }
