@@ -67,9 +67,9 @@ describe('WorkAssetSummarySchema', () => {
   });
 
   it('assetType が未知の値だと拒否', () => {
-    expect(WorkAssetSummarySchema.safeParse({ ...baseAsset, assetType: 'spreadsheet' }).success).toBe(
-      false,
-    );
+    expect(
+      WorkAssetSummarySchema.safeParse({ ...baseAsset, assetType: 'spreadsheet' }).success,
+    ).toBe(false);
   });
 
   it('title 空文字を拒否', () => {
@@ -133,7 +133,9 @@ describe('WorkAssetSummaryUpdateSchema', () => {
   });
 
   it('assetType に未知の値を拒否', () => {
-    expect(WorkAssetSummaryUpdateSchema.safeParse({ assetType: 'spreadsheet' }).success).toBe(false);
+    expect(WorkAssetSummaryUpdateSchema.safeParse({ assetType: 'spreadsheet' }).success).toBe(
+      false,
+    );
   });
 
   it('id を含めても無視される（pick されていない）', () => {

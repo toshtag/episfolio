@@ -64,6 +64,7 @@ export type {
   SkillEvidenceSource,
   SkillEvidenceStatus,
 } from './domain/skill-evidence.js';
+export type { AssetType, WorkAssetSummary } from './domain/work-asset-summary.js';
 // errors
 export { RemoteLLMBlockedError } from './errors.js';
 export { composeApplicationMotiveText } from './exporters/application-motive.js';
@@ -75,6 +76,7 @@ export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
+export { toWorkAssetSummaryMarkdown } from './exporters/work-asset-summary.js';
 export type { AgentMeetingEmailStoragePort } from './ports/agent-meeting-email-storage-port.js';
 export type { AgentTrackRecordStoragePort } from './ports/agent-track-record-storage-port.js';
 // ports
@@ -101,6 +103,7 @@ export type { ResignationMotiveStoragePort } from './ports/resignation-motive-st
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
 export type { SkillEvidenceStoragePort } from './ports/skill-evidence-storage-port.js';
 export type { EpisodeStoragePort } from './ports/storage-port.js';
+export type { WorkAssetSummaryStoragePort } from './ports/work-asset-summary-storage-port.js';
 // prompts
 export { PROMPT_ID, PROMPT_TEMPLATE, PROMPT_VERSION } from './prompts/extract-evidence-v1.js';
 export {
@@ -240,6 +243,15 @@ export {
   SkillEvidenceStatusSchema,
   SkillEvidenceUpdateSchema,
 } from './schemas/skill-evidence.js';
+export type {
+  WorkAssetSummaryInput,
+  WorkAssetSummaryUpdate,
+} from './schemas/work-asset-summary.js';
+export {
+  AssetTypeSchema,
+  WorkAssetSummarySchema,
+  WorkAssetSummaryUpdateSchema,
+} from './schemas/work-asset-summary.js';
 export type { ExtractEvidenceDeps } from './usecases/extract-evidence.js';
 // usecases
 export { extractEvidence } from './usecases/extract-evidence.js';

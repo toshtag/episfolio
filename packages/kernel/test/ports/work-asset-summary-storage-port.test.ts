@@ -39,10 +39,7 @@ class InMemoryWorkAssetSummaryStorage implements WorkAssetSummaryStoragePort {
   }
 }
 
-const buildAsset = (
-  id: string,
-  overrides: Partial<WorkAssetSummary> = {},
-): WorkAssetSummary => ({
+const buildAsset = (id: string, overrides: Partial<WorkAssetSummary> = {}): WorkAssetSummary => ({
   id,
   title: '新規顧客向け提案書',
   assetType: 'proposal',
