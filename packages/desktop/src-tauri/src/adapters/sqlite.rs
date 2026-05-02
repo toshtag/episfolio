@@ -13,6 +13,7 @@ const MIGRATION_009: &str =
     include_str!("../../migrations/0009_add_job_requirement_mappings.sql");
 const MIGRATION_010: &str =
     include_str!("../../migrations/0010_add_revision_job_target_id.sql");
+const MIGRATION_011: &str = include_str!("../../migrations/0011_add_interview_qas.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -39,6 +40,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0008", MIGRATION_008)?;
     apply_migration(conn, "0009", MIGRATION_009)?;
     apply_migration(conn, "0010", MIGRATION_010)?;
+    apply_migration(conn, "0011", MIGRATION_011)?;
 
     Ok(())
 }
@@ -87,12 +89,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0010_apply_to_fresh_db() {
+    fn migrations_0001_through_0011_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 10);
+        assert_eq!(count, 11);
     }
 
     // ──────────────────────────────────────────────
