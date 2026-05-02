@@ -17,6 +17,7 @@ const MIGRATION_011: &str = include_str!("../../migrations/0011_add_interview_qa
 const MIGRATION_012: &str = include_str!("../../migrations/0012_add_interview_reports.sql");
 const MIGRATION_013: &str = include_str!("../../migrations/0013_add_agent_track_records.sql");
 const MIGRATION_014: &str = include_str!("../../migrations/0014_add_agent_meeting_emails.sql");
+const MIGRATION_015: &str = include_str!("../../migrations/0015_add_job_wish_sheets.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -47,6 +48,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0012", MIGRATION_012)?;
     apply_migration(conn, "0013", MIGRATION_013)?;
     apply_migration(conn, "0014", MIGRATION_014)?;
+    apply_migration(conn, "0015", MIGRATION_015)?;
 
     Ok(())
 }
@@ -95,12 +97,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0014_apply_to_fresh_db() {
+    fn migrations_0001_through_0015_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 14);
+        assert_eq!(count, 15);
     }
 
     // ──────────────────────────────────────────────
@@ -668,5 +670,73 @@ mod tests {
             0,
             "AgentTrackRecord 削除で関連 email が CASCADE 削除される"
         );
+    }
+
+    // ──────────────────────────────────────────────
+    // job_wish_sheets (migration 0015)
+    // ──────────────────────────────────────────────
+
+    fn insert_job_wish_sheet(
+        conn: &Connection,
+        id: &str,
+        agent_track_record_id: Option<&str>,
+    ) -> rusqlite::Result<usize> {
+        conn.execute(
+            "INSERT INTO job_wish_sheets \
+             (id, agent_track_record_id, title, desired_industry, desired_role, desired_salary, \
+              desired_location, desired_work_style, other_conditions, \
+              group_a_companies, group_b_companies, group_c_companies, memo, created_at, updated_at) \
+             VALUES (?1, ?2, '', '', '', '', '', '', '', '[]', '[]', '[]', '', ?3, ?3)",
+            rusqlite::params![id, agent_track_record_id, TS],
+        )
+    }
+
+    #[test]
+    fn job_wish_sheets_smoke_insert_and_select() {
+        let conn = db();
+        insert_job_wish_sheet(&conn, "jws1", None).unwrap();
+        let title: String = conn
+            .query_row(
+                "SELECT title FROM job_wish_sheets WHERE id = 'jws1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(title, "");
+    }
+
+    #[test]
+    fn job_wish_sheets_set_null_on_agent_track_record_delete() {
+        let conn = db();
+        insert_agent_track_record(&conn, "atr_jws", "テスト社", "active").unwrap();
+        insert_job_wish_sheet(&conn, "jws_a", Some("atr_jws")).unwrap();
+        insert_job_wish_sheet(&conn, "jws_b", Some("atr_jws")).unwrap();
+
+        conn.execute(
+            "DELETE FROM agent_track_records WHERE id = ?1",
+            rusqlite::params!["atr_jws"],
+        )
+        .unwrap();
+
+        let agent_id_a: Option<String> = conn
+            .query_row(
+                "SELECT agent_track_record_id FROM job_wish_sheets WHERE id = 'jws_a'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert!(
+            agent_id_a.is_none(),
+            "AgentTrackRecord 削除で job_wish_sheets.agent_track_record_id が NULL になる"
+        );
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM job_wish_sheets",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 2, "シートは削除されず残る（SET NULL）");
     }
 }
