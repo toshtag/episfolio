@@ -30,6 +30,11 @@ export type {
 } from './domain/career-document.js';
 // domain
 export type { Episode, ISO8601, ULID } from './domain/episode.js';
+export type {
+  InterviewQA,
+  InterviewQACategory,
+  InterviewQASource,
+} from './domain/interview-qa.js';
 export type { JobRequirementMapping } from './domain/job-requirement-mapping.js';
 export type { JobTarget, JobTargetStatus, SkillItem } from './domain/job-target.js';
 export type {
@@ -62,6 +67,7 @@ export type {
 export type { AIRunStoragePort } from './ports/ai-run-storage-port.js';
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
 export type { DocumentRevisionStoragePort } from './ports/document-revision-storage-port.js';
+export type { InterviewQAStoragePort } from './ports/interview-qa-storage-port.js';
 export type { JobRequirementMappingStoragePort } from './ports/job-requirement-mapping-storage-port.js';
 export type { JobTargetStoragePort } from './ports/job-target-storage-port.js';
 export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port.js';
@@ -91,6 +97,13 @@ export {
 } from './schemas/career-document.js';
 export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
 export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
+export type { InterviewQAInput, InterviewQAUpdate } from './schemas/interview-qa.js';
+export {
+  InterviewQACategorySchema,
+  InterviewQASchema,
+  InterviewQASourceSchema,
+  InterviewQAUpdateSchema,
+} from './schemas/interview-qa.js';
 export type {
   JobRequirementMappingInput,
   JobRequirementMappingUpdate,
