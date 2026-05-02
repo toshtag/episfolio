@@ -21,6 +21,7 @@ export {
   GenerateDocumentInputSchema,
   GenerateDocumentOutputSchema,
 } from './contracts/generate-document.js';
+export type { AgentMeetingEmail } from './domain/agent-meeting-email.js';
 export type {
   AgentTrackRecord,
   AgentTrackRecordStatus,
@@ -61,6 +62,7 @@ export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
+export type { AgentMeetingEmailStoragePort } from './ports/agent-meeting-email-storage-port.js';
 export type { AgentTrackRecordStoragePort } from './ports/agent-track-record-storage-port.js';
 // ports
 export type {
@@ -88,6 +90,14 @@ export {
   PROMPT_TEMPLATE as GENERATE_DOCUMENT_PROMPT_TEMPLATE,
   PROMPT_VERSION as GENERATE_DOCUMENT_PROMPT_VERSION,
 } from './prompts/generate-document-v1.js';
+export type {
+  AgentMeetingEmailInput,
+  AgentMeetingEmailUpdate,
+} from './schemas/agent-meeting-email.js';
+export {
+  AgentMeetingEmailSchema,
+  AgentMeetingEmailUpdateSchema,
+} from './schemas/agent-meeting-email.js';
 export type {
   AgentTrackRecordInput,
   AgentTrackRecordUpdate,
