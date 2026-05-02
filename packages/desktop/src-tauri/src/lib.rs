@@ -56,6 +56,11 @@ pub fn run() {
             commands::job_requirement_mappings::get_job_requirement_mapping,
             commands::job_requirement_mappings::update_job_requirement_mapping,
             commands::job_requirement_mappings::delete_job_requirement_mapping,
+            commands::agent_track_records::create_agent_track_record,
+            commands::agent_track_records::list_agent_track_records,
+            commands::agent_track_records::get_agent_track_record,
+            commands::agent_track_records::update_agent_track_record,
+            commands::agent_track_records::delete_agent_track_record,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

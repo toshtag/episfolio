@@ -9,6 +9,7 @@ import './life-timeline-view.js';
 import './job-target-view.js';
 import './interview-qa-view.js';
 import './interview-report-view.js';
+import './agent-track-record-view.js';
 import './digest-view.js';
 
 type Tab =
@@ -19,6 +20,7 @@ type Tab =
   | 'job-targets'
   | 'interview-qa'
   | 'interview-report'
+  | 'agent-track-records'
   | 'digest'
   | 'settings';
 
@@ -200,6 +202,12 @@ class EpisodeApp extends LitElement {
           }}
         >面接後報告</button>
         <button
+          class=${this.tab === 'agent-track-records' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'agent-track-records';
+          }}
+        >エージェント</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -273,9 +281,11 @@ class EpisodeApp extends LitElement {
                     ? html`<interview-qa-view></interview-qa-view>`
                     : this.tab === 'interview-report'
                       ? html`<interview-report-view></interview-report-view>`
-                      : this.tab === 'digest'
-                        ? html`<digest-view></digest-view>`
-                        : html`<settings-view></settings-view>`
+                      : this.tab === 'agent-track-records'
+                        ? html`<agent-track-record-view></agent-track-record-view>`
+                        : this.tab === 'digest'
+                          ? html`<digest-view></digest-view>`
+                          : html`<settings-view></settings-view>`
       }
     `;
   }
