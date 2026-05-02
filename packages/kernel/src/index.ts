@@ -21,6 +21,8 @@ export {
   GenerateDocumentInputSchema,
   GenerateDocumentOutputSchema,
 } from './contracts/generate-document.js';
+export type { ApplicationMotive } from './domain/application-motive.js';
+export type { ResignationMotive } from './domain/resignation-motive.js';
 export type { AgentMeetingEmail } from './domain/agent-meeting-email.js';
 export type {
   AgentTrackRecord,
@@ -59,11 +61,14 @@ export type {
 // errors
 export { RemoteLLMBlockedError } from './errors.js';
 // exporters
+export { composeApplicationMotiveText } from './exporters/application-motive.js';
 export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
+export type { ApplicationMotiveStoragePort } from './ports/application-motive-storage-port.js';
+export type { ResignationMotiveStoragePort } from './ports/resignation-motive-storage-port.js';
 export type { AgentMeetingEmailStoragePort } from './ports/agent-meeting-email-storage-port.js';
 export type { AgentTrackRecordStoragePort } from './ports/agent-track-record-storage-port.js';
 // ports
@@ -93,6 +98,26 @@ export {
   PROMPT_TEMPLATE as GENERATE_DOCUMENT_PROMPT_TEMPLATE,
   PROMPT_VERSION as GENERATE_DOCUMENT_PROMPT_VERSION,
 } from './prompts/generate-document-v1.js';
+export type {
+  ApplicationMotiveCreate,
+  ApplicationMotiveInput,
+  ApplicationMotiveUpdate,
+} from './schemas/application-motive.js';
+export {
+  ApplicationMotiveCreateSchema,
+  ApplicationMotiveSchema,
+  ApplicationMotiveUpdateSchema,
+} from './schemas/application-motive.js';
+export type {
+  ResignationMotiveCreate,
+  ResignationMotiveInput,
+  ResignationMotiveUpdate,
+} from './schemas/resignation-motive.js';
+export {
+  ResignationMotiveCreateSchema,
+  ResignationMotiveSchema,
+  ResignationMotiveUpdateSchema,
+} from './schemas/resignation-motive.js';
 export type {
   AgentMeetingEmailInput,
   AgentMeetingEmailUpdate,
