@@ -15,6 +15,7 @@ const MIGRATION_010: &str =
     include_str!("../../migrations/0010_add_revision_job_target_id.sql");
 const MIGRATION_011: &str = include_str!("../../migrations/0011_add_interview_qas.sql");
 const MIGRATION_012: &str = include_str!("../../migrations/0012_add_interview_reports.sql");
+const MIGRATION_013: &str = include_str!("../../migrations/0013_add_agent_track_records.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -43,6 +44,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0010", MIGRATION_010)?;
     apply_migration(conn, "0011", MIGRATION_011)?;
     apply_migration(conn, "0012", MIGRATION_012)?;
+    apply_migration(conn, "0013", MIGRATION_013)?;
 
     Ok(())
 }
