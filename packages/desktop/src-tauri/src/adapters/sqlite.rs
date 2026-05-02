@@ -16,6 +16,7 @@ const MIGRATION_010: &str =
 const MIGRATION_011: &str = include_str!("../../migrations/0011_add_interview_qas.sql");
 const MIGRATION_012: &str = include_str!("../../migrations/0012_add_interview_reports.sql");
 const MIGRATION_013: &str = include_str!("../../migrations/0013_add_agent_track_records.sql");
+const MIGRATION_014: &str = include_str!("../../migrations/0014_add_agent_meeting_emails.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -45,6 +46,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0011", MIGRATION_011)?;
     apply_migration(conn, "0012", MIGRATION_012)?;
     apply_migration(conn, "0013", MIGRATION_013)?;
+    apply_migration(conn, "0014", MIGRATION_014)?;
 
     Ok(())
 }
@@ -93,12 +95,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0013_apply_to_fresh_db() {
+    fn migrations_0001_through_0014_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 13);
+        assert_eq!(count, 14);
     }
 
     // ──────────────────────────────────────────────
@@ -608,5 +610,63 @@ mod tests {
             )
             .unwrap();
         assert!(val.is_none(), "first_contact_date should be NULL by default");
+    }
+
+    // ──────────────────────────────────────────────
+    // agent_meeting_emails (migration 0014)
+    // ──────────────────────────────────────────────
+
+    fn insert_agent_meeting_email(
+        conn: &Connection,
+        id: &str,
+        agent_track_record_id: Option<&str>,
+    ) -> rusqlite::Result<usize> {
+        conn.execute(
+            "INSERT INTO agent_meeting_emails \
+             (id, agent_track_record_id, subject, body, sent_at, memo, created_at, updated_at) \
+             VALUES (?1, ?2, '', '', NULL, '', ?3, ?3)",
+            rusqlite::params![id, agent_track_record_id, TS],
+        )
+    }
+
+    #[test]
+    fn agent_meeting_emails_smoke_insert_and_select() {
+        let conn = db();
+        insert_agent_meeting_email(&conn, "ame1", None).unwrap();
+        let subject: String = conn
+            .query_row(
+                "SELECT subject FROM agent_meeting_emails WHERE id = 'ame1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(subject, "");
+    }
+
+    #[test]
+    fn agent_meeting_emails_cascade_on_agent_track_record_delete() {
+        let conn = db();
+        insert_agent_track_record(&conn, "atr_cas", "テスト社", "active").unwrap();
+        insert_agent_meeting_email(&conn, "ame_a", Some("atr_cas")).unwrap();
+        insert_agent_meeting_email(&conn, "ame_b", Some("atr_cas")).unwrap();
+
+        conn.execute(
+            "DELETE FROM agent_track_records WHERE id = ?1",
+            rusqlite::params!["atr_cas"],
+        )
+        .unwrap();
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM agent_meeting_emails WHERE agent_track_record_id = 'atr_cas'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(
+            count,
+            0,
+            "AgentTrackRecord 削除で関連 email が CASCADE 削除される"
+        );
     }
 }
