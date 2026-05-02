@@ -61,6 +61,12 @@ pub fn run() {
             commands::agent_track_records::get_agent_track_record,
             commands::agent_track_records::update_agent_track_record,
             commands::agent_track_records::delete_agent_track_record,
+            commands::agent_meeting_emails::create_agent_meeting_email,
+            commands::agent_meeting_emails::list_agent_meeting_emails,
+            commands::agent_meeting_emails::list_agent_meeting_emails_by_agent,
+            commands::agent_meeting_emails::get_agent_meeting_email,
+            commands::agent_meeting_emails::update_agent_meeting_email,
+            commands::agent_meeting_emails::delete_agent_meeting_email,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
