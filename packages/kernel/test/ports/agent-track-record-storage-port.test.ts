@@ -12,9 +12,7 @@ class InMemoryAgentTrackRecordStorage implements AgentTrackRecordStoragePort {
   }
 
   async list(): Promise<AgentTrackRecord[]> {
-    return Array.from(this.store.values()).sort((a, b) =>
-      a.createdAt.localeCompare(b.createdAt),
-    );
+    return Array.from(this.store.values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }
 
   async get(id: string): Promise<AgentTrackRecord | null> {
@@ -41,10 +39,7 @@ class InMemoryAgentTrackRecordStorage implements AgentTrackRecordStoragePort {
   }
 }
 
-const buildRecord = (
-  id: string,
-  overrides: Partial<AgentTrackRecord> = {},
-): AgentTrackRecord => ({
+const buildRecord = (id: string, overrides: Partial<AgentTrackRecord> = {}): AgentTrackRecord => ({
   id,
   companyName: 'リクルートエージェント',
   contactName: '',
@@ -79,12 +74,8 @@ describe('AgentTrackRecordStoragePort contract', () => {
 
   describe('list', () => {
     it('全件を createdAt 昇順で返す', async () => {
-      await storage.create(
-        buildRecord('01AGENT1', { createdAt: '2026-05-02T00:00:00Z' }),
-      );
-      await storage.create(
-        buildRecord('01AGENT2', { createdAt: '2026-05-01T00:00:00Z' }),
-      );
+      await storage.create(buildRecord('01AGENT1', { createdAt: '2026-05-02T00:00:00Z' }));
+      await storage.create(buildRecord('01AGENT2', { createdAt: '2026-05-01T00:00:00Z' }));
       const list = await storage.list();
       expect(list.map((r) => r.id)).toEqual(['01AGENT2', '01AGENT1']);
     });
@@ -122,17 +113,13 @@ describe('AgentTrackRecordStoragePort contract', () => {
     });
 
     it('firstContactDate を文字列から null に更新できる', async () => {
-      await storage.create(
-        buildRecord('01AGENT1', { firstContactDate: '2026-05-10T10:00:00Z' }),
-      );
+      await storage.create(buildRecord('01AGENT1', { firstContactDate: '2026-05-10T10:00:00Z' }));
       const updated = await storage.update('01AGENT1', { firstContactDate: null });
       expect(updated.firstContactDate).toBeNull();
     });
 
     it('id / createdAt は不可変', async () => {
-      await storage.create(
-        buildRecord('01AGENT1', { createdAt: '2026-01-01T00:00:00Z' }),
-      );
+      await storage.create(buildRecord('01AGENT1', { createdAt: '2026-01-01T00:00:00Z' }));
       const updated = await storage.update('01AGENT1', { memo: '変更' });
       expect(updated.id).toBe('01AGENT1');
       expect(updated.createdAt).toBe('2026-01-01T00:00:00Z');

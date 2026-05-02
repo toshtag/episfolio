@@ -21,6 +21,10 @@ export {
   GenerateDocumentInputSchema,
   GenerateDocumentOutputSchema,
 } from './contracts/generate-document.js';
+export type {
+  AgentTrackRecord,
+  AgentTrackRecordStatus,
+} from './domain/agent-track-record.js';
 export type { AIRun, AIRunInputSnapshotMode, AIRunPurpose } from './domain/ai-run.js';
 export type {
   CareerDocument,
@@ -57,6 +61,7 @@ export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
+export type { AgentTrackRecordStoragePort } from './ports/agent-track-record-storage-port.js';
 // ports
 export type {
   AIProviderPort,
@@ -83,6 +88,15 @@ export {
   PROMPT_TEMPLATE as GENERATE_DOCUMENT_PROMPT_TEMPLATE,
   PROMPT_VERSION as GENERATE_DOCUMENT_PROMPT_VERSION,
 } from './prompts/generate-document-v1.js';
+export type {
+  AgentTrackRecordInput,
+  AgentTrackRecordUpdate,
+} from './schemas/agent-track-record.js';
+export {
+  AgentTrackRecordSchema,
+  AgentTrackRecordStatusSchema,
+  AgentTrackRecordUpdateSchema,
+} from './schemas/agent-track-record.js';
 export type { AIRunInput } from './schemas/ai-run.js';
 export { AIRunInputSnapshotModeSchema, AIRunSchema } from './schemas/ai-run.js';
 export type {

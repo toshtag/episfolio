@@ -45,7 +45,9 @@ describe('AgentTrackRecordSchema', () => {
   });
 
   it('companyName 空文字を拒否', () => {
-    expect(AgentTrackRecordSchema.safeParse({ ...baseRecord, companyName: '' }).success).toBe(false);
+    expect(AgentTrackRecordSchema.safeParse({ ...baseRecord, companyName: '' }).success).toBe(
+      false,
+    );
   });
 
   it('contactName / contactEmail / contactPhone / memo は空文字を許可', () => {
@@ -61,9 +63,9 @@ describe('AgentTrackRecordSchema', () => {
   });
 
   it('firstContactDate 空文字を拒否（null か非空文字のみ）', () => {
-    expect(
-      AgentTrackRecordSchema.safeParse({ ...baseRecord, firstContactDate: '' }).success,
-    ).toBe(false);
+    expect(AgentTrackRecordSchema.safeParse({ ...baseRecord, firstContactDate: '' }).success).toBe(
+      false,
+    );
   });
 
   it('未知の status を拒否', () => {
@@ -90,9 +92,9 @@ describe('AgentTrackRecordUpdateSchema', () => {
   });
 
   it('未知の status を拒否', () => {
-    expect(
-      AgentTrackRecordUpdateSchema.safeParse({ status: 'unknown' as 'active' }).success,
-    ).toBe(false);
+    expect(AgentTrackRecordUpdateSchema.safeParse({ status: 'unknown' as 'active' }).success).toBe(
+      false,
+    );
   });
 
   it('companyName 空文字を拒否', () => {
