@@ -18,6 +18,8 @@ const MIGRATION_012: &str = include_str!("../../migrations/0012_add_interview_re
 const MIGRATION_013: &str = include_str!("../../migrations/0013_add_agent_track_records.sql");
 const MIGRATION_014: &str = include_str!("../../migrations/0014_add_agent_meeting_emails.sql");
 const MIGRATION_015: &str = include_str!("../../migrations/0015_add_job_wish_sheets.sql");
+const MIGRATION_016: &str =
+    include_str!("../../migrations/0016_add_resignation_application_motives.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -49,6 +51,7 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0013", MIGRATION_013)?;
     apply_migration(conn, "0014", MIGRATION_014)?;
     apply_migration(conn, "0015", MIGRATION_015)?;
+    apply_migration(conn, "0016", MIGRATION_016)?;
 
     Ok(())
 }
@@ -97,12 +100,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0015_apply_to_fresh_db() {
+    fn migrations_0001_through_0016_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 15);
+        assert_eq!(count, 16);
     }
 
     // ──────────────────────────────────────────────
@@ -738,5 +741,81 @@ mod tests {
             )
             .unwrap();
         assert_eq!(count, 2, "シートは削除されず残る（SET NULL）");
+    }
+
+    // ──────────────────────────────────────────────
+    // resignation_motives / application_motives (migration 0016)
+    // ──────────────────────────────────────────────
+
+    fn insert_job_target_for_motive(conn: &Connection, id: &str) {
+        conn.execute(
+            "INSERT INTO job_targets \
+             (id, company_name, job_title, status, required_skills, preferred_skills, \
+              job_description, created_at, updated_at) \
+             VALUES (?1,'会社','職種','researching','[]','[]','',?2,?2)",
+            rusqlite::params![id, TS],
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn resignation_motives_smoke_insert_and_select() {
+        let conn = db();
+        conn.execute(
+            "INSERT INTO resignation_motives \
+             (id, company_dissatisfaction, job_dissatisfaction, compensation_dissatisfaction, \
+              relationship_dissatisfaction, resolution_intent, note, created_at, updated_at) \
+             VALUES ('rm1','会社','仕事','待遇','人間関係','自律環境に移る',NULL,?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        let note: Option<String> = conn
+            .query_row(
+                "SELECT note FROM resignation_motives WHERE id = 'rm1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert!(note.is_none(), "note は NULL で保存される");
+    }
+
+    #[test]
+    fn application_motives_cascade_delete_on_job_target() {
+        let conn = db();
+        insert_job_target_for_motive(&conn, "jt_am1");
+        conn.execute(
+            "INSERT INTO application_motives \
+             (id, job_target_id, company_future, contribution_action, leveraged_experience, \
+              formatted_text, created_at, updated_at) \
+             VALUES ('am1','jt_am1','未来','貢献','経験','テキスト',?1,?1)",
+            rusqlite::params![TS],
+        )
+        .unwrap();
+        conn.execute(
+            "DELETE FROM job_targets WHERE id = 'jt_am1'",
+            [],
+        )
+        .unwrap();
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM application_motives WHERE job_target_id = 'jt_am1'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 0, "JobTarget 削除で application_motives が CASCADE 削除される");
+    }
+
+    #[test]
+    fn application_motives_fk_rejects_missing_job_target() {
+        let conn = db();
+        let result = conn.execute(
+            "INSERT INTO application_motives \
+             (id, job_target_id, company_future, contribution_action, leveraged_experience, \
+              formatted_text, created_at, updated_at) \
+             VALUES ('am_err','no-such-target','','','','',?1,?1)",
+            rusqlite::params![TS],
+        );
+        assert!(result.is_err(), "存在しない job_target_id は FK で拒否される");
     }
 }
