@@ -1,4 +1,6 @@
 pub mod agent_meeting_emails;
+pub mod application_motives;
+pub mod resignation_motives;
 pub mod agent_track_records;
 pub mod documents;
 pub mod episodes;
