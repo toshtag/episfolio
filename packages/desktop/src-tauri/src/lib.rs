@@ -67,6 +67,11 @@ pub fn run() {
             commands::agent_meeting_emails::get_agent_meeting_email,
             commands::agent_meeting_emails::update_agent_meeting_email,
             commands::agent_meeting_emails::delete_agent_meeting_email,
+            commands::job_wish_sheets::create_job_wish_sheet,
+            commands::job_wish_sheets::list_job_wish_sheets,
+            commands::job_wish_sheets::get_job_wish_sheet,
+            commands::job_wish_sheets::update_job_wish_sheet,
+            commands::job_wish_sheets::delete_job_wish_sheet,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
