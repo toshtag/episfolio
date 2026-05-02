@@ -98,6 +98,11 @@ pub fn run() {
             commands::work_asset_summaries::get_work_asset_summary,
             commands::work_asset_summaries::update_work_asset_summary,
             commands::work_asset_summaries::delete_work_asset_summary,
+            commands::subordinate_summaries::create_subordinate_summary,
+            commands::subordinate_summaries::list_subordinate_summaries,
+            commands::subordinate_summaries::get_subordinate_summary,
+            commands::subordinate_summaries::update_subordinate_summary,
+            commands::subordinate_summaries::delete_subordinate_summary,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
