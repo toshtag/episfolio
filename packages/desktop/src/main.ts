@@ -7,6 +7,7 @@ import './evidence-list-view.js';
 import './document-view.js';
 import './life-timeline-view.js';
 import './job-target-view.js';
+import './interview-qa-view.js';
 import './digest-view.js';
 
 type Tab =
@@ -15,6 +16,7 @@ type Tab =
   | 'documents'
   | 'timeline'
   | 'job-targets'
+  | 'interview-qa'
   | 'digest'
   | 'settings';
 
@@ -184,6 +186,12 @@ class EpisodeApp extends LitElement {
           }}
         >求人</button>
         <button
+          class=${this.tab === 'interview-qa' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'interview-qa';
+          }}
+        >面接の赤本</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -253,9 +261,11 @@ class EpisodeApp extends LitElement {
                 ? html`<life-timeline-view></life-timeline-view>`
                 : this.tab === 'job-targets'
                   ? html`<job-target-view></job-target-view>`
-                  : this.tab === 'digest'
-                    ? html`<digest-view></digest-view>`
-                    : html`<settings-view></settings-view>`
+                  : this.tab === 'interview-qa'
+                    ? html`<interview-qa-view></interview-qa-view>`
+                    : this.tab === 'digest'
+                      ? html`<digest-view></digest-view>`
+                      : html`<settings-view></settings-view>`
       }
     `;
   }
