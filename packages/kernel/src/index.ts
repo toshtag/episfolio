@@ -42,6 +42,7 @@ export type {
 export type { CustomerReference, CustomerType } from './domain/customer-reference.js';
 // domain
 export type { Episode, ISO8601, ULID } from './domain/episode.js';
+export type { HiddenGemNote } from './domain/hidden-gem-note.js';
 export type {
   InterviewQA,
   InterviewQACategory,
@@ -94,6 +95,7 @@ export { composeApplicationMotiveText } from './exporters/application-motive.js'
 export { toBossReferenceMarkdown } from './exporters/boss-reference.js';
 export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toCustomerReferenceMarkdown } from './exporters/customer-reference.js';
+export { toHiddenGemNoteMarkdown } from './exporters/hidden-gem-note.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export { toMicrochopSkillMarkdown } from './exporters/microchop-skill.js';
@@ -125,6 +127,7 @@ export type { BossReferenceStoragePort } from './ports/boss-reference-storage-po
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
 export type { CustomerReferenceStoragePort } from './ports/customer-reference-storage-port.js';
 export type { DocumentRevisionStoragePort } from './ports/document-revision-storage-port.js';
+export type { HiddenGemNoteStoragePort } from './ports/hidden-gem-note-storage-port.js';
 export type { InterviewQAStoragePort } from './ports/interview-qa-storage-port.js';
 export type { InterviewReportStoragePort } from './ports/interview-report-storage-port.js';
 export type { JobRequirementMappingStoragePort } from './ports/job-requirement-mapping-storage-port.js';
@@ -213,6 +216,16 @@ export {
 } from './schemas/customer-reference.js';
 export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
 export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
+export type {
+  HiddenGemNoteCreate,
+  HiddenGemNoteInput,
+  HiddenGemNoteUpdate,
+} from './schemas/hidden-gem-note.js';
+export {
+  HiddenGemNoteCreateSchema,
+  HiddenGemNoteSchema,
+  HiddenGemNoteUpdateSchema,
+} from './schemas/hidden-gem-note.js';
 export type { InterviewQAInput, InterviewQAUpdate } from './schemas/interview-qa.js';
 export {
   InterviewQACategorySchema,
