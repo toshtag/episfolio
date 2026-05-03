@@ -55,6 +55,7 @@ export type {
   LifeTimelineCategory,
   LifeTimelineEntry,
 } from './domain/life-timeline-entry.js';
+export type { MicrochopSkill, MicrochopTask } from './domain/microchop-skill.js';
 export type { ResignationMotive } from './domain/resignation-motive.js';
 export type { ResultByType, ResultEntry, ResultType } from './domain/result-by-type.js';
 export type { AIProvider, Settings } from './domain/settings.js';
@@ -81,6 +82,7 @@ export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toCustomerReferenceMarkdown } from './exporters/customer-reference.js';
 export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
+export { toMicrochopSkillMarkdown } from './exporters/microchop-skill.js';
 export { toResultByTypeMarkdown } from './exporters/result-by-type.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
@@ -111,6 +113,7 @@ export type { JobRequirementMappingStoragePort } from './ports/job-requirement-m
 export type { JobTargetStoragePort } from './ports/job-target-storage-port.js';
 export type { JobWishSheetStoragePort } from './ports/job-wish-sheet-storage-port.js';
 export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port.js';
+export type { MicrochopSkillStoragePort } from './ports/microchop-skill-storage-port.js';
 export type { ResignationMotiveStoragePort } from './ports/resignation-motive-storage-port.js';
 export type { ResultByTypeStoragePort } from './ports/result-by-type-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
@@ -241,6 +244,17 @@ export {
   LifeTimelineEntrySchema,
   LifeTimelineEntryUpdateSchema,
 } from './schemas/life-timeline-entry.js';
+export type {
+  MicrochopSkillCreate,
+  MicrochopSkillInput,
+  MicrochopSkillUpdate,
+} from './schemas/microchop-skill.js';
+export {
+  MicrochopSkillCreateSchema,
+  MicrochopSkillSchema,
+  MicrochopSkillUpdateSchema,
+  MicrochopTaskSchema,
+} from './schemas/microchop-skill.js';
 export type {
   ResignationMotiveCreate,
   ResignationMotiveInput,
