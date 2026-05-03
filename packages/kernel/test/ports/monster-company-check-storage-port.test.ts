@@ -42,7 +42,10 @@ class InMemoryMonsterCompanyCheckStorage implements MonsterCompanyCheckStoragePo
   }
 }
 
-const buildRecord = (id: string, overrides: Partial<MonsterCompanyCheck> = {}): MonsterCompanyCheck => ({
+const buildRecord = (
+  id: string,
+  overrides: Partial<MonsterCompanyCheck> = {},
+): MonsterCompanyCheck => ({
   id,
   jobTargetId: '01JT00001',
   mhlwCaseUrl: 'https://example.com/case',
@@ -104,14 +107,18 @@ describe('MonsterCompanyCheckStoragePort contract', () => {
     });
 
     it('同一 jobTargetId の複数レコードを createdAt 降順で返す', async () => {
-      await storage.create(buildRecord('01MCC0001', {
-        jobTargetId: '01JT00001',
-        createdAt: '2026-05-01T00:00:00Z',
-      }));
-      await storage.create(buildRecord('01MCC0002', {
-        jobTargetId: '01JT00001',
-        createdAt: '2026-05-03T00:00:00Z',
-      }));
+      await storage.create(
+        buildRecord('01MCC0001', {
+          jobTargetId: '01JT00001',
+          createdAt: '2026-05-01T00:00:00Z',
+        }),
+      );
+      await storage.create(
+        buildRecord('01MCC0002', {
+          jobTargetId: '01JT00001',
+          createdAt: '2026-05-03T00:00:00Z',
+        }),
+      );
       const list = await storage.listByJobTarget('01JT00001');
       expect(list.map((r) => r.id)).toEqual(['01MCC0002', '01MCC0001']);
     });
@@ -142,10 +149,12 @@ describe('MonsterCompanyCheckStoragePort contract', () => {
     });
 
     it('id / jobTargetId / createdAt は不可変', async () => {
-      await storage.create(buildRecord('01MCC0001', {
-        jobTargetId: '01JT00001',
-        createdAt: '2026-01-01T00:00:00Z',
-      }));
+      await storage.create(
+        buildRecord('01MCC0001', {
+          jobTargetId: '01JT00001',
+          createdAt: '2026-01-01T00:00:00Z',
+        }),
+      );
       const updated = await storage.update('01MCC0001', { violationLaw: '新法条' });
       expect(updated.id).toBe('01MCC0001');
       expect(updated.jobTargetId).toBe('01JT00001');

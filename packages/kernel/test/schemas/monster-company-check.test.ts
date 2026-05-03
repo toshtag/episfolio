@@ -21,7 +21,9 @@ const base = {
 
 describe('ResignationEntrySchema', () => {
   it('正常系', () => {
-    expect(ResignationEntrySchema.safeParse({ url: 'https://example.com', summary: '要約' }).success).toBe(true);
+    expect(
+      ResignationEntrySchema.safeParse({ url: 'https://example.com', summary: '要約' }).success,
+    ).toBe(true);
   });
 
   it('url が空文字でも受理', () => {
@@ -51,7 +53,9 @@ describe('MonsterCompanyCheckSchema', () => {
   });
 
   it('resignationEntries が空配列でも受理', () => {
-    expect(MonsterCompanyCheckSchema.safeParse({ ...base, resignationEntries: [] }).success).toBe(true);
+    expect(MonsterCompanyCheckSchema.safeParse({ ...base, resignationEntries: [] }).success).toBe(
+      true,
+    );
   });
 
   it('resignationEntries に複数エントリを受理', () => {
@@ -116,15 +120,21 @@ describe('MonsterCompanyCheckUpdateSchema', () => {
   });
 
   it('violationLaw のみ更新できる', () => {
-    expect(MonsterCompanyCheckUpdateSchema.safeParse({ violationLaw: '労働安全衛生法第65条' }).success).toBe(true);
+    expect(
+      MonsterCompanyCheckUpdateSchema.safeParse({ violationLaw: '労働安全衛生法第65条' }).success,
+    ).toBe(true);
   });
 
   it('hiddenMonsterNote を null に更新できる', () => {
-    expect(MonsterCompanyCheckUpdateSchema.safeParse({ hiddenMonsterNote: null }).success).toBe(true);
+    expect(MonsterCompanyCheckUpdateSchema.safeParse({ hiddenMonsterNote: null }).success).toBe(
+      true,
+    );
   });
 
   it('resignationEntries を空配列に更新できる', () => {
-    expect(MonsterCompanyCheckUpdateSchema.safeParse({ resignationEntries: [] }).success).toBe(true);
+    expect(MonsterCompanyCheckUpdateSchema.safeParse({ resignationEntries: [] }).success).toBe(
+      true,
+    );
   });
 
   it('id を含めても strip される', () => {
