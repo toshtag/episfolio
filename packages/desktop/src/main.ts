@@ -21,6 +21,7 @@ import './subordinate-summary-view.js';
 import './work-asset-summary-view.js';
 import './result-by-type-view.js';
 import './strength-from-weakness-view.js';
+import './microchop-skill-view.js';
 
 type Tab =
   | 'episodes'
@@ -41,6 +42,7 @@ type Tab =
   | 'subordinate-summaries'
   | 'result-by-types'
   | 'strength-from-weakness'
+  | 'microchop-skill'
   | 'digest'
   | 'settings';
 
@@ -288,6 +290,12 @@ class EpisodeApp extends LitElement {
           }}
         >弱みを武器に</button>
         <button
+          class=${this.tab === 'microchop-skill' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'microchop-skill';
+          }}
+        >みじん切り</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -383,9 +391,11 @@ class EpisodeApp extends LitElement {
                                           ? html`<result-by-type-view></result-by-type-view>`
                                           : this.tab === 'strength-from-weakness'
                                             ? html`<strength-from-weakness-view></strength-from-weakness-view>`
-                                            : this.tab === 'digest'
-                                              ? html`<digest-view></digest-view>`
-                                              : html`<settings-view></settings-view>`
+                                            : this.tab === 'microchop-skill'
+                                              ? html`<microchop-skill-view></microchop-skill-view>`
+                                              : this.tab === 'digest'
+                                                ? html`<digest-view></digest-view>`
+                                                : html`<settings-view></settings-view>`
       }
     `;
   }

@@ -359,7 +359,9 @@ class MicrochopSkillView extends LitElement {
         ${r.note ? html`<div class="detail-field"><div class="detail-label">メモ</div><div style="white-space:pre-wrap;margin-top:0.3rem;">${r.note}</div></div>` : ''}
 
         <div class="actions">
-          <button class="btn btn-secondary btn-small" @click=${() => { this.showPreview = !this.showPreview; }}>
+          <button class="btn btn-secondary btn-small" @click=${() => {
+            this.showPreview = !this.showPreview;
+          }}>
             ${this.showPreview ? 'プレビュー非表示' : 'Markdown プレビュー'}
           </button>
         </div>
