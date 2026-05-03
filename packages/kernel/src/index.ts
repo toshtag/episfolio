@@ -64,6 +64,7 @@ export type {
   SkillEvidenceSource,
   SkillEvidenceStatus,
 } from './domain/skill-evidence.js';
+export type { StrengthArrow, StrengthArrowType } from './domain/strength-arrow.js';
 export type {
   SubordinateRow,
   SubordinateSummary,
@@ -80,6 +81,7 @@ export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
+export { toStrengthArrowMarkdown } from './exporters/strength-arrow.js';
 export type { SubordinateSummaryMarkdownOptions } from './exporters/subordinate-summary.js';
 export { toSubordinateSummaryMarkdown } from './exporters/subordinate-summary.js';
 export { toWorkAssetSummaryMarkdown } from './exporters/work-asset-summary.js';
@@ -109,6 +111,7 @@ export type { ResignationMotiveStoragePort } from './ports/resignation-motive-st
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
 export type { SkillEvidenceStoragePort } from './ports/skill-evidence-storage-port.js';
 export type { EpisodeStoragePort } from './ports/storage-port.js';
+export type { StrengthArrowStoragePort } from './ports/strength-arrow-storage-port.js';
 export type { SubordinateSummaryStoragePort } from './ports/subordinate-summary-storage-port.js';
 export type { WorkAssetSummaryStoragePort } from './ports/work-asset-summary-storage-port.js';
 // prompts
@@ -250,6 +253,17 @@ export {
   SkillEvidenceStatusSchema,
   SkillEvidenceUpdateSchema,
 } from './schemas/skill-evidence.js';
+export type {
+  StrengthArrowCreate,
+  StrengthArrowInput,
+  StrengthArrowUpdate,
+} from './schemas/strength-arrow.js';
+export {
+  StrengthArrowCreateSchema,
+  StrengthArrowSchema,
+  StrengthArrowTypeSchema,
+  StrengthArrowUpdateSchema,
+} from './schemas/strength-arrow.js';
 export type {
   SubordinateRowInput,
   SubordinateSummaryCreate,
