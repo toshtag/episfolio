@@ -26,6 +26,7 @@ import './weak-connection-view.js';
 import './monster-company-check-view.js';
 import './recruitment-impression-view.js';
 import './salary-benchmark-view.js';
+import './hidden-gem-note-view.js';
 
 type Tab =
   | 'episodes'
@@ -51,6 +52,7 @@ type Tab =
   | 'monster-company-check'
   | 'recruitment-impression'
   | 'salary-benchmark'
+  | 'hidden-gem-note'
   | 'digest'
   | 'settings';
 
@@ -328,6 +330,12 @@ class EpisodeApp extends LitElement {
           }}
         >給料分析</button>
         <button
+          class=${this.tab === 'hidden-gem-note' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'hidden-gem-note';
+          }}
+        >隠れ優良企業</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -433,9 +441,11 @@ class EpisodeApp extends LitElement {
                                                     ? html`<recruitment-impression-view></recruitment-impression-view>`
                                                     : this.tab === 'salary-benchmark'
                                                       ? html`<salary-benchmark-view></salary-benchmark-view>`
-                                                      : this.tab === 'digest'
-                                                        ? html`<digest-view></digest-view>`
-                                                        : html`<settings-view></settings-view>`
+                                                      : this.tab === 'hidden-gem-note'
+                                                        ? html`<hidden-gem-note-view></hidden-gem-note-view>`
+                                                        : this.tab === 'digest'
+                                                          ? html`<digest-view></digest-view>`
+                                                          : html`<settings-view></settings-view>`
       }
     `;
   }
