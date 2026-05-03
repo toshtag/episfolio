@@ -310,7 +310,7 @@ class ApplicationMotiveView extends LitElement {
         <div class="section">
           <p class="section-title">建前の志望動機（求人ごと）</p>
 
-          <label for="jt-select">求人ターゲットを選択</label>
+          <label for="jt-select">求人を選択</label>
           <select id="jt-select" @change=${this.handleJobTargetChange}>
             <option value="">— 選択してください —</option>
             ${this.jobTargets.map(

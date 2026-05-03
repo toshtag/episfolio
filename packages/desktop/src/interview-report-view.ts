@@ -433,7 +433,7 @@ class InterviewReportView extends LitElement {
       <div class="panel">
         <h1>面接後報告シート</h1>
         <div class="target-select">
-          <label>応募先</label>
+          <label>対象求人</label>
           <select @change=${this.onJobTargetChange}>
             ${this.jobTargets.map(
               (t) => html`
