@@ -16,6 +16,7 @@ import './job-wish-sheet-view.js';
 import './application-motive-view.js';
 import './boss-reference-view.js';
 import './customer-reference-view.js';
+import './strength-arrow-view.js';
 import './subordinate-summary-view.js';
 import './work-asset-summary-view.js';
 
@@ -33,6 +34,7 @@ type Tab =
   | 'application-motives'
   | 'boss-references'
   | 'customer-references'
+  | 'strength-arrows'
   | 'work-asset-summaries'
   | 'subordinate-summaries'
   | 'digest'
@@ -252,6 +254,12 @@ class EpisodeApp extends LitElement {
           }}
         >顧客リファレンス</button>
         <button
+          class=${this.tab === 'strength-arrows' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'strength-arrows';
+          }}
+        >三つの矢印</button>
+        <button
           class=${this.tab === 'work-asset-summaries' ? 'active' : ''}
           @click=${() => {
             this.tab = 'work-asset-summaries';
@@ -349,13 +357,15 @@ class EpisodeApp extends LitElement {
                                 ? html`<boss-reference-view></boss-reference-view>`
                                 : this.tab === 'customer-references'
                                   ? html`<customer-reference-view></customer-reference-view>`
-                                  : this.tab === 'work-asset-summaries'
-                                    ? html`<work-asset-summary-view></work-asset-summary-view>`
-                                    : this.tab === 'subordinate-summaries'
-                                      ? html`<subordinate-summary-view></subordinate-summary-view>`
-                                      : this.tab === 'digest'
-                                        ? html`<digest-view></digest-view>`
-                                        : html`<settings-view></settings-view>`
+                                  : this.tab === 'strength-arrows'
+                                    ? html`<strength-arrow-view></strength-arrow-view>`
+                                    : this.tab === 'work-asset-summaries'
+                                      ? html`<work-asset-summary-view></work-asset-summary-view>`
+                                      : this.tab === 'subordinate-summaries'
+                                        ? html`<subordinate-summary-view></subordinate-summary-view>`
+                                        : this.tab === 'digest'
+                                          ? html`<digest-view></digest-view>`
+                                          : html`<settings-view></settings-view>`
       }
     `;
   }

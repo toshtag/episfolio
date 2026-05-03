@@ -46,9 +46,7 @@ type RawUpdatePatch = Omit<StrengthArrowUpdate, 'relatedEpisodeIds'> & {
   relatedEpisodeIds?: string;
 };
 
-export async function createStrengthArrow(
-  args: CreateStrengthArrowArgs,
-): Promise<StrengthArrow> {
+export async function createStrengthArrow(args: CreateStrengthArrowArgs): Promise<StrengthArrow> {
   const { relatedEpisodeIds, ...rest } = args;
   const raw: RawCreateArgs = { ...rest };
   if (relatedEpisodeIds !== undefined) raw.relatedEpisodeIds = JSON.stringify(relatedEpisodeIds);
@@ -61,9 +59,7 @@ export async function listStrengthArrows(): Promise<StrengthArrow[]> {
   return rows.map(rowToArrow);
 }
 
-export async function listStrengthArrowsByType(
-  type: StrengthArrowType,
-): Promise<StrengthArrow[]> {
+export async function listStrengthArrowsByType(type: StrengthArrowType): Promise<StrengthArrow[]> {
   const rows = await invoke<RawStrengthArrowRow[]>('list_strength_arrows_by_type', {
     arrowType: type,
   });
