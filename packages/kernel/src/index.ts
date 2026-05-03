@@ -60,6 +60,10 @@ export type {
   MonsterCompanyCheck,
   ResignationEntry,
 } from './domain/monster-company-check.js';
+export type {
+  RecruitmentImpression,
+  SensoryObservation,
+} from './domain/recruitment-impression.js';
 export type { ResignationMotive } from './domain/resignation-motive.js';
 export type { ResultByType, ResultEntry, ResultType } from './domain/result-by-type.js';
 export type { AIProvider, Settings } from './domain/settings.js';
