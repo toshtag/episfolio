@@ -27,6 +27,7 @@ import './monster-company-check-view.js';
 import './recruitment-impression-view.js';
 import './salary-benchmark-view.js';
 import './hidden-gem-note-view.js';
+import './growth-cycle-note-view.js';
 
 type Tab =
   | 'episodes'
@@ -53,6 +54,7 @@ type Tab =
   | 'recruitment-impression'
   | 'salary-benchmark'
   | 'hidden-gem-note'
+  | 'growth-cycle-note'
   | 'digest'
   | 'settings';
 
@@ -336,6 +338,12 @@ class EpisodeApp extends LitElement {
           }}
         >隠れ優良企業</button>
         <button
+          class=${this.tab === 'growth-cycle-note' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'growth-cycle-note';
+          }}
+        >成長サイクル</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -443,9 +451,11 @@ class EpisodeApp extends LitElement {
                                                       ? html`<salary-benchmark-view></salary-benchmark-view>`
                                                       : this.tab === 'hidden-gem-note'
                                                         ? html`<hidden-gem-note-view></hidden-gem-note-view>`
-                                                        : this.tab === 'digest'
-                                                          ? html`<digest-view></digest-view>`
-                                                          : html`<settings-view></settings-view>`
+                                                        : this.tab === 'growth-cycle-note'
+                                                          ? html`<growth-cycle-note-view></growth-cycle-note-view>`
+                                                          : this.tab === 'digest'
+                                                            ? html`<digest-view></digest-view>`
+                                                            : html`<settings-view></settings-view>`
       }
     `;
   }
