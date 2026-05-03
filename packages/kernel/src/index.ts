@@ -72,6 +72,11 @@ export type {
   SubordinateRow,
   SubordinateSummary,
 } from './domain/subordinate-summary.js';
+export type {
+  ContactStatus,
+  WeakConnection,
+  WeakConnectionCategory,
+} from './domain/weak-connection.js';
 export type { AssetType, WorkAssetSummary } from './domain/work-asset-summary.js';
 // errors
 export { RemoteLLMBlockedError } from './errors.js';
@@ -90,6 +95,7 @@ export { toStrengthArrowMarkdown } from './exporters/strength-arrow.js';
 export { toStrengthFromWeaknessMarkdown } from './exporters/strength-from-weakness.js';
 export type { SubordinateSummaryMarkdownOptions } from './exporters/subordinate-summary.js';
 export { toSubordinateSummaryMarkdown } from './exporters/subordinate-summary.js';
+export { toWeakConnectionMarkdown } from './exporters/weak-connection.js';
 export { toWorkAssetSummaryMarkdown } from './exporters/work-asset-summary.js';
 export type { AgentMeetingEmailStoragePort } from './ports/agent-meeting-email-storage-port.js';
 export type { AgentTrackRecordStoragePort } from './ports/agent-track-record-storage-port.js';
@@ -122,6 +128,7 @@ export type { EpisodeStoragePort } from './ports/storage-port.js';
 export type { StrengthArrowStoragePort } from './ports/strength-arrow-storage-port.js';
 export type { StrengthFromWeaknessStoragePort } from './ports/strength-from-weakness-storage-port.js';
 export type { SubordinateSummaryStoragePort } from './ports/subordinate-summary-storage-port.js';
+export type { WeakConnectionStoragePort } from './ports/weak-connection-storage-port.js';
 export type { WorkAssetSummaryStoragePort } from './ports/work-asset-summary-storage-port.js';
 // prompts
 export { PROMPT_ID, PROMPT_TEMPLATE, PROMPT_VERSION } from './prompts/extract-evidence-v1.js';
@@ -321,6 +328,18 @@ export {
   SubordinateSummarySchema,
   SubordinateSummaryUpdateSchema,
 } from './schemas/subordinate-summary.js';
+export type {
+  WeakConnectionCreate,
+  WeakConnectionInput,
+  WeakConnectionUpdate,
+} from './schemas/weak-connection.js';
+export {
+  ContactStatusSchema,
+  WeakConnectionCategorySchema,
+  WeakConnectionCreateSchema,
+  WeakConnectionSchema,
+  WeakConnectionUpdateSchema,
+} from './schemas/weak-connection.js';
 export type {
   WorkAssetSummaryInput,
   WorkAssetSummaryUpdate,
