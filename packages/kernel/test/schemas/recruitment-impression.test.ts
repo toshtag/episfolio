@@ -9,10 +9,14 @@ import {
 const base = {
   id: '01RI00001',
   jobTargetId: '01JT00001',
-  selectionProcessNote: '書類選考→一次面接（人事）→二次面接（現場）→最終（役員）の4段階。平均選考期間は3週間とのこと。',
+  selectionProcessNote:
+    '書類選考→一次面接（人事）→二次面接（現場）→最終（役員）の4段階。平均選考期間は3週間とのこと。',
   officeAtmosphere: '受付の対応が丁寧。待合室はガラス張りで開放的。スーツ着用者が多め。',
   sensoryObservations: [
-    { category: '視覚', note: 'オープンフロアでパーティションが低い。グリーンが多く配置されている。' },
+    {
+      category: '視覚',
+      note: 'オープンフロアでパーティションが低い。グリーンが多く配置されている。',
+    },
     { category: '聴覚', note: '会話の声が適度に聞こえ、静かすぎない。BGMはなし。' },
   ],
   lifestyleCompatibilityNote: '残業平均20時間/月、在宅週2回可。子育て世代が多いとのこと。',
@@ -129,7 +133,8 @@ describe('RecruitmentImpressionUpdateSchema', () => {
 
   it('selectionProcessNote のみ更新できる', () => {
     expect(
-      RecruitmentImpressionUpdateSchema.safeParse({ selectionProcessNote: '3段階選考に変更' }).success,
+      RecruitmentImpressionUpdateSchema.safeParse({ selectionProcessNote: '3段階選考に変更' })
+        .success,
     ).toBe(true);
   });
 
@@ -138,9 +143,9 @@ describe('RecruitmentImpressionUpdateSchema', () => {
   });
 
   it('sensoryObservations を空配列に更新できる', () => {
-    expect(
-      RecruitmentImpressionUpdateSchema.safeParse({ sensoryObservations: [] }).success,
-    ).toBe(true);
+    expect(RecruitmentImpressionUpdateSchema.safeParse({ sensoryObservations: [] }).success).toBe(
+      true,
+    );
   });
 
   it('id を含めても strip される', () => {
@@ -152,7 +157,9 @@ describe('RecruitmentImpressionUpdateSchema', () => {
   });
 
   it('jobTargetId を含めても strip される', () => {
-    const result = RecruitmentImpressionUpdateSchema.safeParse({ jobTargetId: 'should-be-stripped' });
+    const result = RecruitmentImpressionUpdateSchema.safeParse({
+      jobTargetId: 'should-be-stripped',
+    });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data).not.toHaveProperty('jobTargetId');

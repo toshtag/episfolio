@@ -131,7 +131,9 @@ describe('RecruitmentImpressionStoragePort contract', () => {
   describe('update', () => {
     it('selectionProcessNote を更新できる', async () => {
       await storage.create(buildRecord('01RI00001', { selectionProcessNote: '旧情報' }));
-      const updated = await storage.update('01RI00001', { selectionProcessNote: '新情報（5段階）' });
+      const updated = await storage.update('01RI00001', {
+        selectionProcessNote: '新情報（5段階）',
+      });
       expect(updated.selectionProcessNote).toBe('新情報（5段階）');
     });
 
