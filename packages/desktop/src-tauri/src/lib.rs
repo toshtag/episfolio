@@ -129,6 +129,11 @@ pub fn run() {
             commands::strength_arrows::get_strength_arrow,
             commands::strength_arrows::update_strength_arrow,
             commands::strength_arrows::delete_strength_arrow,
+            commands::monster_company_checks::create_monster_company_check,
+            commands::monster_company_checks::list_monster_company_checks_by_job_target,
+            commands::monster_company_checks::get_monster_company_check,
+            commands::monster_company_checks::update_monster_company_check,
+            commands::monster_company_checks::delete_monster_company_check,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
