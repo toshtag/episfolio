@@ -23,6 +23,7 @@ import './result-by-type-view.js';
 import './strength-from-weakness-view.js';
 import './microchop-skill-view.js';
 import './weak-connection-view.js';
+import './company-certification-view.js';
 import './monster-company-check-view.js';
 import './recruitment-impression-view.js';
 import './salary-benchmark-view.js';
@@ -50,6 +51,7 @@ type Tab =
   | 'strength-from-weakness'
   | 'microchop-skill'
   | 'weak-connection'
+  | 'company-certification'
   | 'monster-company-check'
   | 'recruitment-impression'
   | 'salary-benchmark'
@@ -314,6 +316,12 @@ class EpisodeApp extends LitElement {
           }}
         >弱いつながり</button>
         <button
+          class=${this.tab === 'company-certification' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'company-certification';
+          }}
+        >認定・認証</button>
+        <button
           class=${this.tab === 'monster-company-check' ? 'active' : ''}
           @click=${() => {
             this.tab = 'monster-company-check';
@@ -443,19 +451,21 @@ class EpisodeApp extends LitElement {
                                               ? html`<microchop-skill-view></microchop-skill-view>`
                                               : this.tab === 'weak-connection'
                                                 ? html`<weak-connection-view></weak-connection-view>`
-                                                : this.tab === 'monster-company-check'
-                                                  ? html`<monster-company-check-view></monster-company-check-view>`
-                                                  : this.tab === 'recruitment-impression'
-                                                    ? html`<recruitment-impression-view></recruitment-impression-view>`
-                                                    : this.tab === 'salary-benchmark'
-                                                      ? html`<salary-benchmark-view></salary-benchmark-view>`
-                                                      : this.tab === 'hidden-gem-note'
-                                                        ? html`<hidden-gem-note-view></hidden-gem-note-view>`
-                                                        : this.tab === 'growth-cycle-note'
-                                                          ? html`<growth-cycle-note-view></growth-cycle-note-view>`
-                                                          : this.tab === 'digest'
-                                                            ? html`<digest-view></digest-view>`
-                                                            : html`<settings-view></settings-view>`
+                                                : this.tab === 'company-certification'
+                                                  ? html`<company-certification-view></company-certification-view>`
+                                                  : this.tab === 'monster-company-check'
+                                                    ? html`<monster-company-check-view></monster-company-check-view>`
+                                                    : this.tab === 'recruitment-impression'
+                                                      ? html`<recruitment-impression-view></recruitment-impression-view>`
+                                                      : this.tab === 'salary-benchmark'
+                                                        ? html`<salary-benchmark-view></salary-benchmark-view>`
+                                                        : this.tab === 'hidden-gem-note'
+                                                          ? html`<hidden-gem-note-view></hidden-gem-note-view>`
+                                                          : this.tab === 'growth-cycle-note'
+                                                            ? html`<growth-cycle-note-view></growth-cycle-note-view>`
+                                                            : this.tab === 'digest'
+                                                              ? html`<digest-view></digest-view>`
+                                                              : html`<settings-view></settings-view>`
       }
     `;
   }
