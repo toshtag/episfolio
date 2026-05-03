@@ -243,8 +243,6 @@ export class WeakConnectionView extends LitElement {
   }
 
   override render() {
-    const selected = this._records.find((r) => r.id === this._selectedId);
-
     return html`
       <div class="panel">
         <h1>弱いつながり</h1>
@@ -269,7 +267,8 @@ export class WeakConnectionView extends LitElement {
                 )}
             >
               ${CATEGORIES.map(
-                (cat) => html`<option value=${cat} ?selected=${this._form.category === cat}>${CATEGORY_LABELS[cat]}</option>`,
+                (cat) =>
+                  html`<option value=${cat} ?selected=${this._form.category === cat}>${CATEGORY_LABELS[cat]}</option>`,
               )}
             </select>
           </div>
@@ -292,7 +291,8 @@ export class WeakConnectionView extends LitElement {
                 )}
             >
               ${CONTACT_STATUSES.map(
-                (s) => html`<option value=${s} ?selected=${this._form.contactStatus === s}>${CONTACT_STATUS_LABELS[s]}</option>`,
+                (s) =>
+                  html`<option value=${s} ?selected=${this._form.contactStatus === s}>${CONTACT_STATUS_LABELS[s]}</option>`,
               )}
             </select>
           </div>
@@ -322,35 +322,42 @@ export class WeakConnectionView extends LitElement {
           <button class="primary" @click=${this._handleSave} ?disabled=${this._saving}>
             ${this._selectedId ? '更新' : '追加'}
           </button>
-          ${this._selectedId
-            ? html`
+          ${
+            this._selectedId
+              ? html`
               <button class="secondary" @click=${this._newRecord}>新規</button>
-              ${this._deleteConfirmId === this._selectedId
-                ? html`
+              ${
+                this._deleteConfirmId === this._selectedId
+                  ? html`
                   <button class="danger" @click=${() => this._confirmDelete(this._selectedId)}>本当に削除</button>
                   <button class="secondary" @click=${this._cancelDelete}>キャンセル</button>
                 `
-                : html`
+                  : html`
                   <button class="secondary" @click=${() => this._requestDelete(this._selectedId)}>削除</button>
-                `}
+                `
+              }
             `
-            : ''}
+              : ''
+          }
         </div>
 
         <hr class="divider" />
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
           <h2 style="margin:0">一覧（${this._records.length} 件）</h2>
-          <button class="secondary" @click=${() => { this._showPreview = !this._showPreview; }}>
+          <button class="secondary" @click=${() => {
+            this._showPreview = !this._showPreview;
+          }}>
             ${this._showPreview ? '一覧に戻る' : 'Markdown プレビュー'}
           </button>
         </div>
 
-        ${this._showPreview
-          ? html`<pre class="preview">${toWeakConnectionMarkdown(this._records)}</pre>`
-          : this._records.length === 0
-            ? html`<p class="empty">まだ登録がありません</p>`
-            : html`
+        ${
+          this._showPreview
+            ? html`<pre class="preview">${toWeakConnectionMarkdown(this._records)}</pre>`
+            : this._records.length === 0
+              ? html`<p class="empty">まだ登録がありません</p>`
+              : html`
               <ul class="record-list">
                 ${this._records.map(
                   (r) => html`
@@ -367,7 +374,8 @@ export class WeakConnectionView extends LitElement {
                   `,
                 )}
               </ul>
-            `}
+            `
+        }
       </div>
     `;
   }
