@@ -24,6 +24,7 @@ import './strength-from-weakness-view.js';
 import './microchop-skill-view.js';
 import './weak-connection-view.js';
 import './monster-company-check-view.js';
+import './recruitment-impression-view.js';
 
 type Tab =
   | 'episodes'
@@ -47,6 +48,7 @@ type Tab =
   | 'microchop-skill'
   | 'weak-connection'
   | 'monster-company-check'
+  | 'recruitment-impression'
   | 'digest'
   | 'settings';
 
@@ -312,6 +314,12 @@ class EpisodeApp extends LitElement {
           }}
         >モンスター企業判定</button>
         <button
+          class=${this.tab === 'recruitment-impression' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'recruitment-impression';
+          }}
+        >採用印象メモ</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -413,9 +421,11 @@ class EpisodeApp extends LitElement {
                                                 ? html`<weak-connection-view></weak-connection-view>`
                                                 : this.tab === 'monster-company-check'
                                                   ? html`<monster-company-check-view></monster-company-check-view>`
-                                                  : this.tab === 'digest'
-                                                    ? html`<digest-view></digest-view>`
-                                                    : html`<settings-view></settings-view>`
+                                                  : this.tab === 'recruitment-impression'
+                                                    ? html`<recruitment-impression-view></recruitment-impression-view>`
+                                                    : this.tab === 'digest'
+                                                      ? html`<digest-view></digest-view>`
+                                                      : html`<settings-view></settings-view>`
       }
     `;
   }

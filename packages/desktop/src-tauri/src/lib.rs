@@ -134,6 +134,11 @@ pub fn run() {
             commands::monster_company_checks::get_monster_company_check,
             commands::monster_company_checks::update_monster_company_check,
             commands::monster_company_checks::delete_monster_company_check,
+            commands::recruitment_impressions::create_recruitment_impression,
+            commands::recruitment_impressions::list_recruitment_impressions_by_job_target,
+            commands::recruitment_impressions::get_recruitment_impression,
+            commands::recruitment_impressions::update_recruitment_impression,
+            commands::recruitment_impressions::delete_recruitment_impression,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
