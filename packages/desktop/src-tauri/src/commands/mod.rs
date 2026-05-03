@@ -13,6 +13,7 @@ pub mod job_requirement_mappings;
 pub mod job_targets;
 pub mod job_wish_sheets;
 pub mod life_timeline;
+pub mod microchop_skill;
 pub mod result_by_type;
 pub mod strength_arrows;
 pub mod strength_from_weakness;
