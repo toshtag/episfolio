@@ -20,6 +20,7 @@ import './strength-arrow-view.js';
 import './subordinate-summary-view.js';
 import './work-asset-summary-view.js';
 import './result-by-type-view.js';
+import './strength-from-weakness-view.js';
 
 type Tab =
   | 'episodes'
@@ -39,6 +40,7 @@ type Tab =
   | 'work-asset-summaries'
   | 'subordinate-summaries'
   | 'result-by-types'
+  | 'strength-from-weakness'
   | 'digest'
   | 'settings';
 
@@ -280,6 +282,12 @@ class EpisodeApp extends LitElement {
           }}
         >3 タイプの実績</button>
         <button
+          class=${this.tab === 'strength-from-weakness' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'strength-from-weakness';
+          }}
+        >弱みを武器に</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -373,9 +381,11 @@ class EpisodeApp extends LitElement {
                                         ? html`<subordinate-summary-view></subordinate-summary-view>`
                                         : this.tab === 'result-by-types'
                                           ? html`<result-by-type-view></result-by-type-view>`
-                                          : this.tab === 'digest'
-                                            ? html`<digest-view></digest-view>`
-                                            : html`<settings-view></settings-view>`
+                                          : this.tab === 'strength-from-weakness'
+                                            ? html`<strength-from-weakness-view></strength-from-weakness-view>`
+                                            : this.tab === 'digest'
+                                              ? html`<digest-view></digest-view>`
+                                              : html`<settings-view></settings-view>`
       }
     `;
   }

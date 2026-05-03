@@ -15,5 +15,6 @@ pub mod job_wish_sheets;
 pub mod life_timeline;
 pub mod result_by_type;
 pub mod strength_arrows;
+pub mod strength_from_weakness;
 pub mod subordinate_summaries;
 pub mod work_asset_summaries;
