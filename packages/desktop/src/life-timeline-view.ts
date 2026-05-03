@@ -16,6 +16,24 @@ const CATEGORIES = [
   { value: 'other', label: 'その他' },
 ] as const;
 
+const SUMMARY_PLACEHOLDERS: Record<string, string> = {
+  education: '例: 大学でプログラミングサークルに参加、文化祭実行委員長を経験',
+  work: '例: 新卒で営業職に就く。目標達成率 150% を継続',
+  family: '例: 親の介護をしながら働く。週 2 回リモートに切り替え',
+  health: '例: 過労で 3 ヶ月休職。回復後に働き方を見直す',
+  hobby: '例: 登山サークルで 100 名超のコミュニティを運営',
+  other: 'この時期を一言で表すと？',
+};
+
+const DETAIL_PLACEHOLDERS: Record<string, string> = {
+  education: 'どんな経験をした？何を学んだ？どんな仲間がいた？',
+  work: '担当した業務・成果・失敗・学び・関わった人など',
+  family: 'その経験から気づいたこと、得たスキルや視点など',
+  health: '休職・回復の経緯、そこから学んだこと、職場環境の変化など',
+  hobby: '活動の詳細、リーダーシップや運営経験、得たつながりなど',
+  other: '出来事の詳細・気づき・転換点になった理由など',
+};
+
 type FormState = {
   ageRangeStart: string;
   ageRangeEnd: string;
@@ -139,6 +157,32 @@ class LifeTimelineView extends LitElement {
     button.del-btn { color: #c00; border-color: #f5c0c0; }
     button.del-btn.confirm { background: #c00; color: #fff; border-color: #c00; }
     .empty { color: #888; font-size: 0.9rem; }
+    .guide {
+      background: #f0f7ff;
+      border: 1px solid #c8dff8;
+      border-radius: 0.4rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.85rem;
+      color: #1a4a80;
+      line-height: 1.6;
+    }
+    .guide strong { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; }
+    .guide ul { margin: 0.25rem 0 0; padding-left: 1.2rem; }
+    .guide li { margin-bottom: 0.15rem; }
+    .hint-box {
+      background: #fafafa;
+      border: 1px dashed #ccc;
+      border-radius: 0.4rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #555;
+    }
+    .hint-box strong { display: block; margin-bottom: 0.5rem; color: #333; }
+    .hint-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .hint-item { font-size: 0.8rem; color: #666; }
+    .hint-item span { font-weight: 600; color: #444; }
     .category-badge {
       display: inline-block;
       font-size: 0.75rem;
@@ -272,6 +316,17 @@ class LifeTimelineView extends LitElement {
       <div class="panel">
         <h1>人生年表</h1>
 
+        <div class="guide">
+          <strong>仕事以外の経験も強みになる</strong>
+          仕事の経験だけでなく、以下のような「仕事以外の経験」も記録しておきましょう。採用担当者が「その人らしさ」を感じるのは、こういったエントリが多いです。
+          <ul>
+            <li><strong>学業</strong> — 部活・サークル・アルバイト・ゼミでのリーダー経験など</li>
+            <li><strong>趣味</strong> — コミュニティ運営・発表・競技・ものづくりなど</li>
+            <li><strong>家族</strong> — 介護・育児・パートナーの転勤サポートなど</li>
+            <li><strong>健康</strong> — 休職・療養・復帰の経緯（「弱み」も強みに変わる）</li>
+          </ul>
+        </div>
+
         <div class="form-grid">
           <div>
             <label>開始年齢 *</label>
@@ -338,7 +393,7 @@ class LifeTimelineView extends LitElement {
               type="text"
               .value=${this.form.summary}
               @input=${(e: Event) => this.setField('summary', (e.target as HTMLInputElement).value)}
-              placeholder="この時期を一言で"
+              placeholder=${SUMMARY_PLACEHOLDERS[this.form.category] ?? 'この時期を一言で'}
             />
           </div>
           <div class="full">
@@ -346,7 +401,7 @@ class LifeTimelineView extends LitElement {
             <textarea
               .value=${this.form.detail}
               @input=${(e: Event) => this.setField('detail', (e.target as HTMLTextAreaElement).value)}
-              placeholder="出来事の詳細・気づきなど"
+              placeholder=${DETAIL_PLACEHOLDERS[this.form.category] ?? '出来事の詳細・気づきなど'}
             ></textarea>
           </div>
         </div>
@@ -368,7 +423,18 @@ class LifeTimelineView extends LitElement {
 
         ${
           this.entries.length === 0
-            ? html`<p class="empty">年表エントリはまだありません</p>`
+            ? html`
+              <p class="empty">年表エントリはまだありません</p>
+              <div class="hint-box">
+                <strong>入力例（仕事以外のカテゴリ）</strong>
+                <div class="hint-grid">
+                  <div class="hint-item"><span>趣味 / 0〜22歳</span><br>幼少期から続ける水泳。県大会で 3 位入賞</div>
+                  <div class="hint-item"><span>学業 / 18〜22歳</span><br>大学でプログラミングサークルを立ち上げ、50 名に成長</div>
+                  <div class="hint-item"><span>家族 / 28〜30歳</span><br>親の介護のため週 2 在宅勤務に移行。チームへの引継ぎを経験</div>
+                  <div class="hint-item"><span>健康 / 32〜33歳</span><br>過労で 3 ヶ月休職。復帰後に働き方を抜本的に見直す</div>
+                </div>
+              </div>
+            `
             : html`
             <div class="entry-list">
               ${this.entries.map((entry) => this.renderEntry(entry))}
