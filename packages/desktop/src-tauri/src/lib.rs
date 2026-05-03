@@ -103,6 +103,12 @@ pub fn run() {
             commands::subordinate_summaries::get_subordinate_summary,
             commands::subordinate_summaries::update_subordinate_summary,
             commands::subordinate_summaries::delete_subordinate_summary,
+            commands::strength_arrows::create_strength_arrow,
+            commands::strength_arrows::list_strength_arrows,
+            commands::strength_arrows::list_strength_arrows_by_type,
+            commands::strength_arrows::get_strength_arrow,
+            commands::strength_arrows::update_strength_arrow,
+            commands::strength_arrows::delete_strength_arrow,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
