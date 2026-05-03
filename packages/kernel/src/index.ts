@@ -64,9 +64,9 @@ export type {
   RecruitmentImpression,
   SensoryObservation,
 } from './domain/recruitment-impression.js';
-export type { SalaryBenchmark } from './domain/salary-benchmark.js';
 export type { ResignationMotive } from './domain/resignation-motive.js';
 export type { ResultByType, ResultEntry, ResultType } from './domain/result-by-type.js';
+export type { SalaryBenchmark } from './domain/salary-benchmark.js';
 export type { AIProvider, Settings } from './domain/settings.js';
 export { DEFAULT_SETTINGS } from './domain/settings.js';
 export type {
@@ -99,10 +99,10 @@ export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export { toMicrochopSkillMarkdown } from './exporters/microchop-skill.js';
 export { toMonsterCompanyCheckMarkdown } from './exporters/monster-company-check.js';
 export { toRecruitmentImpressionMarkdown } from './exporters/recruitment-impression.js';
-export { toSalaryBenchmarkMarkdown } from './exporters/salary-benchmark.js';
 export { toResultByTypeMarkdown } from './exporters/result-by-type.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
+export { toSalaryBenchmarkMarkdown } from './exporters/salary-benchmark.js';
 export { toStrengthArrowMarkdown } from './exporters/strength-arrow.js';
 export { toStrengthFromWeaknessMarkdown } from './exporters/strength-from-weakness.js';
 export type { SubordinateSummaryMarkdownOptions } from './exporters/subordinate-summary.js';
@@ -134,9 +134,9 @@ export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port
 export type { MicrochopSkillStoragePort } from './ports/microchop-skill-storage-port.js';
 export type { MonsterCompanyCheckStoragePort } from './ports/monster-company-check-storage-port.js';
 export type { RecruitmentImpressionStoragePort } from './ports/recruitment-impression-storage-port.js';
-export type { SalaryBenchmarkStoragePort } from './ports/salary-benchmark-storage-port.js';
 export type { ResignationMotiveStoragePort } from './ports/resignation-motive-storage-port.js';
 export type { ResultByTypeStoragePort } from './ports/result-by-type-storage-port.js';
+export type { SalaryBenchmarkStoragePort } from './ports/salary-benchmark-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
 export type { SkillEvidenceStoragePort } from './ports/skill-evidence-storage-port.js';
 export type { EpisodeStoragePort } from './ports/storage-port.js';
@@ -302,16 +302,6 @@ export {
   SensoryObservationSchema,
 } from './schemas/recruitment-impression.js';
 export type {
-  SalaryBenchmarkCreate,
-  SalaryBenchmarkInput,
-  SalaryBenchmarkUpdate,
-} from './schemas/salary-benchmark.js';
-export {
-  SalaryBenchmarkCreateSchema,
-  SalaryBenchmarkSchema,
-  SalaryBenchmarkUpdateSchema,
-} from './schemas/salary-benchmark.js';
-export type {
   ResignationMotiveCreate,
   ResignationMotiveInput,
   ResignationMotiveUpdate,
@@ -335,6 +325,16 @@ export {
   ResultTypeSchema,
   SkillTypeSchema,
 } from './schemas/result-by-type.js';
+export type {
+  SalaryBenchmarkCreate,
+  SalaryBenchmarkInput,
+  SalaryBenchmarkUpdate,
+} from './schemas/salary-benchmark.js';
+export {
+  SalaryBenchmarkCreateSchema,
+  SalaryBenchmarkSchema,
+  SalaryBenchmarkUpdateSchema,
+} from './schemas/salary-benchmark.js';
 export type { SkillEvidenceInput, SkillEvidenceUpdate } from './schemas/skill-evidence.js';
 export {
   SkillEvidenceConfidenceSchema,
