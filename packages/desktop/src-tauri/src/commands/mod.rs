@@ -22,3 +22,4 @@ pub mod weak_connection;
 pub mod work_asset_summaries;
 pub mod monster_company_checks;
 pub mod recruitment_impressions;
+pub mod salary_benchmarks;

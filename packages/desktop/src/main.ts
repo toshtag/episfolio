@@ -25,6 +25,7 @@ import './microchop-skill-view.js';
 import './weak-connection-view.js';
 import './monster-company-check-view.js';
 import './recruitment-impression-view.js';
+import './salary-benchmark-view.js';
 
 type Tab =
   | 'episodes'
@@ -49,6 +50,7 @@ type Tab =
   | 'weak-connection'
   | 'monster-company-check'
   | 'recruitment-impression'
+  | 'salary-benchmark'
   | 'digest'
   | 'settings';
 
@@ -320,6 +322,12 @@ class EpisodeApp extends LitElement {
           }}
         >採用印象メモ</button>
         <button
+          class=${this.tab === 'salary-benchmark' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'salary-benchmark';
+          }}
+        >給料分析</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -423,9 +431,11 @@ class EpisodeApp extends LitElement {
                                                   ? html`<monster-company-check-view></monster-company-check-view>`
                                                   : this.tab === 'recruitment-impression'
                                                     ? html`<recruitment-impression-view></recruitment-impression-view>`
-                                                    : this.tab === 'digest'
-                                                      ? html`<digest-view></digest-view>`
-                                                      : html`<settings-view></settings-view>`
+                                                    : this.tab === 'salary-benchmark'
+                                                      ? html`<salary-benchmark-view></salary-benchmark-view>`
+                                                      : this.tab === 'digest'
+                                                        ? html`<digest-view></digest-view>`
+                                                        : html`<settings-view></settings-view>`
       }
     `;
   }

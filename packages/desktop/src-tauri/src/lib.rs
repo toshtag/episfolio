@@ -139,6 +139,11 @@ pub fn run() {
             commands::recruitment_impressions::get_recruitment_impression,
             commands::recruitment_impressions::update_recruitment_impression,
             commands::recruitment_impressions::delete_recruitment_impression,
+            commands::salary_benchmarks::create_salary_benchmark,
+            commands::salary_benchmarks::list_salary_benchmarks_by_job_target,
+            commands::salary_benchmarks::get_salary_benchmark,
+            commands::salary_benchmarks::update_salary_benchmark,
+            commands::salary_benchmarks::delete_salary_benchmark,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
