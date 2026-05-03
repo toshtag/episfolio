@@ -34,6 +34,10 @@ export type {
   BossReferenceAxisValues,
 } from './domain/boss-reference.js';
 export type {
+  BusinessUnitType,
+  BusinessUnitTypeMatch,
+} from './domain/business-unit-type-match.js';
+export type {
   CareerDocument,
   CareerDocumentStatus,
   CareerDocumentType,
@@ -95,6 +99,7 @@ export { RemoteLLMBlockedError } from './errors.js';
 export { composeApplicationMotiveText } from './exporters/application-motive.js';
 // exporters
 export { toBossReferenceMarkdown } from './exporters/boss-reference.js';
+export { toBusinessUnitTypeMatchMarkdown } from './exporters/business-unit-type-match.js';
 export { toCareerDigestMarkdown } from './exporters/career-digest.js';
 export { toCompanyCertificationMarkdown } from './exporters/company-certification.js';
 export { toCustomerReferenceMarkdown } from './exporters/customer-reference.js';
@@ -128,6 +133,7 @@ export type {
 export type { AIRunStoragePort } from './ports/ai-run-storage-port.js';
 export type { ApplicationMotiveStoragePort } from './ports/application-motive-storage-port.js';
 export type { BossReferenceStoragePort } from './ports/boss-reference-storage-port.js';
+export type { BusinessUnitTypeMatchStoragePort } from './ports/business-unit-type-match-storage-port.js';
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
 export type { CompanyCertificationStoragePort } from './ports/company-certification-storage-port.js';
 export type { CustomerReferenceStoragePort } from './ports/customer-reference-storage-port.js';
@@ -199,6 +205,17 @@ export {
   BossReferenceSchema,
   BossReferenceUpdateSchema,
 } from './schemas/boss-reference.js';
+export type {
+  BusinessUnitTypeMatchCreate,
+  BusinessUnitTypeMatchInput,
+  BusinessUnitTypeMatchUpdate,
+} from './schemas/business-unit-type-match.js';
+export {
+  BusinessUnitTypeMatchCreateSchema,
+  BusinessUnitTypeMatchSchema,
+  BusinessUnitTypeMatchUpdateSchema,
+  BusinessUnitTypeSchema,
+} from './schemas/business-unit-type-match.js';
 export type {
   CareerDocumentInput,
   CareerDocumentUpdate,
