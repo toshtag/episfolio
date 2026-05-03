@@ -1,5 +1,7 @@
-import type { BusinessUnitTypeMatch } from '../domain/business-unit-type-match.js';
-import type { BusinessUnitType } from '../domain/business-unit-type-match.js';
+import type {
+  BusinessUnitType,
+  BusinessUnitTypeMatch,
+} from '../domain/business-unit-type-match.js';
 
 const PLACEHOLDER = '（未記入）';
 

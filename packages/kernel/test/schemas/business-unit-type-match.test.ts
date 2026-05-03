@@ -62,9 +62,9 @@ describe('BusinessUnitTypeMatchSchema', () => {
   });
 
   it('isMatchConfirmed が true でも受理', () => {
-    expect(
-      BusinessUnitTypeMatchSchema.safeParse({ ...base, isMatchConfirmed: true }).success,
-    ).toBe(true);
+    expect(BusinessUnitTypeMatchSchema.safeParse({ ...base, isMatchConfirmed: true }).success).toBe(
+      true,
+    );
   });
 
   it('companyUnitType に無効な値を拒否', () => {
@@ -131,15 +131,15 @@ describe('BusinessUnitTypeMatchUpdateSchema', () => {
   });
 
   it('isMatchConfirmed を true に更新できる', () => {
-    expect(
-      BusinessUnitTypeMatchUpdateSchema.safeParse({ isMatchConfirmed: true }).success,
-    ).toBe(true);
+    expect(BusinessUnitTypeMatchUpdateSchema.safeParse({ isMatchConfirmed: true }).success).toBe(
+      true,
+    );
   });
 
   it('companyUnitType を null に更新できる', () => {
-    expect(
-      BusinessUnitTypeMatchUpdateSchema.safeParse({ companyUnitType: null }).success,
-    ).toBe(true);
+    expect(BusinessUnitTypeMatchUpdateSchema.safeParse({ companyUnitType: null }).success).toBe(
+      true,
+    );
   });
 
   it('note を更新できる', () => {
