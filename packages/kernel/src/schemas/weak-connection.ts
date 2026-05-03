@@ -8,11 +8,7 @@ export const WeakConnectionCategorySchema = z.enum([
   'sns',
 ]);
 
-export const ContactStatusSchema = z.enum([
-  'not_contacted',
-  'contacted',
-  'replied',
-]);
+export const ContactStatusSchema = z.enum(['not_contacted', 'contacted', 'replied']);
 
 export const WeakConnectionSchema = z.object({
   id: z.string().min(1),

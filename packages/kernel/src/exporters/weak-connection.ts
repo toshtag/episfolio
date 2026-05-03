@@ -1,4 +1,8 @@
-import type { ContactStatus, WeakConnection, WeakConnectionCategory } from '../domain/weak-connection.js';
+import type {
+  ContactStatus,
+  WeakConnection,
+  WeakConnectionCategory,
+} from '../domain/weak-connection.js';
 
 const PLACEHOLDER = '（未記入）';
 
