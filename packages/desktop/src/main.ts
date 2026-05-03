@@ -24,6 +24,7 @@ import './strength-from-weakness-view.js';
 import './microchop-skill-view.js';
 import './weak-connection-view.js';
 import './company-certification-view.js';
+import './business-unit-type-match-view.js';
 import './monster-company-check-view.js';
 import './recruitment-impression-view.js';
 import './salary-benchmark-view.js';
@@ -52,6 +53,7 @@ type Tab =
   | 'microchop-skill'
   | 'weak-connection'
   | 'company-certification'
+  | 'business-unit-type-match'
   | 'monster-company-check'
   | 'recruitment-impression'
   | 'salary-benchmark'
@@ -322,6 +324,12 @@ class EpisodeApp extends LitElement {
           }}
         >認定・認証</button>
         <button
+          class=${this.tab === 'business-unit-type-match' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'business-unit-type-match';
+          }}
+        >事業部タイプ相性</button>
+        <button
           class=${this.tab === 'monster-company-check' ? 'active' : ''}
           @click=${() => {
             this.tab = 'monster-company-check';
@@ -453,19 +461,21 @@ class EpisodeApp extends LitElement {
                                                 ? html`<weak-connection-view></weak-connection-view>`
                                                 : this.tab === 'company-certification'
                                                   ? html`<company-certification-view></company-certification-view>`
-                                                  : this.tab === 'monster-company-check'
-                                                    ? html`<monster-company-check-view></monster-company-check-view>`
-                                                    : this.tab === 'recruitment-impression'
-                                                      ? html`<recruitment-impression-view></recruitment-impression-view>`
-                                                      : this.tab === 'salary-benchmark'
-                                                        ? html`<salary-benchmark-view></salary-benchmark-view>`
-                                                        : this.tab === 'hidden-gem-note'
-                                                          ? html`<hidden-gem-note-view></hidden-gem-note-view>`
-                                                          : this.tab === 'growth-cycle-note'
-                                                            ? html`<growth-cycle-note-view></growth-cycle-note-view>`
-                                                            : this.tab === 'digest'
-                                                              ? html`<digest-view></digest-view>`
-                                                              : html`<settings-view></settings-view>`
+                                                  : this.tab === 'business-unit-type-match'
+                                                    ? html`<business-unit-type-match-view></business-unit-type-match-view>`
+                                                    : this.tab === 'monster-company-check'
+                                                      ? html`<monster-company-check-view></monster-company-check-view>`
+                                                      : this.tab === 'recruitment-impression'
+                                                        ? html`<recruitment-impression-view></recruitment-impression-view>`
+                                                        : this.tab === 'salary-benchmark'
+                                                          ? html`<salary-benchmark-view></salary-benchmark-view>`
+                                                          : this.tab === 'hidden-gem-note'
+                                                            ? html`<hidden-gem-note-view></hidden-gem-note-view>`
+                                                            : this.tab === 'growth-cycle-note'
+                                                              ? html`<growth-cycle-note-view></growth-cycle-note-view>`
+                                                              : this.tab === 'digest'
+                                                                ? html`<digest-view></digest-view>`
+                                                                : html`<settings-view></settings-view>`
       }
     `;
   }

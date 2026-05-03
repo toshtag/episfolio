@@ -23,6 +23,7 @@ pub mod work_asset_summaries;
 pub mod company_certifications;
 pub mod growth_cycle_notes;
 pub mod hidden_gem_notes;
+pub mod business_unit_type_matches;
 pub mod monster_company_checks;
 pub mod recruitment_impressions;
 pub mod salary_benchmarks;
