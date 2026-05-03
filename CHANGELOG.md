@@ -7,6 +7,39 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.8.0] - 2026-05-03
+
+企業分析チェックリスト（7 機能）を追加した機能リリース。転職先候補の企業を多面的に評価するチェックリスト群が end-to-end で動作する。全機能が JobTarget に紐づく 1:N 構造で設計され、求人ごとに詳細な企業分析を記録・管理できる。
+
+### Added
+
+- **MonsterCompanyCheck ドメイン**（kernel）: ブラック企業チェックの型・Zod schema・StoragePort・Markdown exporter。厚労省公表事案 URL / 違反法条 / 退職エントリ配列（URL + 要約）/ 隠れモンスター部署メモを構造化保存
+- **RecruitmentImpression ドメイン**（kernel）: 採用選考・オフィス訪問印象の型・Zod schema・StoragePort・Markdown exporter。選考プロセス記述 + 五感別観察エントリ配列 + ライフスタイル適合 / 危険信号 / 総合印象
+- **SalaryBenchmark ドメイン**（kernel）: 給与水準分析の型・Zod schema・StoragePort・Markdown exporter。求人想定年収 vs 業界平均 / 最低水準 / 最高水準 +「見合わない企業」フラグ
+- **HiddenGemNote ドメイン**（kernel）: 隠れ優良企業チェックの型・Zod schema・StoragePort・Markdown exporter。グローバルニッチトップ判定 / モンスター化しにくい仕組みチェック / 長期就労適性
+- **GrowthCycleNote ドメイン**（kernel）: 企業成長サイクル分析の型・Zod schema・StoragePort・Markdown exporter。3 段階（startup / growth / stable_expansion）+ 段階別メモ + 長期就労適性
+- **CompanyCertification ドメイン**（kernel）: 認定・認証チェックの型・Zod schema・StoragePort・Markdown exporter。くるみん / プラチナくるみん / トモニン / えるぼし（レベル 1〜3）/ プラチナえるぼし
+- **BusinessUnitTypeMatch ドメイン**（kernel）: 事業部タイプ相性チェックの型・Zod schema・StoragePort・Markdown exporter。花形 / 縁の下の力持ち / チャレンジ / 立て直し の 4 タイプで企業タイプと自己タイプを照合し志望動機ドラフトを管理
+- **MonsterCompanyCheck CRUD + UI**（desktop）: migration `0026`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI（退職エントリリスト + Markdown プレビュー + 2 ステップ削除）
+- **RecruitmentImpression CRUD + UI**（desktop）: migration `0027`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI（五感観察エントリ動的追加 + Markdown プレビュー + 2 ステップ削除）
+- **SalaryBenchmark CRUD + UI**（desktop）: migration `0028`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI
+- **HiddenGemNote CRUD + UI**（desktop）: migration `0029`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI
+- **GrowthCycleNote CRUD + UI**（desktop）: migration `0030`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI
+- **CompanyCertification CRUD + UI**（desktop）: migration `0031`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI（くるみん / トモニン / えるぼし チェックボックス + select）
+- **BusinessUnitTypeMatch CRUD + UI**（desktop）: migration `0032`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI（企業タイプ / 自己タイプ select + 一致確認 + 志望動機ドラフト）
+- **kernel テスト**: 895 → 1351 件（v0.8 で +456 件: 7 ドメインの schema・port・exporter テスト）
+
+### Changed
+
+- 全パッケージの version を 0.8.0 に揃える（root / kernel / desktop / Cargo.toml / tauri.conf.json）
+
+### Notes
+
+- v0.8 は完全ローカル動作のまま（外部送信 surface は v0.2.1 で物理削除済、ADR-0009）
+- 全 7 entity は `jobTargetId` FK で JobTarget に 1:N 紐づけ
+
+---
+
 ## [0.7.0] - 2026-05-03
 
 強み発掘ワークシート + 弱いつながり管理 + 人生年表 UI 改善を追加した機能リリース。転職活動の自己分析フェーズで使う「自分の強みを発掘する」系ワークシート 4 種と、グラノベターの「弱いつながり」管理機能が end-to-end で動作する。
