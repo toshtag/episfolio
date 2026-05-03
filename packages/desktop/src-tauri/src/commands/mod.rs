@@ -18,4 +18,5 @@ pub mod result_by_type;
 pub mod strength_arrows;
 pub mod strength_from_weakness;
 pub mod subordinate_summaries;
+pub mod weak_connection;
 pub mod work_asset_summaries;
