@@ -97,6 +97,7 @@ export { toJibunTaizenMarkdown } from './exporters/jibun-taizen.js';
 export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export { toMicrochopSkillMarkdown } from './exporters/microchop-skill.js';
 export { toMonsterCompanyCheckMarkdown } from './exporters/monster-company-check.js';
+export { toRecruitmentImpressionMarkdown } from './exporters/recruitment-impression.js';
 export { toResultByTypeMarkdown } from './exporters/result-by-type.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
@@ -130,6 +131,7 @@ export type { JobWishSheetStoragePort } from './ports/job-wish-sheet-storage-por
 export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port.js';
 export type { MicrochopSkillStoragePort } from './ports/microchop-skill-storage-port.js';
 export type { MonsterCompanyCheckStoragePort } from './ports/monster-company-check-storage-port.js';
+export type { RecruitmentImpressionStoragePort } from './ports/recruitment-impression-storage-port.js';
 export type { ResignationMotiveStoragePort } from './ports/resignation-motive-storage-port.js';
 export type { ResultByTypeStoragePort } from './ports/result-by-type-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
@@ -284,6 +286,18 @@ export {
   MonsterCompanyCheckUpdateSchema,
   ResignationEntrySchema,
 } from './schemas/monster-company-check.js';
+export type {
+  RecruitmentImpressionCreate,
+  RecruitmentImpressionInput,
+  RecruitmentImpressionUpdate,
+  SensoryObservationInput,
+} from './schemas/recruitment-impression.js';
+export {
+  RecruitmentImpressionCreateSchema,
+  RecruitmentImpressionSchema,
+  RecruitmentImpressionUpdateSchema,
+  SensoryObservationSchema,
+} from './schemas/recruitment-impression.js';
 export type {
   ResignationMotiveCreate,
   ResignationMotiveInput,

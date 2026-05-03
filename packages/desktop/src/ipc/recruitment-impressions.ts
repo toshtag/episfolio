@@ -70,9 +70,7 @@ export async function listRecruitmentImpressionsByJobTarget(
   return rows.map(rowToRecord);
 }
 
-export async function getRecruitmentImpression(
-  id: string,
-): Promise<RecruitmentImpression | null> {
+export async function getRecruitmentImpression(id: string): Promise<RecruitmentImpression | null> {
   const row = await invoke<RawRow | null>('get_recruitment_impression', { id });
   return row ? rowToRecord(row) : null;
 }
