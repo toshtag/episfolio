@@ -66,6 +66,7 @@ export type {
   SkillEvidenceStatus,
 } from './domain/skill-evidence.js';
 export type { StrengthArrow, StrengthArrowType } from './domain/strength-arrow.js';
+export type { BlankType, StrengthFromWeakness } from './domain/strength-from-weakness.js';
 export type {
   SubordinateRow,
   SubordinateSummary,
@@ -84,6 +85,7 @@ export { toResultByTypeMarkdown } from './exporters/result-by-type.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
 export { toStrengthArrowMarkdown } from './exporters/strength-arrow.js';
+export { toStrengthFromWeaknessMarkdown } from './exporters/strength-from-weakness.js';
 export type { SubordinateSummaryMarkdownOptions } from './exporters/subordinate-summary.js';
 export { toSubordinateSummaryMarkdown } from './exporters/subordinate-summary.js';
 export { toWorkAssetSummaryMarkdown } from './exporters/work-asset-summary.js';
@@ -115,6 +117,7 @@ export type { SettingsStoragePort } from './ports/settings-storage-port.js';
 export type { SkillEvidenceStoragePort } from './ports/skill-evidence-storage-port.js';
 export type { EpisodeStoragePort } from './ports/storage-port.js';
 export type { StrengthArrowStoragePort } from './ports/strength-arrow-storage-port.js';
+export type { StrengthFromWeaknessStoragePort } from './ports/strength-from-weakness-storage-port.js';
 export type { SubordinateSummaryStoragePort } from './ports/subordinate-summary-storage-port.js';
 export type { WorkAssetSummaryStoragePort } from './ports/work-asset-summary-storage-port.js';
 // prompts
@@ -281,6 +284,17 @@ export {
   StrengthArrowTypeSchema,
   StrengthArrowUpdateSchema,
 } from './schemas/strength-arrow.js';
+export type {
+  StrengthFromWeaknessCreate,
+  StrengthFromWeaknessInput,
+  StrengthFromWeaknessUpdate,
+} from './schemas/strength-from-weakness.js';
+export {
+  BlankTypeSchema,
+  StrengthFromWeaknessCreateSchema,
+  StrengthFromWeaknessSchema,
+  StrengthFromWeaknessUpdateSchema,
+} from './schemas/strength-from-weakness.js';
 export type {
   SubordinateRowInput,
   SubordinateSummaryCreate,
