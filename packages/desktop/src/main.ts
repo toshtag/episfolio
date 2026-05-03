@@ -22,6 +22,7 @@ import './work-asset-summary-view.js';
 import './result-by-type-view.js';
 import './strength-from-weakness-view.js';
 import './microchop-skill-view.js';
+import './weak-connection-view.js';
 
 type Tab =
   | 'episodes'
@@ -43,6 +44,7 @@ type Tab =
   | 'result-by-types'
   | 'strength-from-weakness'
   | 'microchop-skill'
+  | 'weak-connection'
   | 'digest'
   | 'settings';
 
@@ -296,6 +298,12 @@ class EpisodeApp extends LitElement {
           }}
         >みじん切り</button>
         <button
+          class=${this.tab === 'weak-connection' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'weak-connection';
+          }}
+        >弱いつながり</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -393,9 +401,11 @@ class EpisodeApp extends LitElement {
                                             ? html`<strength-from-weakness-view></strength-from-weakness-view>`
                                             : this.tab === 'microchop-skill'
                                               ? html`<microchop-skill-view></microchop-skill-view>`
-                                              : this.tab === 'digest'
-                                                ? html`<digest-view></digest-view>`
-                                                : html`<settings-view></settings-view>`
+                                              : this.tab === 'weak-connection'
+                                                ? html`<weak-connection-view></weak-connection-view>`
+                                                : this.tab === 'digest'
+                                                  ? html`<digest-view></digest-view>`
+                                                  : html`<settings-view></settings-view>`
       }
     `;
   }
