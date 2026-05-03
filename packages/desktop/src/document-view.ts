@@ -40,6 +40,7 @@ class DocumentView extends LitElement {
     editTargetMemo: { state: true },
     editJobTargetId: { state: true },
     selectedEvidenceId: { state: true },
+    expandedRevisionId: { state: true },
     isSaving: { state: true },
     error: { state: true },
   };
@@ -60,6 +61,7 @@ class DocumentView extends LitElement {
   declare editTargetMemo: string;
   declare editJobTargetId: string;
   declare selectedEvidenceId: string;
+  declare expandedRevisionId: string;
   declare isSaving: boolean;
   declare error: string;
 
@@ -81,6 +83,7 @@ class DocumentView extends LitElement {
     this.editTargetMemo = '';
     this.editJobTargetId = '';
     this.selectedEvidenceId = '';
+    this.expandedRevisionId = '';
     this.isSaving = false;
     this.error = '';
   }
@@ -169,6 +172,30 @@ class DocumentView extends LitElement {
     .history-item.current { border-color: #1a1a1a; background: #fff; }
     .history-reason { font-weight: 600; margin-bottom: 0.2rem; }
     .history-meta { color: #888; font-size: 0.78rem; }
+    .history-actions { margin-top: 0.4rem; }
+    button.history-toggle {
+      padding: 0.2rem 0.6rem;
+      font-size: 0.78rem;
+      background: #f0f0f0;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 0.25rem;
+      cursor: pointer;
+    }
+    button.history-toggle:hover { background: #e5e5e5; }
+    .revision-content {
+      margin-top: 0.6rem;
+      padding: 0.7rem 0.9rem;
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 0.3rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      max-height: 20rem;
+      overflow-y: auto;
+      color: #222;
+    }
   `;
 
   override async connectedCallback() {
@@ -201,6 +228,7 @@ class DocumentView extends LitElement {
       this.editRevisionReason = '';
       this.editTargetMemo = latest?.targetMemo ?? '';
       this.editJobTargetId = latest?.jobTargetId ?? '';
+      this.expandedRevisionId = '';
       this.viewState = 'edit';
       this.error = '';
     } catch (e) {
@@ -502,27 +530,37 @@ class DocumentView extends LitElement {
     return html`
       <div class="history">
         <h3>改訂履歴（${this.revisions.length} 件）</h3>
-        ${this.revisions.map(
-          (rev, idx) => html`
-            <div class="history-item ${idx === 0 ? 'current' : ''}">
-              <div class="history-reason">
-                ${idx === 0 ? '【最新】' : ''}${rev.revisionReason || '(理由未記入)'}
+        ${this.revisions.map((rev, idx) => {
+          const isExpanded = this.expandedRevisionId === rev.id;
+          return html`
+              <div class="history-item ${idx === 0 ? 'current' : ''}">
+                <div class="history-reason">
+                  ${idx === 0 ? '【最新】' : ''}${rev.revisionReason || '(理由未記入)'}
+                </div>
+                <div class="history-meta">
+                  ${rev.createdAt.replace('T', ' ').replace('Z', '')}
+                  &nbsp;|&nbsp;
+                  ${rev.createdBy === 'human' ? '手動' : 'AI'}
+                  ${this.renderJobTargetLabel(rev.jobTargetId)}
+                  ${rev.targetMemo ? html` &nbsp;|&nbsp; 宛先: ${rev.targetMemo}` : ''}
+                  ${
+                    rev.previousRevisionId
+                      ? html` &nbsp;|&nbsp; 前バージョン: ${rev.previousRevisionId.slice(-6)}`
+                      : ''
+                  }
+                </div>
+                <div class="history-actions">
+                  <button
+                    class="history-toggle"
+                    @click=${() => {
+                      this.expandedRevisionId = isExpanded ? '' : rev.id;
+                    }}
+                  >${isExpanded ? '閉じる' : '内容を見る'}</button>
+                </div>
+                ${isExpanded ? html`<div class="revision-content">${rev.content}</div>` : ''}
               </div>
-              <div class="history-meta">
-                ${rev.createdAt.replace('T', ' ').replace('Z', '')}
-                &nbsp;|&nbsp;
-                ${rev.createdBy === 'human' ? '手動' : 'AI'}
-                ${this.renderJobTargetLabel(rev.jobTargetId)}
-                ${rev.targetMemo ? html` &nbsp;|&nbsp; 宛先: ${rev.targetMemo}` : ''}
-                ${
-                  rev.previousRevisionId
-                    ? html` &nbsp;|&nbsp; 前バージョン: ${rev.previousRevisionId.slice(-6)}`
-                    : ''
-                }
-              </div>
-            </div>
-          `,
-        )}
+            `;
+        })}
       </div>
     `;
   }
