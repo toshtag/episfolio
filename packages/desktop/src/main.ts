@@ -23,6 +23,7 @@ import './result-by-type-view.js';
 import './strength-from-weakness-view.js';
 import './microchop-skill-view.js';
 import './weak-connection-view.js';
+import './monster-company-check-view.js';
 
 type Tab =
   | 'episodes'
@@ -45,6 +46,7 @@ type Tab =
   | 'strength-from-weakness'
   | 'microchop-skill'
   | 'weak-connection'
+  | 'monster-company-check'
   | 'digest'
   | 'settings';
 
@@ -304,6 +306,12 @@ class EpisodeApp extends LitElement {
           }}
         >弱いつながり</button>
         <button
+          class=${this.tab === 'monster-company-check' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'monster-company-check';
+          }}
+        >モンスター企業判定</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -403,9 +411,11 @@ class EpisodeApp extends LitElement {
                                               ? html`<microchop-skill-view></microchop-skill-view>`
                                               : this.tab === 'weak-connection'
                                                 ? html`<weak-connection-view></weak-connection-view>`
-                                                : this.tab === 'digest'
-                                                  ? html`<digest-view></digest-view>`
-                                                  : html`<settings-view></settings-view>`
+                                                : this.tab === 'monster-company-check'
+                                                  ? html`<monster-company-check-view></monster-company-check-view>`
+                                                  : this.tab === 'digest'
+                                                    ? html`<digest-view></digest-view>`
+                                                    : html`<settings-view></settings-view>`
       }
     `;
   }
