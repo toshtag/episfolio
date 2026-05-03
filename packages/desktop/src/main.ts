@@ -19,6 +19,7 @@ import './customer-reference-view.js';
 import './strength-arrow-view.js';
 import './subordinate-summary-view.js';
 import './work-asset-summary-view.js';
+import './result-by-type-view.js';
 
 type Tab =
   | 'episodes'
@@ -37,6 +38,7 @@ type Tab =
   | 'strength-arrows'
   | 'work-asset-summaries'
   | 'subordinate-summaries'
+  | 'result-by-types'
   | 'digest'
   | 'settings';
 
@@ -272,6 +274,12 @@ class EpisodeApp extends LitElement {
           }}
         >部下まとめ</button>
         <button
+          class=${this.tab === 'result-by-types' ? 'active' : ''}
+          @click=${() => {
+            this.tab = 'result-by-types';
+          }}
+        >3 タイプの実績</button>
+        <button
           class=${this.tab === 'digest' ? 'active' : ''}
           @click=${() => {
             this.tab = 'digest';
@@ -363,9 +371,11 @@ class EpisodeApp extends LitElement {
                                       ? html`<work-asset-summary-view></work-asset-summary-view>`
                                       : this.tab === 'subordinate-summaries'
                                         ? html`<subordinate-summary-view></subordinate-summary-view>`
-                                        : this.tab === 'digest'
-                                          ? html`<digest-view></digest-view>`
-                                          : html`<settings-view></settings-view>`
+                                        : this.tab === 'result-by-types'
+                                          ? html`<result-by-type-view></result-by-type-view>`
+                                          : this.tab === 'digest'
+                                            ? html`<digest-view></digest-view>`
+                                            : html`<settings-view></settings-view>`
       }
     `;
   }
