@@ -144,6 +144,11 @@ pub fn run() {
             commands::salary_benchmarks::get_salary_benchmark,
             commands::salary_benchmarks::update_salary_benchmark,
             commands::salary_benchmarks::delete_salary_benchmark,
+            commands::hidden_gem_notes::create_hidden_gem_note,
+            commands::hidden_gem_notes::list_hidden_gem_notes_by_job_target,
+            commands::hidden_gem_notes::get_hidden_gem_note,
+            commands::hidden_gem_notes::update_hidden_gem_note,
+            commands::hidden_gem_notes::delete_hidden_gem_note,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
