@@ -159,6 +159,11 @@ pub fn run() {
             commands::hidden_gem_notes::get_hidden_gem_note,
             commands::hidden_gem_notes::update_hidden_gem_note,
             commands::hidden_gem_notes::delete_hidden_gem_note,
+            commands::business_unit_type_matches::create_business_unit_type_match,
+            commands::business_unit_type_matches::list_business_unit_type_matches_by_job_target,
+            commands::business_unit_type_matches::get_business_unit_type_match,
+            commands::business_unit_type_matches::update_business_unit_type_match,
+            commands::business_unit_type_matches::delete_business_unit_type_match,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
