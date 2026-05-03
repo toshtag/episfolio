@@ -26,7 +26,13 @@ export function toCompanyCertificationMarkdown(record: CompanyCertification): st
 
   lines.push('## くるみん認定（子育て支援）');
   lines.push('');
-  lines.push(flag(record.hasPlatinumKurumin, '🌸 プラチナくるみん認定取得', flag(record.hasKurumin, '🌸 くるみん認定取得', '❌ 未取得')));
+  lines.push(
+    flag(
+      record.hasPlatinumKurumin,
+      '🌸 プラチナくるみん認定取得',
+      flag(record.hasKurumin, '🌸 くるみん認定取得', '❌ 未取得'),
+    ),
+  );
   lines.push('');
 
   lines.push('## トモニンマーク（介護支援）');
