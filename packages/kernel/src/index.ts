@@ -64,6 +64,7 @@ export type {
   RecruitmentImpression,
   SensoryObservation,
 } from './domain/recruitment-impression.js';
+export type { SalaryBenchmark } from './domain/salary-benchmark.js';
 export type { ResignationMotive } from './domain/resignation-motive.js';
 export type { ResultByType, ResultEntry, ResultType } from './domain/result-by-type.js';
 export type { AIProvider, Settings } from './domain/settings.js';
@@ -98,6 +99,7 @@ export { toJobWishSheetMarkdown } from './exporters/job-wish-sheet.js';
 export { toMicrochopSkillMarkdown } from './exporters/microchop-skill.js';
 export { toMonsterCompanyCheckMarkdown } from './exporters/monster-company-check.js';
 export { toRecruitmentImpressionMarkdown } from './exporters/recruitment-impression.js';
+export { toSalaryBenchmarkMarkdown } from './exporters/salary-benchmark.js';
 export { toResultByTypeMarkdown } from './exporters/result-by-type.js';
 export type { DiffHunk } from './exporters/revision-diff.js';
 export { computeUnifiedDiff, formatUnifiedDiff } from './exporters/revision-diff.js';
@@ -132,6 +134,7 @@ export type { LifeTimelineStoragePort } from './ports/life-timeline-storage-port
 export type { MicrochopSkillStoragePort } from './ports/microchop-skill-storage-port.js';
 export type { MonsterCompanyCheckStoragePort } from './ports/monster-company-check-storage-port.js';
 export type { RecruitmentImpressionStoragePort } from './ports/recruitment-impression-storage-port.js';
+export type { SalaryBenchmarkStoragePort } from './ports/salary-benchmark-storage-port.js';
 export type { ResignationMotiveStoragePort } from './ports/resignation-motive-storage-port.js';
 export type { ResultByTypeStoragePort } from './ports/result-by-type-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
@@ -298,6 +301,16 @@ export {
   RecruitmentImpressionUpdateSchema,
   SensoryObservationSchema,
 } from './schemas/recruitment-impression.js';
+export type {
+  SalaryBenchmarkCreate,
+  SalaryBenchmarkInput,
+  SalaryBenchmarkUpdate,
+} from './schemas/salary-benchmark.js';
+export {
+  SalaryBenchmarkCreateSchema,
+  SalaryBenchmarkSchema,
+  SalaryBenchmarkUpdateSchema,
+} from './schemas/salary-benchmark.js';
 export type {
   ResignationMotiveCreate,
   ResignationMotiveInput,
