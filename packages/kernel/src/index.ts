@@ -39,6 +39,7 @@ export type {
   CareerDocumentType,
   DocumentRevision,
 } from './domain/career-document.js';
+export type { CompanyCertification } from './domain/company-certification.js';
 export type { CustomerReference, CustomerType } from './domain/customer-reference.js';
 // domain
 export type { Episode, ISO8601, ULID } from './domain/episode.js';
@@ -95,6 +96,7 @@ export { composeApplicationMotiveText } from './exporters/application-motive.js'
 // exporters
 export { toBossReferenceMarkdown } from './exporters/boss-reference.js';
 export { toCareerDigestMarkdown } from './exporters/career-digest.js';
+export { toCompanyCertificationMarkdown } from './exporters/company-certification.js';
 export { toCustomerReferenceMarkdown } from './exporters/customer-reference.js';
 export { toGrowthCycleNoteMarkdown } from './exporters/growth-cycle-note.js';
 export { toHiddenGemNoteMarkdown } from './exporters/hidden-gem-note.js';
@@ -127,6 +129,7 @@ export type { AIRunStoragePort } from './ports/ai-run-storage-port.js';
 export type { ApplicationMotiveStoragePort } from './ports/application-motive-storage-port.js';
 export type { BossReferenceStoragePort } from './ports/boss-reference-storage-port.js';
 export type { CareerDocumentStoragePort } from './ports/career-document-storage-port.js';
+export type { CompanyCertificationStoragePort } from './ports/company-certification-storage-port.js';
 export type { CustomerReferenceStoragePort } from './ports/customer-reference-storage-port.js';
 export type { DocumentRevisionStoragePort } from './ports/document-revision-storage-port.js';
 export type { GrowthCycleNoteStoragePort } from './ports/growth-cycle-note-storage-port.js';
@@ -208,6 +211,16 @@ export {
   CareerDocumentUpdateSchema,
   DocumentRevisionSchema,
 } from './schemas/career-document.js';
+export type {
+  CompanyCertificationCreate,
+  CompanyCertificationInput,
+  CompanyCertificationUpdate,
+} from './schemas/company-certification.js';
+export {
+  CompanyCertificationCreateSchema,
+  CompanyCertificationSchema,
+  CompanyCertificationUpdateSchema,
+} from './schemas/company-certification.js';
 export type {
   CustomerReferenceInput,
   CustomerReferenceUpdate,
