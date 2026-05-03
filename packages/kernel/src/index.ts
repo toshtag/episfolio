@@ -78,6 +78,10 @@ export type {
   WeakConnectionCategory,
 } from './domain/weak-connection.js';
 export type { AssetType, WorkAssetSummary } from './domain/work-asset-summary.js';
+export type {
+  MonsterCompanyCheck,
+  ResignationEntry,
+} from './domain/monster-company-check.js';
 // errors
 export { RemoteLLMBlockedError } from './errors.js';
 export { composeApplicationMotiveText } from './exporters/application-motive.js';
