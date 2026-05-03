@@ -42,6 +42,7 @@ export type {
 export type { CustomerReference, CustomerType } from './domain/customer-reference.js';
 // domain
 export type { Episode, ISO8601, ULID } from './domain/episode.js';
+export type { HiddenGemNote } from './domain/hidden-gem-note.js';
 export type {
   InterviewQA,
   InterviewQACategory,
