@@ -7,6 +7,32 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.7.0] - 2026-05-03
+
+強み発掘ワークシート + 弱いつながり管理 + 人生年表 UI 改善を追加した機能リリース。転職活動の自己分析フェーズで使う「自分の強みを発掘する」系ワークシート 4 種と、グラノベターの「弱いつながり」管理機能が end-to-end で動作する。
+
+### Added
+- **StrengthArrow ドメイン**（kernel）: 強みの矢印（強みタイプ × 対象 × エピソード）の型・Zod schema・StoragePort・Markdown exporter。`strengthType`（個人 / 対人 / 企業）で分類し、矢印の方向と強さを保存
+- **ResultByType ドメイン**（kernel）: タイプ別の実績を構造化する型・Zod schema・StoragePort・Markdown exporter。`resultType`（数字 / 評価 / 変化 / その他）で分類
+- **StrengthFromWeakness ドメイン**（kernel）: 弱みからの強みを反転発見する型・Zod schema・StoragePort・Markdown exporter
+- **MicrochopSkill ドメイン**（kernel）: スキルを細かく刻んで整理する型・Zod schema・StoragePort・Markdown exporter。`tasks`（JSON 配列）で複数タスクを保存
+- **WeakConnection ドメイン**（kernel）: 弱いつながり管理の型・Zod schema・StoragePort・Markdown exporter。`category`（student_days / family_network / business_card / hobby / sns）+ `contactStatus`（not_contacted / contacted / replied）で状況管理
+- **StrengthArrow CRUD + UI**（desktop）: migration `0021_add_strength_arrows.sql`、Rust CRUD 6 コマンド（タイプ別 list 含む）、IPC wrapper、Lit UI（強みタイプ select + 2 ステップ削除 + Markdown プレビュー）
+- **ResultByType CRUD + UI**（desktop）: migration `0022_add_result_by_type.sql`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI
+- **StrengthFromWeakness CRUD + UI**（desktop）: migration `0023_add_strength_from_weakness.sql`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI
+- **MicrochopSkill CRUD + UI**（desktop）: migration `0024_add_microchop_skill.sql`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI（タスク行の動的追加・削除 + Markdown プレビュー）
+- **WeakConnection CRUD + UI**（desktop）: migration `0025_add_weak_connection.sql`、Rust CRUD 5 コマンド、IPC wrapper、Lit UI（カテゴリ別 + 連絡状況バッジ + 2 ステップ削除 + Markdown プレビュー）
+- **人生年表 UI 改善**（desktop）: 非 work カテゴリのガイダンス表示（カテゴリ別プレースホルダー + 空状態ヒントグリッド）
+
+### Changed
+- 全パッケージの version を 0.7.0 に揃える（root / kernel / desktop / Cargo.toml / tauri.conf.json）
+
+### Notes
+- v0.7 は完全ローカル動作のまま（外部送信 surface は v0.2.1 で物理削除済、ADR-0009）
+- 強み発掘ワークシート群の UX 細部改善は v0.7.x で対応予定
+
+---
+
 ## [0.6.0] - 2026-05-02
 
 応募書類拡充パックを追加した機能リリース。退職理由 + 志望動機ペア / 上司リファレンス / 顧客リファレンス / 仕事資料のまとめ / 部下まとめシート の 5 機能が end-to-end で動作する。これにより応募書類向けの「プラスアルファ書類」群（職務経歴ダイジェスト・自分大全・上司リファレンス・顧客リファレンス・仕事資料のまとめ・部下まとめシート）が UI レベルで完結した。AI 機能は引き続き不在（次フェーズで復活予定）。
