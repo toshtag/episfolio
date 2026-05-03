@@ -49,27 +49,54 @@ class DigestView extends LitElement {
 
   static override styles = css`
     :host { display: block; }
-    .panel { padding: 2rem; }
-    h1 { margin: 0 0 1.5rem; font-size: 1.4rem; }
-    h2 { margin: 1.5rem 0 0.75rem; font-size: 1.05rem; color: #333; }
+    .panel { padding: 2rem; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+    h1 { margin: 0 0 1rem; font-size: 1.4rem; flex-shrink: 0; }
     .selector {
       display: flex;
       align-items: center;
       gap: 0.6rem;
       margin-bottom: 1rem;
+      flex-shrink: 0;
     }
-    .selector label { font-size: 0.9rem; color: #555; }
+    .selector label { font-size: 0.9rem; color: #555; white-space: nowrap; }
     select {
       padding: 0.4rem 0.6rem;
       font-size: 0.9rem;
       border: 1px solid #ccc;
       border-radius: 0.3rem;
       min-width: 18rem;
+      flex: 1;
+      max-width: 32rem;
     }
     .target-summary {
       font-size: 0.85rem;
       color: #555;
-      margin-bottom: 1.25rem;
+      margin-bottom: 0.75rem;
+      flex-shrink: 0;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      flex: 1;
+      min-height: 0;
+    }
+    .col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .col-header {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 0.6rem;
+      flex-shrink: 0;
+    }
+    .col-scroll {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
     }
     .req-card {
       border: 1px solid #e0e0e0;
@@ -103,7 +130,7 @@ class DigestView extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 0.3rem;
-      max-height: 14rem;
+      max-height: 12rem;
       overflow-y: auto;
       border: 1px solid #eee;
       border-radius: 0.3rem;
@@ -135,8 +162,19 @@ class DigestView extends LitElement {
     button.save-btn:disabled { opacity: 0.5; cursor: default; }
     .saved-msg { font-size: 0.8rem; color: #2a7d2a; }
     .empty { color: #888; font-size: 0.9rem; padding: 0.5rem 0; }
-    .error { color: #c00; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .empty-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 8rem;
+      color: #aaa;
+      font-size: 0.9rem;
+      border: 1px dashed #ddd;
+      border-radius: 0.4rem;
+    }
+    .error { color: #c00; font-size: 0.85rem; margin-bottom: 0.5rem; flex-shrink: 0; }
     .preview-box {
+      flex: 1;
       border: 1px solid #ddd;
       border-radius: 0.4rem;
       padding: 1rem 1.2rem;
@@ -144,14 +182,15 @@ class DigestView extends LitElement {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.82rem;
       white-space: pre-wrap;
-      max-height: 28rem;
       overflow-y: auto;
+      min-height: 0;
     }
     .preview-actions {
       display: flex;
       gap: 0.6rem;
       align-items: center;
-      margin-top: 0.7rem;
+      margin-top: 0.6rem;
+      flex-shrink: 0;
     }
     button.copy-btn {
       padding: 0.35rem 0.9rem;
@@ -299,6 +338,7 @@ class DigestView extends LitElement {
   }
 
   override render() {
+    const target = this.selectedJobTarget;
     return html`
       <div class="panel">
         <h1>職務経歴ダイジェスト</h1>
@@ -322,10 +362,20 @@ class DigestView extends LitElement {
           </select>
         </div>
 
-        ${this.renderRequirementCards()}
+        ${target ? html`<div class="target-summary">${target.companyName} — ${target.jobTitle}</div>` : ''}
 
-        <h2>Markdown プレビュー</h2>
-        ${this.renderPreview()}
+        <div class="two-col">
+          <div class="col">
+            <div class="col-header">要件マッピング</div>
+            <div class="col-scroll">
+              ${this.renderRequirementCards()}
+            </div>
+          </div>
+          <div class="col">
+            <div class="col-header">Markdown プレビュー</div>
+            ${this.renderPreview()}
+          </div>
+        </div>
       </div>
     `;
   }
@@ -333,16 +383,12 @@ class DigestView extends LitElement {
   private renderRequirementCards() {
     const target = this.selectedJobTarget;
     if (!target) {
-      return html`<p class="empty">求人を選択するとマッピング編集が表示されます</p>`;
+      return html`<div class="empty-box">求人を選択するとマッピング編集が表示されます</div>`;
     }
     if (target.requiredSkills.length === 0) {
-      return html`
-        <div class="target-summary">${target.companyName} — ${target.jobTitle}</div>
-        <p class="empty">この求人には必須要件が登録されていません（求人タブで追加してください）</p>
-      `;
+      return html`<div class="empty-box">必須要件が未登録です（求人タブで追加してください）</div>`;
     }
     return html`
-      <div class="target-summary">${target.companyName} — ${target.jobTitle}</div>
       ${target.requiredSkills.map((skill) => {
         const card = this.cardByRequirementId[skill.id];
         if (!card) return null;
@@ -397,7 +443,7 @@ class DigestView extends LitElement {
   private renderPreview() {
     const target = this.selectedJobTarget;
     if (!target) {
-      return html`<p class="empty">求人を選択するとプレビューが表示されます</p>`;
+      return html`<div class="empty-box">求人を選択するとプレビューが表示されます</div>`;
     }
     const md = this.buildPreviewMarkdown();
     return html`
