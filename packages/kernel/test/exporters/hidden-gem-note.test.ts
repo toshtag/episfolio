@@ -55,27 +55,27 @@ describe('toHiddenGemNoteMarkdown', () => {
   });
 
   it('hasAntiMonsterMechanism が true のとき「✅ 仕組みあり」を出力する', () => {
-    expect(
-      toHiddenGemNoteMarkdown(buildRecord({ hasAntiMonsterMechanism: true })),
-    ).toContain('✅ 仕組みあり');
+    expect(toHiddenGemNoteMarkdown(buildRecord({ hasAntiMonsterMechanism: true }))).toContain(
+      '✅ 仕組みあり',
+    );
   });
 
   it('hasAntiMonsterMechanism が false のとき「❌ 確認できず」を出力する', () => {
-    expect(
-      toHiddenGemNoteMarkdown(buildRecord({ hasAntiMonsterMechanism: false })),
-    ).toContain('❌ 確認できず');
+    expect(toHiddenGemNoteMarkdown(buildRecord({ hasAntiMonsterMechanism: false }))).toContain(
+      '❌ 確認できず',
+    );
   });
 
   it('isHiringOnJobSites が false のとき「直接コンタクト要」を出力する', () => {
-    expect(
-      toHiddenGemNoteMarkdown(buildRecord({ isHiringOnJobSites: false })),
-    ).toContain('直接コンタクト要');
+    expect(toHiddenGemNoteMarkdown(buildRecord({ isHiringOnJobSites: false }))).toContain(
+      '直接コンタクト要',
+    );
   });
 
   it('isHiringOnJobSites が true のとき「転職サイトで募集中」を出力する', () => {
-    expect(
-      toHiddenGemNoteMarkdown(buildRecord({ isHiringOnJobSites: true })),
-    ).toContain('転職サイトで募集中');
+    expect(toHiddenGemNoteMarkdown(buildRecord({ isHiringOnJobSites: true }))).toContain(
+      '転職サイトで募集中',
+    );
   });
 
   it('nicheKeywords の内容が出力される', () => {

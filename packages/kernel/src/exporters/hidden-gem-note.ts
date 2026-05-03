@@ -35,7 +35,13 @@ export function toHiddenGemNoteMarkdown(record: HiddenGemNote): string {
 
   lines.push('## 転職サイトでの採用状況');
   lines.push('');
-  lines.push(flag(record.isHiringOnJobSites, '📋 転職サイトで募集中', '🔍 転職サイトに掲載なし（直接コンタクト要）'));
+  lines.push(
+    flag(
+      record.isHiringOnJobSites,
+      '📋 転職サイトで募集中',
+      '🔍 転職サイトに掲載なし（直接コンタクト要）',
+    ),
+  );
   lines.push('');
 
   lines.push('## 直接コンタクトのメモ');

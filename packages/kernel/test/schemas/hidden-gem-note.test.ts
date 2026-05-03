@@ -40,9 +40,9 @@ describe('HiddenGemNoteSchema', () => {
   });
 
   it('hasAntiMonsterMechanism が false でも受理', () => {
-    expect(
-      HiddenGemNoteSchema.safeParse({ ...base, hasAntiMonsterMechanism: false }).success,
-    ).toBe(true);
+    expect(HiddenGemNoteSchema.safeParse({ ...base, hasAntiMonsterMechanism: false }).success).toBe(
+      true,
+    );
   });
 
   it('isHiringOnJobSites が true でも受理', () => {
