@@ -2,36 +2,6 @@ import type { Episode } from '@episfolio/kernel';
 import { css, html, LitElement, type TemplateResult } from 'lit';
 import { backupIfNeeded } from './ipc/backup.js';
 import { createEpisode, listEpisodes } from './ipc/episodes.js';
-import './agent-meeting-email-view.js';
-import './agent-track-record-view.js';
-import './application-motive-view.js';
-import './boss-reference-view.js';
-import './business-unit-type-match-view.js';
-import './company-certification-view.js';
-import './customer-reference-view.js';
-import './digest-view.js';
-import './document-view.js';
-import './episode-detail-view.js';
-import './evidence-list-view.js';
-import './growth-cycle-note-view.js';
-import './hidden-gem-note-view.js';
-import './interview-qa-view.js';
-import './interview-report-view.js';
-import './job-target-view.js';
-import './job-wish-sheet-view.js';
-import './life-timeline-view.js';
-import './microchop-skill-view.js';
-import './monster-company-check-view.js';
-import './recruitment-impression-view.js';
-import './resignation-plan-view.js';
-import './result-by-type-view.js';
-import './salary-benchmark-view.js';
-import './settings-view.js';
-import './strength-arrow-view.js';
-import './strength-from-weakness-view.js';
-import './subordinate-summary-view.js';
-import './weak-connection-view.js';
-import './work-asset-summary-view.js';
 
 type Tab =
   | 'episodes'
@@ -64,6 +34,42 @@ type Tab =
   | 'resignation-plan'
   | 'digest'
   | 'settings';
+
+type LazyTab = Exclude<Tab, 'episodes'>;
+type LazyView = LazyTab | 'episode-detail';
+
+const VIEW_LOADERS: Record<LazyView, () => Promise<unknown>> = {
+  'episode-detail': () => import('./episode-detail-view.js'),
+  evidence: () => import('./evidence-list-view.js'),
+  documents: () => import('./document-view.js'),
+  timeline: () => import('./life-timeline-view.js'),
+  'job-targets': () => import('./job-target-view.js'),
+  'interview-qa': () => import('./interview-qa-view.js'),
+  'interview-report': () => import('./interview-report-view.js'),
+  'agent-track-records': () => import('./agent-track-record-view.js'),
+  'agent-meeting-emails': () => import('./agent-meeting-email-view.js'),
+  'job-wish-sheets': () => import('./job-wish-sheet-view.js'),
+  'application-motives': () => import('./application-motive-view.js'),
+  'boss-references': () => import('./boss-reference-view.js'),
+  'customer-references': () => import('./customer-reference-view.js'),
+  'strength-arrows': () => import('./strength-arrow-view.js'),
+  'work-asset-summaries': () => import('./work-asset-summary-view.js'),
+  'subordinate-summaries': () => import('./subordinate-summary-view.js'),
+  'result-by-types': () => import('./result-by-type-view.js'),
+  'strength-from-weakness': () => import('./strength-from-weakness-view.js'),
+  'microchop-skill': () => import('./microchop-skill-view.js'),
+  'weak-connection': () => import('./weak-connection-view.js'),
+  'company-certification': () => import('./company-certification-view.js'),
+  'business-unit-type-match': () => import('./business-unit-type-match-view.js'),
+  'monster-company-check': () => import('./monster-company-check-view.js'),
+  'recruitment-impression': () => import('./recruitment-impression-view.js'),
+  'salary-benchmark': () => import('./salary-benchmark-view.js'),
+  'hidden-gem-note': () => import('./hidden-gem-note-view.js'),
+  'growth-cycle-note': () => import('./growth-cycle-note-view.js'),
+  'resignation-plan': () => import('./resignation-plan-view.js'),
+  digest: () => import('./digest-view.js'),
+  settings: () => import('./settings-view.js'),
+};
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'episodes', label: 'エピソード' },
@@ -98,7 +104,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'settings', label: '設定' },
 ];
 
-const TAB_CONTENT: Partial<Record<Tab, () => TemplateResult>> = {
+const TAB_CONTENT: Record<LazyTab, () => TemplateResult> = {
   evidence: () => html`<evidence-list-view></evidence-list-view>`,
   documents: () => html`<document-view></document-view>`,
   timeline: () => html`<life-timeline-view></life-timeline-view>`,
@@ -131,6 +137,10 @@ const TAB_CONTENT: Partial<Record<Tab, () => TemplateResult>> = {
   settings: () => html`<settings-view></settings-view>`,
 };
 
+function isLazyTab(tab: Tab): tab is LazyTab {
+  return tab !== 'episodes';
+}
+
 class EpisodeApp extends LitElement {
   static override properties = {
     episodes: { state: true },
@@ -147,6 +157,10 @@ class EpisodeApp extends LitElement {
   declare error: string;
   declare tab: Tab;
   declare selectedId: string;
+
+  private readonly loadedViews = new Set<LazyView>();
+  private readonly loadingViews = new Set<LazyView>();
+  private loadErrors: Partial<Record<LazyView, string>> = {};
 
   constructor() {
     super();
@@ -251,6 +265,7 @@ class EpisodeApp extends LitElement {
 
   private handleSelect(id: string) {
     this.selectedId = id;
+    void this.ensureView('episode-detail');
   }
 
   private async handleBack() {
@@ -273,6 +288,7 @@ class EpisodeApp extends LitElement {
             @click=${() => {
               this.tab = id;
               if (id === 'episodes') this.selectedId = '';
+              if (isLazyTab(id)) void this.ensureView(id);
             }}
           >${label}</button>
         `,
@@ -283,13 +299,16 @@ class EpisodeApp extends LitElement {
 
   private renderEpisodesPanel() {
     if (this.selectedId) {
-      return html`
+      return this.renderLazyView(
+        'episode-detail',
+        () => html`
         <episode-detail-view
           episode-id=${this.selectedId}
           @back=${this.handleBack}
           @episode-deleted=${this.handleDeleted}
         ></episode-detail-view>
-      `;
+      `,
+      );
     }
     return html`
       <div class="panel">
@@ -333,8 +352,38 @@ class EpisodeApp extends LitElement {
 
   private renderContent() {
     if (this.tab === 'episodes') return this.renderEpisodesPanel();
-    const render = TAB_CONTENT[this.tab];
-    return render ? render() : html``;
+    return this.renderLazyView(this.tab, TAB_CONTENT[this.tab]);
+  }
+
+  private renderLazyView(view: LazyView, render: () => TemplateResult) {
+    if (this.loadErrors[view]) {
+      return html`<div class="panel"><p class="error">${this.loadErrors[view]}</p></div>`;
+    }
+    if (!this.loadedViews.has(view)) {
+      void this.ensureView(view);
+      return html`<div class="panel"><p class="empty">読み込み中...</p></div>`;
+    }
+    return render();
+  }
+
+  private async ensureView(view: LazyView) {
+    if (this.loadedViews.has(view) || this.loadingViews.has(view)) return;
+    this.loadingViews.add(view);
+    const { [view]: _previousError, ...loadErrors } = this.loadErrors;
+    this.loadErrors = loadErrors;
+    this.requestUpdate();
+    try {
+      await VIEW_LOADERS[view]();
+      this.loadedViews.add(view);
+    } catch (e) {
+      this.loadErrors = {
+        ...this.loadErrors,
+        [view]: `画面の読み込みに失敗しました: ${String(e)}`,
+      };
+    } finally {
+      this.loadingViews.delete(view);
+      this.requestUpdate();
+    }
   }
 
   override render() {
