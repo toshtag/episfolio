@@ -33,8 +33,7 @@ fn int_to_bool(v: Option<i64>) -> Option<bool> {
     v.map(|n| n != 0)
 }
 
-const SELECT_COLUMNS: &str =
-    "id, company_name, contact_name, contact_email, contact_phone, \
+const SELECT_COLUMNS: &str = "id, company_name, contact_name, contact_email, contact_phone, \
      first_contact_date, memo, status, \
      specialty_industries, specialty_job_types, consultant_quality, \
      has_exclusive_jobs, provides_recommendation_letter, recommendation_letter_received, \
@@ -92,6 +91,13 @@ pub fn create_agent_track_record(
     args: CreateAgentTrackRecordArgs,
 ) -> Result<AgentTrackRecordRow, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    create_agent_track_record_with_conn(&conn, args)
+}
+
+fn create_agent_track_record_with_conn(
+    conn: &Connection,
+    args: CreateAgentTrackRecordArgs,
+) -> Result<AgentTrackRecordRow, String> {
     let id = Ulid::new().to_string();
     let now = chrono_now();
     let status = args.status.unwrap_or_else(|| "active".to_string());
@@ -139,9 +145,14 @@ pub fn list_agent_track_records(
     db: State<'_, Mutex<Connection>>,
 ) -> Result<Vec<AgentTrackRecordRow>, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
-    let sql = format!(
-        "SELECT {SELECT_COLUMNS} FROM agent_track_records ORDER BY created_at ASC, id ASC"
-    );
+    list_agent_track_records_with_conn(&conn)
+}
+
+fn list_agent_track_records_with_conn(
+    conn: &Connection,
+) -> Result<Vec<AgentTrackRecordRow>, String> {
+    let sql =
+        format!("SELECT {SELECT_COLUMNS} FROM agent_track_records ORDER BY created_at ASC, id ASC");
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let rows = stmt
         .query_map([], row_from_query)
@@ -156,6 +167,13 @@ pub fn get_agent_track_record(
     id: String,
 ) -> Result<Option<AgentTrackRecordRow>, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    get_agent_track_record_with_conn(&conn, &id)
+}
+
+fn get_agent_track_record_with_conn(
+    conn: &Connection,
+    id: &str,
+) -> Result<Option<AgentTrackRecordRow>, String> {
     let sql = format!("SELECT {SELECT_COLUMNS} FROM agent_track_records WHERE id = ?1");
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let mut rows = stmt
@@ -195,6 +213,14 @@ pub fn update_agent_track_record(
     patch: UpdateAgentTrackRecordArgs,
 ) -> Result<AgentTrackRecordRow, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    update_agent_track_record_with_conn(&conn, &id, patch)
+}
+
+fn update_agent_track_record_with_conn(
+    conn: &Connection,
+    id: &str,
+    patch: UpdateAgentTrackRecordArgs,
+) -> Result<AgentTrackRecordRow, String> {
     let now = chrono_now();
 
     let mut sets: Vec<String> = Vec::new();
@@ -250,8 +276,14 @@ pub fn update_agent_track_record(
     push_nullable!(patch.specialty_job_types, "specialty_job_types");
     push_nullable!(patch.consultant_quality, "consultant_quality");
     push_nullable_bool!(patch.has_exclusive_jobs, "has_exclusive_jobs");
-    push_nullable_bool!(patch.provides_recommendation_letter, "provides_recommendation_letter");
-    push_nullable_bool!(patch.recommendation_letter_received, "recommendation_letter_received");
+    push_nullable_bool!(
+        patch.provides_recommendation_letter,
+        "provides_recommendation_letter"
+    );
+    push_nullable_bool!(
+        patch.recommendation_letter_received,
+        "recommendation_letter_received"
+    );
     push_nullable!(patch.number_of_jobs_introduced, "number_of_jobs_introduced");
     push_nullable!(patch.response_speed_days, "response_speed_days");
     push_nullable!(patch.overall_rating, "overall_rating");
@@ -262,7 +294,7 @@ pub fn update_agent_track_record(
 
     sets.push("updated_at = ?".to_string());
     params.push(Box::new(now));
-    params.push(Box::new(id.clone()));
+    params.push(Box::new(id.to_string()));
 
     let sql = format!(
         "UPDATE agent_track_records SET {} WHERE id = ?",
@@ -288,6 +320,10 @@ pub fn delete_agent_track_record(
     id: String,
 ) -> Result<(), String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    delete_agent_track_record_with_conn(&conn, &id)
+}
+
+fn delete_agent_track_record_with_conn(conn: &Connection, id: &str) -> Result<(), String> {
     let affected = conn
         .execute(
             "DELETE FROM agent_track_records WHERE id = ?1",
@@ -356,4 +392,112 @@ fn epoch_to_parts(secs: u64) -> (u64, u64, u64, u64, u64, u64) {
 
 fn is_leap(y: u64) -> bool {
     (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::adapters::sqlite;
+
+    fn create_args() -> CreateAgentTrackRecordArgs {
+        CreateAgentTrackRecordArgs {
+            company_name: "Agent Inc.".to_string(),
+            contact_name: Some("Arai".to_string()),
+            contact_email: Some("agent@example.com".to_string()),
+            contact_phone: Some("03-0000-0000".to_string()),
+            first_contact_date: Some("2026-05-04".to_string()),
+            memo: Some("SaaS に強い".to_string()),
+            status: Some("active".to_string()),
+            specialty_industries: Some("SaaS, Fintech".to_string()),
+            specialty_job_types: Some("Engineering manager".to_string()),
+            consultant_quality: Some("excellent".to_string()),
+            has_exclusive_jobs: Some(true),
+            provides_recommendation_letter: Some(true),
+            recommendation_letter_received: Some(false),
+            number_of_jobs_introduced: Some(12),
+            response_speed_days: Some(1.5),
+            overall_rating: Some(5.0),
+        }
+    }
+
+    fn empty_patch() -> UpdateAgentTrackRecordArgs {
+        UpdateAgentTrackRecordArgs {
+            company_name: None,
+            contact_name: None,
+            contact_email: None,
+            contact_phone: None,
+            first_contact_date: None,
+            memo: None,
+            status: None,
+            specialty_industries: None,
+            specialty_job_types: None,
+            consultant_quality: None,
+            has_exclusive_jobs: None,
+            provides_recommendation_letter: None,
+            recommendation_letter_received: None,
+            number_of_jobs_introduced: None,
+            response_speed_days: None,
+            overall_rating: None,
+        }
+    }
+
+    #[test]
+    fn agent_track_record_command_core_crud_smoke() {
+        let conn = sqlite::open_in_memory_with_migrations().unwrap();
+
+        let created = create_agent_track_record_with_conn(&conn, create_args())
+            .expect("create should store v0.11 agent fields");
+        assert_eq!(created.company_name, "Agent Inc.");
+        assert_eq!(
+            created.specialty_industries.as_deref(),
+            Some("SaaS, Fintech")
+        );
+        assert_eq!(created.consultant_quality.as_deref(), Some("excellent"));
+        assert_eq!(created.has_exclusive_jobs, Some(true));
+        assert_eq!(created.provides_recommendation_letter, Some(true));
+        assert_eq!(created.recommendation_letter_received, Some(false));
+        assert_eq!(created.number_of_jobs_introduced, Some(12));
+        assert_eq!(created.response_speed_days, Some(1.5));
+        assert_eq!(created.overall_rating, Some(5.0));
+
+        let listed = list_agent_track_records_with_conn(&conn).unwrap();
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].id, created.id);
+
+        let fetched = get_agent_track_record_with_conn(&conn, &created.id)
+            .unwrap()
+            .expect("created record should be fetchable");
+        assert_eq!(fetched.id, created.id);
+
+        let mut patch = empty_patch();
+        patch.memo = Some("更新後メモ".to_string());
+        patch.specialty_industries = Some(None);
+        patch.consultant_quality = Some(None);
+        patch.has_exclusive_jobs = Some(Some(false));
+        patch.provides_recommendation_letter = Some(None);
+        patch.overall_rating = Some(Some(4.0));
+
+        let updated = update_agent_track_record_with_conn(&conn, &created.id, patch).unwrap();
+        assert_eq!(updated.memo, "更新後メモ");
+        assert_eq!(updated.specialty_industries, None);
+        assert_eq!(updated.consultant_quality, None);
+        assert_eq!(updated.has_exclusive_jobs, Some(false));
+        assert_eq!(updated.provides_recommendation_letter, None);
+        assert_eq!(updated.overall_rating, Some(4.0));
+
+        delete_agent_track_record_with_conn(&conn, &created.id).unwrap();
+        assert!(get_agent_track_record_with_conn(&conn, &created.id)
+            .unwrap()
+            .is_none());
+    }
+
+    #[test]
+    fn agent_track_record_update_rejects_empty_patch() {
+        let conn = sqlite::open_in_memory_with_migrations().unwrap();
+        let created = create_agent_track_record_with_conn(&conn, create_args()).unwrap();
+
+        let error = update_agent_track_record_with_conn(&conn, &created.id, empty_patch())
+            .expect_err("empty patch should be rejected");
+        assert!(error.contains("更新フィールドがありません"));
+    }
 }
