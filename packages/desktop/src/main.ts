@@ -1,5 +1,6 @@
 import type { Episode } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
+import { backupIfNeeded } from './ipc/backup.js';
 import { createEpisode, listEpisodes } from './ipc/episodes.js';
 import './settings-view.js';
 import './episode-detail-view.js';
@@ -148,6 +149,7 @@ class EpisodeApp extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    backupIfNeeded().catch(() => {});
     await this.loadEpisodes();
   }
 
