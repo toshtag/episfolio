@@ -1,4 +1,8 @@
-import type { AgentTrackRecord, AgentTrackRecordUpdate, ConsultantQuality } from '@episfolio/kernel';
+import type {
+  AgentTrackRecord,
+  AgentTrackRecordUpdate,
+  ConsultantQuality,
+} from '@episfolio/kernel';
 import { invoke } from '@tauri-apps/api/core';
 
 export type CreateAgentTrackRecordArgs = {
