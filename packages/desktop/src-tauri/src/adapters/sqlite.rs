@@ -24,6 +24,23 @@ const MIGRATION_017: &str = include_str!("../../migrations/0017_add_boss_referen
 const MIGRATION_018: &str = include_str!("../../migrations/0018_add_customer_references.sql");
 const MIGRATION_019: &str = include_str!("../../migrations/0019_add_work_asset_summaries.sql");
 const MIGRATION_020: &str = include_str!("../../migrations/0020_add_subordinate_summaries.sql");
+const MIGRATION_021: &str = include_str!("../../migrations/0021_add_strength_arrows.sql");
+const MIGRATION_022: &str = include_str!("../../migrations/0022_add_result_by_type.sql");
+const MIGRATION_023: &str = include_str!("../../migrations/0023_add_strength_from_weakness.sql");
+const MIGRATION_024: &str = include_str!("../../migrations/0024_add_microchop_skill.sql");
+const MIGRATION_025: &str = include_str!("../../migrations/0025_add_weak_connection.sql");
+const MIGRATION_026: &str = include_str!("../../migrations/0026_add_monster_company_checks.sql");
+const MIGRATION_027: &str =
+    include_str!("../../migrations/0027_add_recruitment_impressions.sql");
+const MIGRATION_028: &str = include_str!("../../migrations/0028_add_salary_benchmarks.sql");
+const MIGRATION_029: &str = include_str!("../../migrations/0029_add_hidden_gem_notes.sql");
+const MIGRATION_030: &str = include_str!("../../migrations/0030_add_growth_cycle_notes.sql");
+const MIGRATION_031: &str =
+    include_str!("../../migrations/0031_add_company_certifications.sql");
+const MIGRATION_032: &str =
+    include_str!("../../migrations/0032_add_business_unit_type_matches.sql");
+const MIGRATION_033: &str =
+    include_str!("../../migrations/0033_extend_application_motives.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -60,6 +77,19 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0018", MIGRATION_018)?;
     apply_migration(conn, "0019", MIGRATION_019)?;
     apply_migration(conn, "0020", MIGRATION_020)?;
+    apply_migration(conn, "0021", MIGRATION_021)?;
+    apply_migration(conn, "0022", MIGRATION_022)?;
+    apply_migration(conn, "0023", MIGRATION_023)?;
+    apply_migration(conn, "0024", MIGRATION_024)?;
+    apply_migration(conn, "0025", MIGRATION_025)?;
+    apply_migration(conn, "0026", MIGRATION_026)?;
+    apply_migration(conn, "0027", MIGRATION_027)?;
+    apply_migration(conn, "0028", MIGRATION_028)?;
+    apply_migration(conn, "0029", MIGRATION_029)?;
+    apply_migration(conn, "0030", MIGRATION_030)?;
+    apply_migration(conn, "0031", MIGRATION_031)?;
+    apply_migration(conn, "0032", MIGRATION_032)?;
+    apply_migration(conn, "0033", MIGRATION_033)?;
 
     Ok(())
 }
@@ -108,12 +138,12 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0020_apply_to_fresh_db() {
+    fn migrations_0001_through_0033_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 20);
+        assert_eq!(count, 33);
     }
 
     // ──────────────────────────────────────────────

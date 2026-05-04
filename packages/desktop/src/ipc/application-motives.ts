@@ -1,13 +1,37 @@
-import type { ApplicationMotive, ApplicationMotiveUpdate } from '@episfolio/kernel';
+import type {
+  ApplicationMotive,
+  ApplicationMotiveUpdate,
+  InfoSourceType,
+  SelfIdentification,
+  ValueAnalysisType,
+} from '@episfolio/kernel';
 import { invoke } from '@tauri-apps/api/core';
 
-type CreateApplicationMotiveArgs = {
-  jobTargetId: string;
-  companyFuture?: string;
-  contributionAction?: string;
-  leveragedExperience?: string;
-  formattedText?: string;
-};
+type CreateApplicationMotiveArgs =
+  | {
+      jobTargetId: string;
+      motiveStyle?: 'standard';
+      formattedText?: string;
+      companyFuture?: string;
+      contributionAction?: string;
+      leveragedExperience?: string;
+      infoSourceType?: InfoSourceType | null;
+      infoSourceUrl?: string;
+      targetDepartment?: string;
+      departmentChallenge?: string;
+    }
+  | {
+      jobTargetId: string;
+      motiveStyle: 'iron';
+      formattedText?: string;
+      positiveInfluence?: string;
+      beforeAfterFact?: string;
+      selfIdentification?: SelfIdentification | null;
+      providerSwitchMoment?: string;
+      valueAnalysisType?: ValueAnalysisType | null;
+      valueAnalysisDetail?: string;
+      postJoinActionPlan?: string;
+    };
 
 export async function createApplicationMotive(
   args: CreateApplicationMotiveArgs,
