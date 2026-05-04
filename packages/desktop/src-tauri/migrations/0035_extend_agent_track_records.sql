@@ -1,4 +1,4 @@
--- 書籍 B 第 3 章（多経路発想・エージェントを資産として評価）由来 9 フィールドを agent_track_records に追加
+-- 多経路発想・エージェント評価用の 9 フィールドを agent_track_records に追加
 -- 全列 NULL デフォルトで既存レコードの後方互換を維持
 
 ALTER TABLE agent_track_records ADD COLUMN specialty_industries          TEXT;

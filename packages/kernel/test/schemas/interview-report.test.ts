@@ -93,7 +93,7 @@ describe('ResponseImpressionSchema', () => {
   });
 });
 
-describe('InterviewReportSchema — 書籍 B 第4章フィールド', () => {
+describe('InterviewReportSchema — 面接ログ拡張フィールド', () => {
   it('新フィールドが省略されていても default null で受理', () => {
     const result = InterviewReportSchema.safeParse(baseReport);
     expect(result.success).toBe(true);

@@ -39,7 +39,7 @@ const ironMotive: IronApplicationMotive = {
 };
 
 describe('composeApplicationMotiveText（standard）', () => {
-  it('3 フィールドが揃っている場合に書籍フォーマットの文を生成する', () => {
+  it('3 フィールドが揃っている場合に定型フォーマットの文を生成する', () => {
     const result = composeApplicationMotiveText(standardMotive);
     expect(result).toBe(
       '私はDX 推進による業界変革を達成するために、貴社を志望しています。' +

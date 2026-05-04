@@ -1,4 +1,4 @@
--- 書籍 B 第 4 章（求人票分析）・第 3 章（applicationRoute）由来 16 フィールドを job_targets に追加
+-- 求人票分析・応募経路管理用の 16 フィールドを job_targets に追加
 -- 全列 NULL デフォルトで既存レコードの後方互換を維持
 
 ALTER TABLE job_targets ADD COLUMN annual_holidays        INTEGER;

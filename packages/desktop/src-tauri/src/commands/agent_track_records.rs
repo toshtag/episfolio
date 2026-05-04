@@ -15,7 +15,7 @@ pub struct AgentTrackRecordRow {
     pub first_contact_date: Option<String>,
     pub memo: String,
     pub status: String,
-    // 書籍 B 第 3 章 — 多経路発想・エージェントを資産として評価するフィールド
+    // 多経路発想・エージェントを資産として評価するフィールド
     pub specialty_industries: Option<String>,
     pub specialty_job_types: Option<String>,
     pub consultant_quality: Option<String>,

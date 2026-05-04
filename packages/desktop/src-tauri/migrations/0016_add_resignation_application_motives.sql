@@ -1,6 +1,6 @@
 -- 0016: resignation_motives / application_motives テーブルを追加
 --
--- 書籍 A 3-02「本音の転職理由」と「建前の志望動機」の分離構造（ADR-0011）。
+-- 「本音の転職理由」と「建前の志望動機」の分離構造（ADR-0011）。
 -- resignation_motives は求人非依存（1 レコードで管理）。
 -- application_motives は job_targets への FK CASCADE（求人ごとに 1 つ）。
 

@@ -1,6 +1,6 @@
 -- 0017: boss_references テーブルを追加
 --
--- 書籍 A 3-08「上司リファレンス」。上司タイプ分析（8軸スライダー）と
+-- 「上司リファレンス」。上司タイプ分析（8軸スライダー）と
 -- 11質問の回答・強みエピソードを管理する。JobTarget 非依存の汎用資料。
 
 CREATE TABLE IF NOT EXISTS boss_references (

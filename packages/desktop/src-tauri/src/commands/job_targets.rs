@@ -23,7 +23,7 @@ pub struct JobTargetRow {
     pub preferred_skills: Vec<SkillItemRow>,
     pub concerns: String,
     pub appeal_points: String,
-    // 書籍 B 第 4 章 — 求人票分析フィールド
+    // 求人票分析フィールド
     pub annual_holidays: Option<i64>,
     pub working_hours_per_day: Option<f64>,
     pub commute_time_minutes: Option<i64>,
@@ -39,7 +39,7 @@ pub struct JobTargetRow {
     pub bonus_base_months: Option<f64>,
     pub has_future_raise_promise: Option<bool>,
     pub future_raise_promise_in_contract: Option<bool>,
-    // 書籍 B 第 3 章 — 応募経路
+    // 応募経路フィールド
     pub application_route: Option<String>,
     pub created_at: String,
     pub updated_at: String,

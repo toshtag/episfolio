@@ -27,7 +27,7 @@ export type JobTarget = {
   preferredSkills: SkillItem[];
   concerns: string;
   appealPoints: string;
-  // 書籍 B 第 4 章 — 求人票分析フィールド
+  // 求人票分析フィールド
   annualHolidays: number | null;
   workingHoursPerDay: number | null;
   commuteTimeMinutes: number | null;
@@ -43,7 +43,7 @@ export type JobTarget = {
   bonusBaseMonths: number | null;
   hasFutureRaisePromise: boolean | null;
   futureRaisePromiseInContract: boolean | null;
-  // 書籍 B 第 3 章 — 応募経路
+  // 応募経路フィールド
   applicationRoute: ApplicationRoute | null;
   createdAt: ISO8601;
   updatedAt: ISO8601;
