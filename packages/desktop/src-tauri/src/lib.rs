@@ -95,6 +95,12 @@ pub fn run() {
             commands::get_resignation_motive,
             commands::update_resignation_motive,
             commands::delete_resignation_motive,
+            // resignation plans
+            commands::create_resignation_plan,
+            commands::list_resignation_plans_by_job_target,
+            commands::get_resignation_plan,
+            commands::update_resignation_plan,
+            commands::delete_resignation_plan,
             // application motives
             commands::create_application_motive,
             commands::list_application_motives,
