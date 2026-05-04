@@ -27,7 +27,14 @@ export type {
   AgentTrackRecordStatus,
 } from './domain/agent-track-record.js';
 export type { AIRun, AIRunInputSnapshotMode, AIRunPurpose } from './domain/ai-run.js';
-export type { ApplicationMotive } from './domain/application-motive.js';
+export type {
+  ApplicationMotive,
+  IronApplicationMotive,
+  StandardApplicationMotive,
+  InfoSourceType,
+  SelfIdentification,
+  ValueAnalysisType,
+} from './domain/application-motive.js';
 export type {
   BossReference,
   BossReferenceAxis,
@@ -195,6 +202,8 @@ export {
   ApplicationMotiveCreateSchema,
   ApplicationMotiveSchema,
   ApplicationMotiveUpdateSchema,
+  StandardApplicationMotiveSchema,
+  IronApplicationMotiveSchema,
 } from './schemas/application-motive.js';
 export type {
   BossReferenceInput,
