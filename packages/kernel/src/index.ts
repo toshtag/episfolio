@@ -92,6 +92,7 @@ export type {
   SensoryObservation,
 } from './domain/recruitment-impression.js';
 export type { ResignationMotive } from './domain/resignation-motive.js';
+export type { RecruitmentBackground, ResignationPlan } from './domain/resignation-plan.js';
 export type { ResultByType, ResultEntry, ResultType } from './domain/result-by-type.js';
 export type { SalaryBenchmark } from './domain/salary-benchmark.js';
 export type { AIProvider, Settings } from './domain/settings.js';
@@ -170,6 +171,7 @@ export type { MicrochopSkillStoragePort } from './ports/microchop-skill-storage-
 export type { MonsterCompanyCheckStoragePort } from './ports/monster-company-check-storage-port.js';
 export type { RecruitmentImpressionStoragePort } from './ports/recruitment-impression-storage-port.js';
 export type { ResignationMotiveStoragePort } from './ports/resignation-motive-storage-port.js';
+export type { ResignationPlanStoragePort } from './ports/resignation-plan-storage-port.js';
 export type { ResultByTypeStoragePort } from './ports/result-by-type-storage-port.js';
 export type { SalaryBenchmarkStoragePort } from './ports/salary-benchmark-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
@@ -396,6 +398,15 @@ export {
   ResignationMotiveSchema,
   ResignationMotiveUpdateSchema,
 } from './schemas/resignation-motive.js';
+export type {
+  ResignationPlanInput,
+  ResignationPlanUpdate,
+} from './schemas/resignation-plan.js';
+export {
+  RecruitmentBackgroundSchema,
+  ResignationPlanSchema,
+  ResignationPlanUpdateSchema,
+} from './schemas/resignation-plan.js';
 export type {
   ResultByTypeCreate,
   ResultByTypeInput,
