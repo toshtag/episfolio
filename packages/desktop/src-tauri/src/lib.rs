@@ -7,6 +7,8 @@ use tauri::Manager;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let db_path = app.path().app_data_dir()?.join("episfolio.db");
             if let Some(parent) = db_path.parent() {
