@@ -1,4 +1,9 @@
-import type { ApplicationMotive, JobTarget, ResignationMotive, StandardApplicationMotive } from '@episfolio/kernel';
+import type {
+  ApplicationMotive,
+  JobTarget,
+  ResignationMotive,
+  StandardApplicationMotive,
+} from '@episfolio/kernel';
 import { composeApplicationMotiveText } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
 import {

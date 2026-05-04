@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import type {
+  IronApplicationMotive,
+  StandardApplicationMotive,
+} from '../../src/domain/application-motive.js';
 import { composeApplicationMotiveText } from '../../src/exporters/application-motive.js';
-import type { IronApplicationMotive, StandardApplicationMotive } from '../../src/domain/application-motive.js';
 
 const common = {
   id: '01APPMO01',
@@ -67,7 +70,12 @@ describe('composeApplicationMotiveText（standard）', () => {
 
   it('フィールドを変えると別の文章になる', () => {
     const a = composeApplicationMotiveText(standardMotive);
-    const b = composeApplicationMotiveText({ ...standardMotive, companyFuture: 'X', contributionAction: 'Y', leveragedExperience: 'Z' });
+    const b = composeApplicationMotiveText({
+      ...standardMotive,
+      companyFuture: 'X',
+      contributionAction: 'Y',
+      leveragedExperience: 'Z',
+    });
     expect(a).not.toBe(b);
   });
 
@@ -90,7 +98,9 @@ describe('composeApplicationMotiveText（iron）', () => {
     expect(result).toContain('【肯定的影響】顧客の行動変容に立ち会えた瞬間');
     expect(result).toContain('【Before→After の事実】導入前 CSV 手作業 → 導入後 90% 自動化');
     expect(result).toContain('【自己認識】提供者');
-    expect(result).toContain('【提供者への転換点】OSS コントリビュートで「使われる側」の視点を得た');
+    expect(result).toContain(
+      '【提供者への転換点】OSS コントリビュートで「使われる側」の視点を得た',
+    );
     expect(result).toContain('【価値分析】マーケットイン型：顧客課題起点でプロダクトを設計');
     expect(result).toContain('【入社後の行動計画】入社 3 ヶ月で既存顧客ヒアリング 20 社実施');
   });
@@ -126,7 +136,10 @@ describe('composeApplicationMotiveText（iron）', () => {
   });
 
   it('selfIdentification=transitioning のラベルが正しい', () => {
-    const result = composeApplicationMotiveText({ ...ironMotive, selfIdentification: 'transitioning' });
+    const result = composeApplicationMotiveText({
+      ...ironMotive,
+      selfIdentification: 'transitioning',
+    });
     expect(result).toContain('【自己認識】移行中');
   });
 

@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { ApplicationMotive, StandardApplicationMotive, IronApplicationMotive } from '../../src/domain/application-motive.js';
+import type {
+  ApplicationMotive,
+  IronApplicationMotive,
+  StandardApplicationMotive,
+} from '../../src/domain/application-motive.js';
 import type { ApplicationMotiveStoragePort } from '../../src/ports/application-motive-storage-port.js';
 import type { ApplicationMotiveUpdate } from '../../src/schemas/application-motive.js';
 
@@ -119,8 +123,12 @@ describe('ApplicationMotiveStoragePort contract', () => {
 
   describe('list', () => {
     it('全件を createdAt 昇順で返す', async () => {
-      await storage.save(buildStandard('01APPMO02', '01JOBTG1', { createdAt: '2026-05-02T00:00:00Z' }));
-      await storage.save(buildStandard('01APPMO01', '01JOBTG1', { createdAt: '2026-05-01T00:00:00Z' }));
+      await storage.save(
+        buildStandard('01APPMO02', '01JOBTG1', { createdAt: '2026-05-02T00:00:00Z' }),
+      );
+      await storage.save(
+        buildStandard('01APPMO01', '01JOBTG1', { createdAt: '2026-05-01T00:00:00Z' }),
+      );
       const list = await storage.list();
       expect(list.map((m) => m.id)).toEqual(['01APPMO01', '01APPMO02']);
     });
@@ -177,14 +185,18 @@ describe('ApplicationMotiveStoragePort contract', () => {
     });
 
     it('id / createdAt は不可変', async () => {
-      await storage.save(buildStandard('01APPMO01', '01JOBTG1', { createdAt: '2026-01-01T00:00:00Z' }));
+      await storage.save(
+        buildStandard('01APPMO01', '01JOBTG1', { createdAt: '2026-01-01T00:00:00Z' }),
+      );
       const updated = await storage.update('01APPMO01', { companyFuture: '変更' });
       expect(updated.id).toBe('01APPMO01');
       expect(updated.createdAt).toBe('2026-01-01T00:00:00Z');
     });
 
     it('updatedAt が更新される', async () => {
-      await storage.save(buildStandard('01APPMO01', '01JOBTG1', { updatedAt: '2026-01-01T00:00:00Z' }));
+      await storage.save(
+        buildStandard('01APPMO01', '01JOBTG1', { updatedAt: '2026-01-01T00:00:00Z' }),
+      );
       const updated = await storage.update('01APPMO01', { companyFuture: '変更' });
       expect(updated.updatedAt).not.toBe('2026-01-01T00:00:00Z');
     });

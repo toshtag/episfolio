@@ -57,35 +57,56 @@ describe('StandardApplicationMotiveSchema', () => {
   });
 
   it('infoSourceType に有効な enum 値を受理', () => {
-    for (const v of ['recruit_info', 'mid_term_plan', 'president_message', 'member_profile', 'other'] as const) {
-      expect(StandardApplicationMotiveSchema.safeParse({ ...baseStandard, infoSourceType: v }).success).toBe(true);
+    for (const v of [
+      'recruit_info',
+      'mid_term_plan',
+      'president_message',
+      'member_profile',
+      'other',
+    ] as const) {
+      expect(
+        StandardApplicationMotiveSchema.safeParse({ ...baseStandard, infoSourceType: v }).success,
+      ).toBe(true);
     }
   });
 
   it('infoSourceType に無効な値を拒否', () => {
     expect(
-      StandardApplicationMotiveSchema.safeParse({ ...baseStandard, infoSourceType: 'invalid_value' }).success,
+      StandardApplicationMotiveSchema.safeParse({
+        ...baseStandard,
+        infoSourceType: 'invalid_value',
+      }).success,
     ).toBe(false);
   });
 
   it('id 空文字を拒否', () => {
-    expect(StandardApplicationMotiveSchema.safeParse({ ...baseStandard, id: '' }).success).toBe(false);
+    expect(StandardApplicationMotiveSchema.safeParse({ ...baseStandard, id: '' }).success).toBe(
+      false,
+    );
   });
 
   it('jobTargetId 空文字を拒否', () => {
-    expect(StandardApplicationMotiveSchema.safeParse({ ...baseStandard, jobTargetId: '' }).success).toBe(false);
+    expect(
+      StandardApplicationMotiveSchema.safeParse({ ...baseStandard, jobTargetId: '' }).success,
+    ).toBe(false);
   });
 
   it('createdAt 空文字を拒否', () => {
-    expect(StandardApplicationMotiveSchema.safeParse({ ...baseStandard, createdAt: '' }).success).toBe(false);
+    expect(
+      StandardApplicationMotiveSchema.safeParse({ ...baseStandard, createdAt: '' }).success,
+    ).toBe(false);
   });
 
   it('updatedAt 空文字を拒否', () => {
-    expect(StandardApplicationMotiveSchema.safeParse({ ...baseStandard, updatedAt: '' }).success).toBe(false);
+    expect(
+      StandardApplicationMotiveSchema.safeParse({ ...baseStandard, updatedAt: '' }).success,
+    ).toBe(false);
   });
 
   it('jobTargetId が null を拒否（FK 必須）', () => {
-    expect(StandardApplicationMotiveSchema.safeParse({ ...baseStandard, jobTargetId: null }).success).toBe(false);
+    expect(
+      StandardApplicationMotiveSchema.safeParse({ ...baseStandard, jobTargetId: null }).success,
+    ).toBe(false);
   });
 
   it('style が iron のデータを拒否', () => {
@@ -113,22 +134,30 @@ describe('IronApplicationMotiveSchema', () => {
 
   it('selfIdentification に有効な enum 値を受理', () => {
     for (const v of ['fan', 'provider', 'transitioning'] as const) {
-      expect(IronApplicationMotiveSchema.safeParse({ ...baseIron, selfIdentification: v }).success).toBe(true);
+      expect(
+        IronApplicationMotiveSchema.safeParse({ ...baseIron, selfIdentification: v }).success,
+      ).toBe(true);
     }
   });
 
   it('selfIdentification に無効な値を拒否', () => {
-    expect(IronApplicationMotiveSchema.safeParse({ ...baseIron, selfIdentification: 'unknown' }).success).toBe(false);
+    expect(
+      IronApplicationMotiveSchema.safeParse({ ...baseIron, selfIdentification: 'unknown' }).success,
+    ).toBe(false);
   });
 
   it('valueAnalysisType に有効な enum 値を受理', () => {
     for (const v of ['productOut', 'marketIn'] as const) {
-      expect(IronApplicationMotiveSchema.safeParse({ ...baseIron, valueAnalysisType: v }).success).toBe(true);
+      expect(
+        IronApplicationMotiveSchema.safeParse({ ...baseIron, valueAnalysisType: v }).success,
+      ).toBe(true);
     }
   });
 
   it('valueAnalysisType に無効な値を拒否', () => {
-    expect(IronApplicationMotiveSchema.safeParse({ ...baseIron, valueAnalysisType: 'hybrid' }).success).toBe(false);
+    expect(
+      IronApplicationMotiveSchema.safeParse({ ...baseIron, valueAnalysisType: 'hybrid' }).success,
+    ).toBe(false);
   });
 
   it('id 空文字を拒否', () => {
@@ -155,7 +184,9 @@ describe('ApplicationMotiveSchema（discriminated union）', () => {
   });
 
   it('未知の style 値を拒否', () => {
-    expect(ApplicationMotiveSchema.safeParse({ ...baseStandard, style: 'premium' }).success).toBe(false);
+    expect(ApplicationMotiveSchema.safeParse({ ...baseStandard, style: 'premium' }).success).toBe(
+      false,
+    );
   });
 
   it('パース結果から style で narrow できる', () => {
@@ -176,15 +207,21 @@ describe('ApplicationMotiveUpdateSchema', () => {
   });
 
   it('standard 系フィールドのみ送れる', () => {
-    expect(ApplicationMotiveUpdateSchema.safeParse({ companyFuture: '新しい企業ビジョン' }).success).toBe(true);
+    expect(
+      ApplicationMotiveUpdateSchema.safeParse({ companyFuture: '新しい企業ビジョン' }).success,
+    ).toBe(true);
   });
 
   it('iron 系フィールドのみ送れる', () => {
-    expect(ApplicationMotiveUpdateSchema.safeParse({ positiveInfluence: '新しい影響' }).success).toBe(true);
+    expect(
+      ApplicationMotiveUpdateSchema.safeParse({ positiveInfluence: '新しい影響' }).success,
+    ).toBe(true);
   });
 
   it('formattedText を更新できる', () => {
-    expect(ApplicationMotiveUpdateSchema.safeParse({ formattedText: '新しい文章' }).success).toBe(true);
+    expect(ApplicationMotiveUpdateSchema.safeParse({ formattedText: '新しい文章' }).success).toBe(
+      true,
+    );
   });
 
   it('jobTargetId は UpdateSchema に含まれない（FK 変更不可）', () => {

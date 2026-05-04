@@ -29,10 +29,10 @@ export type {
 export type { AIRun, AIRunInputSnapshotMode, AIRunPurpose } from './domain/ai-run.js';
 export type {
   ApplicationMotive,
-  IronApplicationMotive,
-  StandardApplicationMotive,
   InfoSourceType,
+  IronApplicationMotive,
   SelfIdentification,
+  StandardApplicationMotive,
   ValueAnalysisType,
 } from './domain/application-motive.js';
 export type {
@@ -202,8 +202,8 @@ export {
   ApplicationMotiveCreateSchema,
   ApplicationMotiveSchema,
   ApplicationMotiveUpdateSchema,
-  StandardApplicationMotiveSchema,
   IronApplicationMotiveSchema,
+  StandardApplicationMotiveSchema,
 } from './schemas/application-motive.js';
 export type {
   BossReferenceInput,
