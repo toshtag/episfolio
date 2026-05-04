@@ -1,4 +1,9 @@
-import type { InterviewReport, JobTarget } from '@episfolio/kernel';
+import type {
+  InterviewerStyle,
+  InterviewReport,
+  JobTarget,
+  ResponseImpression,
+} from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
 import {
   createInterviewReport,
@@ -15,6 +20,18 @@ const STAGES: { value: InterviewReport['stage']; label: string }[] = [
   { value: 'other', label: 'その他' },
 ];
 
+const INTERVIEWER_STYLE_OPTIONS: { value: InterviewerStyle; label: string }[] = [
+  { value: 'numeric', label: '数値重視型' },
+  { value: 'process', label: 'プロセス重視型' },
+  { value: 'unknown', label: '不明' },
+];
+
+const RESPONSE_IMPRESSION_OPTIONS: { value: ResponseImpression; label: string }[] = [
+  { value: 'good', label: '好感触' },
+  { value: 'neutral', label: '普通' },
+  { value: 'poor', label: '懸念あり' },
+];
+
 type FormState = {
   stage: InterviewReport['stage'];
   interviewerNote: string;
@@ -22,6 +39,14 @@ type FormState = {
   motivationChangeNote: string;
   questionsToBringNote: string;
   conductedAt: string;
+  interviewerRole: string;
+  interviewerStyle: InterviewerStyle | '';
+  talkRatioSelf: string;
+  questionsAskedNote: string;
+  responseImpression: ResponseImpression | '';
+  blankAreasNote: string;
+  improvementNote: string;
+  passed: boolean | null;
 };
 
 function emptyForm(): FormState {
@@ -32,11 +57,66 @@ function emptyForm(): FormState {
     motivationChangeNote: '',
     questionsToBringNote: '',
     conductedAt: '',
+    interviewerRole: '',
+    interviewerStyle: '',
+    talkRatioSelf: '',
+    questionsAskedNote: '',
+    responseImpression: '',
+    blankAreasNote: '',
+    improvementNote: '',
+    passed: null,
+  };
+}
+
+function recordToForm(r: InterviewReport): FormState {
+  return {
+    stage: r.stage,
+    interviewerNote: r.interviewerNote,
+    qaNote: r.qaNote,
+    motivationChangeNote: r.motivationChangeNote,
+    questionsToBringNote: r.questionsToBringNote,
+    conductedAt: r.conductedAt ?? '',
+    interviewerRole: r.interviewerRole ?? '',
+    interviewerStyle: r.interviewerStyle ?? '',
+    talkRatioSelf: r.talkRatioSelf != null ? String(r.talkRatioSelf) : '',
+    questionsAskedNote: r.questionsAskedNote ?? '',
+    responseImpression: r.responseImpression ?? '',
+    blankAreasNote: r.blankAreasNote ?? '',
+    improvementNote: r.improvementNote ?? '',
+    passed: r.passed,
+  };
+}
+
+function formToPayload(form: FormState) {
+  const talkRatio = form.talkRatioSelf.trim();
+  return {
+    stage: form.stage,
+    interviewerNote: form.interviewerNote,
+    qaNote: form.qaNote,
+    motivationChangeNote: form.motivationChangeNote,
+    questionsToBringNote: form.questionsToBringNote,
+    conductedAt: form.conductedAt.trim() || null,
+    interviewerRole: form.interviewerRole.trim() || null,
+    interviewerStyle: (form.interviewerStyle || null) as InterviewerStyle | null,
+    talkRatioSelf: talkRatio !== '' ? Number(talkRatio) : null,
+    questionsAskedNote: form.questionsAskedNote.trim() || null,
+    responseImpression: (form.responseImpression || null) as ResponseImpression | null,
+    blankAreasNote: form.blankAreasNote.trim() || null,
+    improvementNote: form.improvementNote.trim() || null,
+    passed: form.passed,
   };
 }
 
 function stageLabel(stage: InterviewReport['stage']): string {
   return STAGES.find((s) => s.value === stage)?.label ?? stage;
+}
+
+function impressionLabel(v: ResponseImpression | null): string {
+  return RESPONSE_IMPRESSION_OPTIONS.find((o) => o.value === v)?.label ?? '';
+}
+
+function styleLabel(v: InterviewerStyle | null): string {
+  return INTERVIEWER_STYLE_OPTIONS.find((o) => o.value === v)?.label ?? '';
 }
 
 class InterviewReportView extends LitElement {
@@ -103,6 +183,28 @@ class InterviewReportView extends LitElement {
       box-sizing: border-box;
     }
     textarea { min-height: 4rem; resize: vertical; }
+    .section-divider {
+      grid-column: 1 / -1;
+      margin: 0.5rem 0 0.25rem;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #777;
+      border-bottom: 1px solid #e8e8e8;
+      padding-bottom: 0.25rem;
+    }
+    .tristate { display: flex; gap: 0.4rem; }
+    .tristate button {
+      padding: 0.3rem 0.75rem;
+      font-size: 0.85rem;
+      border: 1px solid #ccc;
+      border-radius: 0.3rem;
+      background: #f5f5f5;
+      cursor: pointer;
+      width: auto;
+    }
+    .tristate button.active-pass { background: #1a7a4a; color: #fff; border-color: #1a7a4a; }
+    .tristate button.active-fail { background: #c00; color: #fff; border-color: #c00; }
+    .tristate button.active-unknown { background: #888; color: #fff; border-color: #888; }
     .actions { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; align-items: center; }
     button.save-btn {
       padding: 0.4rem 1rem;
@@ -124,15 +226,6 @@ class InterviewReportView extends LitElement {
     }
     .error { color: #c00; font-size: 0.85rem; }
     .section { margin-bottom: 2rem; }
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #e0e0e0;
-    }
-    .section-header h2 { margin: 0; font-size: 1.1rem; }
     .report-card {
       border: 1px solid #e0e0e0;
       border-radius: 0.4rem;
@@ -153,6 +246,25 @@ class InterviewReportView extends LitElement {
       border-radius: 1rem;
       background: #f0f0f0;
       color: #333;
+    }
+    .passed-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.78rem;
+      font-weight: bold;
+      border-radius: 1rem;
+      margin-left: 0.4rem;
+    }
+    .passed-badge.pass { background: #d4f0e4; color: #1a7a4a; }
+    .passed-badge.fail { background: #fde8e8; color: #c00; }
+    .meta-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }
+    .meta-chip {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.75rem;
+      border-radius: 1rem;
+      background: #f0f0f0;
+      color: #555;
     }
     .conducted-at { font-size: 0.8rem; color: #888; }
     .card-actions { display: flex; gap: 0.4rem; }
@@ -230,14 +342,7 @@ class InterviewReportView extends LitElement {
 
   private startEdit(r: InterviewReport) {
     this.editingId = r.id;
-    this.form = {
-      stage: r.stage,
-      interviewerNote: r.interviewerNote,
-      qaNote: r.qaNote,
-      motivationChangeNote: r.motivationChangeNote,
-      questionsToBringNote: r.questionsToBringNote,
-      conductedAt: r.conductedAt ?? '',
-    };
+    this.form = recordToForm(r);
     this.error = '';
   }
 
@@ -247,7 +352,7 @@ class InterviewReportView extends LitElement {
     this.error = '';
   }
 
-  private updateField(field: keyof FormState, value: string) {
+  private updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
     this.form = { ...this.form, [field]: value };
   }
 
@@ -256,25 +361,13 @@ class InterviewReportView extends LitElement {
     this.saving = true;
     this.error = '';
     try {
-      const conductedAt = this.form.conductedAt.trim() || null;
+      const payload = formToPayload(this.form);
       if (this.editingId) {
-        await updateInterviewReport(this.editingId, {
-          stage: this.form.stage,
-          interviewerNote: this.form.interviewerNote,
-          qaNote: this.form.qaNote,
-          motivationChangeNote: this.form.motivationChangeNote,
-          questionsToBringNote: this.form.questionsToBringNote,
-          conductedAt,
-        });
+        await updateInterviewReport(this.editingId, payload);
       } else {
         await createInterviewReport({
           jobTargetId: this.selectedJobTargetId,
-          stage: this.form.stage,
-          interviewerNote: this.form.interviewerNote,
-          qaNote: this.form.qaNote,
-          motivationChangeNote: this.form.motivationChangeNote,
-          questionsToBringNote: this.form.questionsToBringNote,
-          conductedAt,
+          ...payload,
         });
       }
       this.editingId = '';
@@ -299,6 +392,29 @@ class InterviewReportView extends LitElement {
     } else {
       this.confirmDeleteId = id;
     }
+  }
+
+  private renderTristate() {
+    const v = this.form.passed;
+    return html`
+      <div>
+        <label>選考結果</label>
+        <div class="tristate">
+          <button
+            class=${v === true ? 'active-pass' : ''}
+            @click=${() => this.updateField('passed', v === true ? null : true)}
+          >通過</button>
+          <button
+            class=${v === false ? 'active-fail' : ''}
+            @click=${() => this.updateField('passed', v === false ? null : false)}
+          >不通過</button>
+          <button
+            class=${v === null ? 'active-unknown' : ''}
+            @click=${() => this.updateField('passed', null)}
+          >未確定</button>
+        </div>
+      </div>
+    `;
   }
 
   private renderForm() {
@@ -334,7 +450,8 @@ class InterviewReportView extends LitElement {
             <label>面接官メモ</label>
             <textarea
               .value=${this.form.interviewerNote}
-              @input=${(e: Event) => this.updateField('interviewerNote', (e.target as HTMLTextAreaElement).value)}
+              @input=${(e: Event) =>
+                this.updateField('interviewerNote', (e.target as HTMLTextAreaElement).value)}
               placeholder="面接官の印象・特徴など"
             ></textarea>
           </div>
@@ -364,6 +481,95 @@ class InterviewReportView extends LitElement {
               placeholder="次の面接で聞きたいことなど"
             ></textarea>
           </div>
+
+          <div class="section-divider full">余白設計・面接ログ</div>
+
+          <div>
+            <label>面接官の役職・所属（任意）</label>
+            <input
+              type="text"
+              .value=${this.form.interviewerRole}
+              @input=${(e: Event) =>
+                this.updateField('interviewerRole', (e.target as HTMLInputElement).value)}
+              placeholder="例: 人事部長・現場マネージャーなど"
+            />
+          </div>
+          <div>
+            <label>面接スタイル（任意）</label>
+            <select
+              .value=${this.form.interviewerStyle}
+              @change=${(e: Event) =>
+                this.updateField(
+                  'interviewerStyle',
+                  (e.target as HTMLSelectElement).value as InterviewerStyle | '',
+                )}
+            >
+              <option value="">-- 未選択 --</option>
+              ${INTERVIEWER_STYLE_OPTIONS.map(
+                (o) =>
+                  html`<option value=${o.value} ?selected=${this.form.interviewerStyle === o.value}>${o.label}</option>`,
+              )}
+            </select>
+          </div>
+          <div>
+            <label>自分の話量（%、任意）</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              .value=${this.form.talkRatioSelf}
+              @input=${(e: Event) =>
+                this.updateField('talkRatioSelf', (e.target as HTMLInputElement).value)}
+              placeholder="0〜100"
+            />
+          </div>
+          <div>
+            <label>自分の回答印象（任意）</label>
+            <select
+              .value=${this.form.responseImpression}
+              @change=${(e: Event) =>
+                this.updateField(
+                  'responseImpression',
+                  (e.target as HTMLSelectElement).value as ResponseImpression | '',
+                )}
+            >
+              <option value="">-- 未選択 --</option>
+              ${RESPONSE_IMPRESSION_OPTIONS.map(
+                (o) =>
+                  html`<option value=${o.value} ?selected=${this.form.responseImpression === o.value}>${o.label}</option>`,
+              )}
+            </select>
+          </div>
+          <div class="full">
+            <label>聞かれた質問メモ（任意）</label>
+            <textarea
+              .value=${this.form.questionsAskedNote}
+              @input=${(e: Event) =>
+                this.updateField('questionsAskedNote', (e.target as HTMLTextAreaElement).value)}
+              placeholder="面接官が実際に聞いてきた質問を記録"
+            ></textarea>
+          </div>
+          <div class="full">
+            <label>余白として残せた部分（任意）</label>
+            <textarea
+              .value=${this.form.blankAreasNote}
+              @input=${(e: Event) =>
+                this.updateField('blankAreasNote', (e.target as HTMLTextAreaElement).value)}
+              placeholder="あえて話さなかった・次回に持ち越した内容"
+            ></textarea>
+          </div>
+          <div class="full">
+            <label>改善メモ（任意）</label>
+            <textarea
+              .value=${this.form.improvementNote}
+              @input=${(e: Event) =>
+                this.updateField('improvementNote', (e.target as HTMLTextAreaElement).value)}
+              placeholder="次回に向けた改善点・反省点"
+            ></textarea>
+          </div>
+          <div class="full">
+            ${this.renderTristate()}
+          </div>
         </div>
         <div class="actions">
           <button class="save-btn" ?disabled=${this.saving} @click=${this.save}>
@@ -384,19 +590,30 @@ class InterviewReportView extends LitElement {
     const isEditing = this.editingId === r.id;
     if (isEditing) return this.renderForm();
 
-    const notes: { label: string; value: string }[] = [
+    const mainNotes: { label: string; value: string }[] = [
       { label: '面接官メモ', value: r.interviewerNote },
       { label: 'Q&Aメモ', value: r.qaNote },
       { label: '志望度変化メモ', value: r.motivationChangeNote },
       { label: '次回への持ち込み質問', value: r.questionsToBringNote },
     ];
-    const hasAny = notes.some((n) => n.value.trim());
+    const extraNotes: { label: string; value: string | null }[] = [
+      { label: '聞かれた質問', value: r.questionsAskedNote },
+      { label: '余白として残せた部分', value: r.blankAreasNote },
+      { label: '改善メモ', value: r.improvementNote },
+    ];
 
     return html`
       <div class="report-card">
         <div class="report-card-header">
           <div>
             <span class="stage-badge">${stageLabel(r.stage)}</span>
+            ${
+              r.passed === true
+                ? html`<span class="passed-badge pass">通過</span>`
+                : r.passed === false
+                  ? html`<span class="passed-badge fail">不通過</span>`
+                  : ''
+            }
             ${r.conductedAt ? html`<span class="conducted-at">&nbsp;${r.conductedAt}</span>` : ''}
           </div>
           <div class="card-actions">
@@ -410,18 +627,52 @@ class InterviewReportView extends LitElement {
           </div>
         </div>
         ${
-          hasAny
-            ? notes
-                .filter((n) => n.value.trim())
-                .map(
-                  (n) => html`
-                  <div class="note-section">
-                    <div class="note-label">${n.label}</div>
-                    <div class="note-body">${n.value}</div>
-                  </div>
-                `,
-                )
-            : html`<div class="note-empty">メモはまだありません</div>`
+          r.interviewerStyle != null || r.talkRatioSelf != null || r.responseImpression != null
+            ? html`
+            <div class="meta-chips">
+              ${
+                r.interviewerStyle != null
+                  ? html`<span class="meta-chip">スタイル: ${styleLabel(r.interviewerStyle)}</span>`
+                  : ''
+              }
+              ${
+                r.talkRatioSelf != null
+                  ? html`<span class="meta-chip">話量: ${r.talkRatioSelf}%</span>`
+                  : ''
+              }
+              ${
+                r.responseImpression != null
+                  ? html`<span class="meta-chip">印象: ${impressionLabel(r.responseImpression)}</span>`
+                  : ''
+              }
+            </div>
+          `
+            : ''
+        }
+        ${mainNotes
+          .filter((n) => n.value.trim())
+          .map(
+            (n) => html`
+            <div class="note-section">
+              <div class="note-label">${n.label}</div>
+              <div class="note-body">${n.value}</div>
+            </div>
+          `,
+          )}
+        ${extraNotes
+          .filter((n) => n.value?.trim())
+          .map(
+            (n) => html`
+            <div class="note-section">
+              <div class="note-label">${n.label}</div>
+              <div class="note-body">${n.value}</div>
+            </div>
+          `,
+          )}
+        ${
+          !mainNotes.some((n) => n.value.trim()) && !extraNotes.some((n) => n.value?.trim())
+            ? html`<div class="note-empty">メモはまだありません</div>`
+            : ''
         }
       </div>
     `;

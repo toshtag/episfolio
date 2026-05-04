@@ -1,7 +1,7 @@
 import type {
+  InterviewerStyle,
   InterviewReport,
   InterviewReportUpdate,
-  InterviewerStyle,
   ResponseImpression,
 } from '@episfolio/kernel';
 import { invoke } from '@tauri-apps/api/core';
