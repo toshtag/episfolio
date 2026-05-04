@@ -23,6 +23,7 @@ import './life-timeline-view.js';
 import './microchop-skill-view.js';
 import './monster-company-check-view.js';
 import './recruitment-impression-view.js';
+import './resignation-plan-view.js';
 import './result-by-type-view.js';
 import './salary-benchmark-view.js';
 import './settings-view.js';
@@ -60,6 +61,7 @@ type Tab =
   | 'salary-benchmark'
   | 'hidden-gem-note'
   | 'growth-cycle-note'
+  | 'resignation-plan'
   | 'digest'
   | 'settings';
 
@@ -91,6 +93,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'salary-benchmark', label: '給料分析' },
   { id: 'hidden-gem-note', label: '隠れ優良企業' },
   { id: 'growth-cycle-note', label: '成長サイクル' },
+  { id: 'resignation-plan', label: '退職交渉' },
   { id: 'digest', label: 'ダイジェスト' },
   { id: 'settings', label: '設定' },
 ];
@@ -123,6 +126,7 @@ const TAB_CONTENT: Partial<Record<Tab, () => TemplateResult>> = {
   'salary-benchmark': () => html`<salary-benchmark-view></salary-benchmark-view>`,
   'hidden-gem-note': () => html`<hidden-gem-note-view></hidden-gem-note-view>`,
   'growth-cycle-note': () => html`<growth-cycle-note-view></growth-cycle-note-view>`,
+  'resignation-plan': () => html`<resignation-plan-view></resignation-plan-view>`,
   digest: () => html`<digest-view></digest-view>`,
   settings: () => html`<settings-view></settings-view>`,
 };
