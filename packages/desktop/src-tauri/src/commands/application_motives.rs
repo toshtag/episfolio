@@ -9,28 +9,58 @@ use ulid::Ulid;
 pub struct ApplicationMotiveRow {
     pub id: String,
     pub job_target_id: String,
-    pub company_future: String,
-    pub contribution_action: String,
-    pub leveraged_experience: String,
+    pub motive_style: String,
+    // shared
     pub formatted_text: String,
     pub created_at: String,
     pub updated_at: String,
+    // standard fields
+    pub company_future: String,
+    pub contribution_action: String,
+    pub leveraged_experience: String,
+    pub info_source_type: Option<String>,
+    pub info_source_url: String,
+    pub target_department: String,
+    pub department_challenge: String,
+    // iron fields
+    pub positive_influence: String,
+    pub before_after_fact: String,
+    pub self_identification: Option<String>,
+    pub provider_switch_moment: String,
+    pub value_analysis_type: Option<String>,
+    pub value_analysis_detail: String,
+    pub post_join_action_plan: String,
 }
 
 const SELECT_COLUMNS: &str =
-    "id, job_target_id, company_future, contribution_action, leveraged_experience, \
-     formatted_text, created_at, updated_at";
+    "id, job_target_id, motive_style, formatted_text, created_at, updated_at, \
+     company_future, contribution_action, leveraged_experience, \
+     info_source_type, info_source_url, target_department, department_challenge, \
+     positive_influence, before_after_fact, self_identification, \
+     provider_switch_moment, value_analysis_type, value_analysis_detail, post_join_action_plan";
 
 fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<ApplicationMotiveRow> {
     Ok(ApplicationMotiveRow {
         id: row.get(0)?,
         job_target_id: row.get(1)?,
-        company_future: row.get(2)?,
-        contribution_action: row.get(3)?,
-        leveraged_experience: row.get(4)?,
-        formatted_text: row.get(5)?,
-        created_at: row.get(6)?,
-        updated_at: row.get(7)?,
+        motive_style: row.get(2)?,
+        formatted_text: row.get(3)?,
+        created_at: row.get(4)?,
+        updated_at: row.get(5)?,
+        company_future: row.get(6)?,
+        contribution_action: row.get(7)?,
+        leveraged_experience: row.get(8)?,
+        info_source_type: row.get(9)?,
+        info_source_url: row.get(10)?,
+        target_department: row.get(11)?,
+        department_challenge: row.get(12)?,
+        positive_influence: row.get(13)?,
+        before_after_fact: row.get(14)?,
+        self_identification: row.get(15)?,
+        provider_switch_moment: row.get(16)?,
+        value_analysis_type: row.get(17)?,
+        value_analysis_detail: row.get(18)?,
+        post_join_action_plan: row.get(19)?,
     })
 }
 
@@ -38,10 +68,24 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<ApplicationMotive
 #[serde(rename_all = "camelCase")]
 pub struct CreateApplicationMotiveArgs {
     pub job_target_id: String,
+    pub motive_style: Option<String>,
+    pub formatted_text: Option<String>,
+    // standard
     pub company_future: Option<String>,
     pub contribution_action: Option<String>,
     pub leveraged_experience: Option<String>,
-    pub formatted_text: Option<String>,
+    pub info_source_type: Option<String>,
+    pub info_source_url: Option<String>,
+    pub target_department: Option<String>,
+    pub department_challenge: Option<String>,
+    // iron
+    pub positive_influence: Option<String>,
+    pub before_after_fact: Option<String>,
+    pub self_identification: Option<String>,
+    pub provider_switch_moment: Option<String>,
+    pub value_analysis_type: Option<String>,
+    pub value_analysis_detail: Option<String>,
+    pub post_join_action_plan: Option<String>,
 }
 
 #[tauri::command]
@@ -52,20 +96,36 @@ pub fn create_application_motive(
     let conn = db.lock().map_err(|e| e.to_string())?;
     let id = Ulid::new().to_string();
     let now = chrono_now();
+    let style = args.motive_style.unwrap_or_else(|| "standard".to_string());
 
     conn.execute(
         "INSERT INTO application_motives \
-         (id, job_target_id, company_future, contribution_action, leveraged_experience, \
-          formatted_text, created_at, updated_at) \
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?7)",
+         (id, job_target_id, motive_style, formatted_text, created_at, updated_at, \
+          company_future, contribution_action, leveraged_experience, \
+          info_source_type, info_source_url, target_department, department_challenge, \
+          positive_influence, before_after_fact, self_identification, \
+          provider_switch_moment, value_analysis_type, value_analysis_detail, post_join_action_plan) \
+         VALUES (?1,?2,?3,?4,?5,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)",
         rusqlite::params![
             id,
             args.job_target_id,
+            style,
+            args.formatted_text.unwrap_or_default(),
+            now,
             args.company_future.unwrap_or_default(),
             args.contribution_action.unwrap_or_default(),
             args.leveraged_experience.unwrap_or_default(),
-            args.formatted_text.unwrap_or_default(),
-            now,
+            args.info_source_type,
+            args.info_source_url.unwrap_or_default(),
+            args.target_department.unwrap_or_default(),
+            args.department_challenge.unwrap_or_default(),
+            args.positive_influence.unwrap_or_default(),
+            args.before_after_fact.unwrap_or_default(),
+            args.self_identification,
+            args.provider_switch_moment.unwrap_or_default(),
+            args.value_analysis_type,
+            args.value_analysis_detail.unwrap_or_default(),
+            args.post_join_action_plan.unwrap_or_default(),
         ],
     )
     .map_err(|e| e.to_string())?;
@@ -130,10 +190,24 @@ pub fn get_application_motive(
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateApplicationMotiveArgs {
+    pub motive_style: Option<String>,
+    pub formatted_text: Option<String>,
+    // standard
     pub company_future: Option<String>,
     pub contribution_action: Option<String>,
     pub leveraged_experience: Option<String>,
-    pub formatted_text: Option<String>,
+    pub info_source_type: Option<Option<String>>,
+    pub info_source_url: Option<String>,
+    pub target_department: Option<String>,
+    pub department_challenge: Option<String>,
+    // iron
+    pub positive_influence: Option<String>,
+    pub before_after_fact: Option<String>,
+    pub self_identification: Option<Option<String>>,
+    pub provider_switch_moment: Option<String>,
+    pub value_analysis_type: Option<Option<String>>,
+    pub value_analysis_detail: Option<String>,
+    pub post_join_action_plan: Option<String>,
 }
 
 #[tauri::command]
@@ -148,22 +222,40 @@ pub fn update_application_motive(
     let mut sets: Vec<String> = Vec::new();
     let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
 
-    if let Some(v) = patch.company_future {
-        sets.push("company_future = ?".to_string());
+    macro_rules! add_field {
+        ($field:expr, $col:expr) => {
+            if let Some(v) = $field {
+                sets.push(format!("{} = ?", $col));
+                params.push(Box::new(v));
+            }
+        };
+    }
+
+    add_field!(patch.motive_style, "motive_style");
+    add_field!(patch.formatted_text, "formatted_text");
+    add_field!(patch.company_future, "company_future");
+    add_field!(patch.contribution_action, "contribution_action");
+    add_field!(patch.leveraged_experience, "leveraged_experience");
+    if let Some(v) = patch.info_source_type {
+        sets.push("info_source_type = ?".to_string());
         params.push(Box::new(v));
     }
-    if let Some(v) = patch.contribution_action {
-        sets.push("contribution_action = ?".to_string());
+    add_field!(patch.info_source_url, "info_source_url");
+    add_field!(patch.target_department, "target_department");
+    add_field!(patch.department_challenge, "department_challenge");
+    add_field!(patch.positive_influence, "positive_influence");
+    add_field!(patch.before_after_fact, "before_after_fact");
+    if let Some(v) = patch.self_identification {
+        sets.push("self_identification = ?".to_string());
         params.push(Box::new(v));
     }
-    if let Some(v) = patch.leveraged_experience {
-        sets.push("leveraged_experience = ?".to_string());
+    add_field!(patch.provider_switch_moment, "provider_switch_moment");
+    if let Some(v) = patch.value_analysis_type {
+        sets.push("value_analysis_type = ?".to_string());
         params.push(Box::new(v));
     }
-    if let Some(v) = patch.formatted_text {
-        sets.push("formatted_text = ?".to_string());
-        params.push(Box::new(v));
-    }
+    add_field!(patch.value_analysis_detail, "value_analysis_detail");
+    add_field!(patch.post_join_action_plan, "post_join_action_plan");
 
     if sets.is_empty() {
         return Err("更新フィールドがありません".to_string());
