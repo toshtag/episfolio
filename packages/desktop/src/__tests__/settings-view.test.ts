@@ -15,7 +15,7 @@ describe('settings-view', () => {
 
     const shadowRoot = el.shadowRoot;
     expect(shadowRoot).not.toBeNull();
-    expect(shadowRoot?.querySelector('h2')?.textContent?.trim()).toBe('Settings');
+    expect(shadowRoot?.querySelector('h2')?.textContent?.trim()).toBe('設定');
 
     document.body.removeChild(el);
   });
