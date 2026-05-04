@@ -5,6 +5,7 @@ import DOMPurify from 'dompurify';
 import { css, html, LitElement } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { marked } from 'marked';
+import { markdownToDocxBlob } from './docx-export.js';
 import type { CareerDocumentRow, DocumentRevisionRow } from './ipc/documents.js';
 import {
   type CreateDocumentManualArgs,
@@ -50,6 +51,7 @@ class DocumentView extends LitElement {
     error: { state: true },
     showPrintPreview: { state: true },
     isExportingPdf: { state: true },
+    isExportingDocx: { state: true },
   };
 
   declare documents: CareerDocumentRow[];
@@ -73,6 +75,7 @@ class DocumentView extends LitElement {
   declare error: string;
   declare showPrintPreview: boolean;
   declare isExportingPdf: boolean;
+  declare isExportingDocx: boolean;
 
   constructor() {
     super();
@@ -97,6 +100,7 @@ class DocumentView extends LitElement {
     this.error = '';
     this.showPrintPreview = false;
     this.isExportingPdf = false;
+    this.isExportingDocx = false;
   }
 
   static override styles = css`
@@ -605,6 +609,11 @@ class DocumentView extends LitElement {
           @click=${this.handleExportPdf}
           ?disabled=${!this.editContent.trim() || this.isExportingPdf}
         >${this.isExportingPdf ? 'PDF 生成中...' : 'PDF 書き出し'}</button>
+        <button
+          class="secondary"
+          @click=${this.handleExportDocx}
+          ?disabled=${!this.editContent.trim() || this.isExportingDocx}
+        >${this.isExportingDocx ? 'DOCX 生成中...' : 'DOCX 書き出し'}</button>
       </div>
       ${this.renderHistory()}
     `;
@@ -707,6 +716,27 @@ class DocumentView extends LitElement {
       this.error = `PDF 書き出しに失敗しました: ${String(e)}`;
     } finally {
       this.isExportingPdf = false;
+    }
+  }
+
+  private async handleExportDocx() {
+    if (!this.editContent.trim()) return;
+    this.isExportingDocx = true;
+    this.error = '';
+    try {
+      const title = this.selected?.title ?? 'document';
+      const filePath = await saveDialog({
+        defaultPath: `${title}.docx`,
+        filters: [{ name: 'Word', extensions: ['docx'] }],
+      });
+      if (!filePath) return;
+      const blob = await markdownToDocxBlob(this.editContent, title);
+      const buf = await blob.arrayBuffer();
+      await writeFile(filePath, new Uint8Array(buf));
+    } catch (e) {
+      this.error = `DOCX 書き出しに失敗しました: ${String(e)}`;
+    } finally {
+      this.isExportingDocx = false;
     }
   }
 
