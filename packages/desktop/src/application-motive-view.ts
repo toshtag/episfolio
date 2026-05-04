@@ -1,4 +1,4 @@
-import type { ApplicationMotive, JobTarget, ResignationMotive } from '@episfolio/kernel';
+import type { ApplicationMotive, JobTarget, ResignationMotive, StandardApplicationMotive } from '@episfolio/kernel';
 import { composeApplicationMotiveText } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
 import {
@@ -164,17 +164,15 @@ class ApplicationMotiveView extends LitElement {
     return typeof v === 'string' ? v : '';
   }
 
-  private getApplicationField(field: keyof ApplicationMotive): string {
-    if (!this.applicationMotive) return '';
-    const v = this.applicationMotive[field];
+  private getApplicationField(field: keyof StandardApplicationMotive): string {
+    if (!this.applicationMotive || this.applicationMotive.style !== 'standard') return '';
+    const v = (this.applicationMotive as StandardApplicationMotive)[field];
     return typeof v === 'string' ? v : '';
   }
 
   private buildPreview(): string {
-    const companyFuture = this.getApplicationField('companyFuture');
-    const contributionAction = this.getApplicationField('contributionAction');
-    const leveragedExperience = this.getApplicationField('leveragedExperience');
-    return composeApplicationMotiveText({ companyFuture, contributionAction, leveragedExperience });
+    if (!this.applicationMotive || this.applicationMotive.style !== 'standard') return '';
+    return composeApplicationMotiveText(this.applicationMotive as StandardApplicationMotive);
   }
 
   private async handleSaveResignation() {
