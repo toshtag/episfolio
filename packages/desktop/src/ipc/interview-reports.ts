@@ -1,4 +1,9 @@
-import type { InterviewReport, InterviewReportUpdate } from '@episfolio/kernel';
+import type {
+  InterviewReport,
+  InterviewReportUpdate,
+  InterviewerStyle,
+  ResponseImpression,
+} from '@episfolio/kernel';
 import { invoke } from '@tauri-apps/api/core';
 
 export type CreateInterviewReportArgs = {
@@ -9,6 +14,14 @@ export type CreateInterviewReportArgs = {
   motivationChangeNote?: string;
   questionsToBringNote?: string;
   conductedAt?: string | null;
+  interviewerRole?: string | null;
+  interviewerStyle?: InterviewerStyle | null;
+  talkRatioSelf?: number | null;
+  questionsAskedNote?: string | null;
+  responseImpression?: ResponseImpression | null;
+  blankAreasNote?: string | null;
+  improvementNote?: string | null;
+  passed?: boolean | null;
 };
 
 export async function createInterviewReport(

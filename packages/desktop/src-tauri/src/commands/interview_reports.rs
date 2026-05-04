@@ -15,12 +15,29 @@ pub struct InterviewReportRow {
     pub motivation_change_note: String,
     pub questions_to_bring_note: String,
     pub conducted_at: Option<String>,
+    // 書籍 B 第 4 章 — 余白設計・面接ログフィールド
+    pub interviewer_role: Option<String>,
+    pub interviewer_style: Option<String>,
+    pub talk_ratio_self: Option<f64>,
+    pub questions_asked_note: Option<String>,
+    pub response_impression: Option<String>,
+    pub blank_areas_note: Option<String>,
+    pub improvement_note: Option<String>,
+    pub passed: Option<bool>,
     pub created_at: String,
     pub updated_at: String,
 }
 
-const SELECT_COLUMNS: &str = "id, job_target_id, stage, interviewer_note, qa_note, \
-     motivation_change_note, questions_to_bring_note, conducted_at, created_at, updated_at";
+fn int_to_bool(v: Option<i64>) -> Option<bool> {
+    v.map(|n| n != 0)
+}
+
+const SELECT_COLUMNS: &str =
+    "id, job_target_id, stage, interviewer_note, qa_note, \
+     motivation_change_note, questions_to_bring_note, conducted_at, \
+     interviewer_role, interviewer_style, talk_ratio_self, questions_asked_note, \
+     response_impression, blank_areas_note, improvement_note, passed, \
+     created_at, updated_at";
 
 fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<InterviewReportRow> {
     Ok(InterviewReportRow {
@@ -32,8 +49,16 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<InterviewReportRo
         motivation_change_note: row.get(5)?,
         questions_to_bring_note: row.get(6)?,
         conducted_at: row.get(7)?,
-        created_at: row.get(8)?,
-        updated_at: row.get(9)?,
+        interviewer_role: row.get(8)?,
+        interviewer_style: row.get(9)?,
+        talk_ratio_self: row.get(10)?,
+        questions_asked_note: row.get(11)?,
+        response_impression: row.get(12)?,
+        blank_areas_note: row.get(13)?,
+        improvement_note: row.get(14)?,
+        passed: int_to_bool(row.get(15)?),
+        created_at: row.get(16)?,
+        updated_at: row.get(17)?,
     })
 }
 
@@ -47,6 +72,14 @@ pub struct CreateInterviewReportArgs {
     pub motivation_change_note: Option<String>,
     pub questions_to_bring_note: Option<String>,
     pub conducted_at: Option<String>,
+    pub interviewer_role: Option<String>,
+    pub interviewer_style: Option<String>,
+    pub talk_ratio_self: Option<f64>,
+    pub questions_asked_note: Option<String>,
+    pub response_impression: Option<String>,
+    pub blank_areas_note: Option<String>,
+    pub improvement_note: Option<String>,
+    pub passed: Option<bool>,
 }
 
 #[tauri::command]
@@ -62,8 +95,11 @@ pub fn create_interview_report(
     conn.execute(
         "INSERT INTO interview_reports \
          (id, job_target_id, stage, interviewer_note, qa_note, \
-          motivation_change_note, questions_to_bring_note, conducted_at, created_at, updated_at) \
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?9)",
+          motivation_change_note, questions_to_bring_note, conducted_at, \
+          interviewer_role, interviewer_style, talk_ratio_self, questions_asked_note, \
+          response_impression, blank_areas_note, improvement_note, passed, \
+          created_at, updated_at) \
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?17)",
         rusqlite::params![
             id,
             args.job_target_id,
@@ -73,6 +109,14 @@ pub fn create_interview_report(
             args.motivation_change_note.unwrap_or_default(),
             args.questions_to_bring_note.unwrap_or_default(),
             args.conducted_at,
+            args.interviewer_role,
+            args.interviewer_style,
+            args.talk_ratio_self,
+            args.questions_asked_note,
+            args.response_impression,
+            args.blank_areas_note,
+            args.improvement_note,
+            args.passed.map(|b| b as i64),
             now,
         ],
     )
@@ -128,6 +172,14 @@ pub struct UpdateInterviewReportArgs {
     pub motivation_change_note: Option<String>,
     pub questions_to_bring_note: Option<String>,
     pub conducted_at: Option<Option<String>>,
+    pub interviewer_role: Option<Option<String>>,
+    pub interviewer_style: Option<Option<String>>,
+    pub talk_ratio_self: Option<Option<f64>>,
+    pub questions_asked_note: Option<Option<String>>,
+    pub response_impression: Option<Option<String>>,
+    pub blank_areas_note: Option<Option<String>>,
+    pub improvement_note: Option<Option<String>>,
+    pub passed: Option<Option<bool>>,
 }
 
 #[tauri::command]
@@ -141,6 +193,24 @@ pub fn update_interview_report(
 
     let mut sets: Vec<String> = Vec::new();
     let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+
+    macro_rules! push_nullable {
+        ($field:expr, $col:expr) => {
+            if let Some(v) = $field {
+                sets.push(format!("{} = ?", $col));
+                params.push(Box::new(v));
+            }
+        };
+    }
+
+    macro_rules! push_nullable_bool {
+        ($field:expr, $col:expr) => {
+            if let Some(v) = $field {
+                sets.push(format!("{} = ?", $col));
+                params.push(Box::new(v.map(|b: bool| b as i64)));
+            }
+        };
+    }
 
     if let Some(v) = patch.stage {
         sets.push("stage = ?".to_string());
@@ -162,10 +232,15 @@ pub fn update_interview_report(
         sets.push("questions_to_bring_note = ?".to_string());
         params.push(Box::new(v));
     }
-    if let Some(v) = patch.conducted_at {
-        sets.push("conducted_at = ?".to_string());
-        params.push(Box::new(v));
-    }
+    push_nullable!(patch.conducted_at, "conducted_at");
+    push_nullable!(patch.interviewer_role, "interviewer_role");
+    push_nullable!(patch.interviewer_style, "interviewer_style");
+    push_nullable!(patch.talk_ratio_self, "talk_ratio_self");
+    push_nullable!(patch.questions_asked_note, "questions_asked_note");
+    push_nullable!(patch.response_impression, "response_impression");
+    push_nullable!(patch.blank_areas_note, "blank_areas_note");
+    push_nullable!(patch.improvement_note, "improvement_note");
+    push_nullable_bool!(patch.passed, "passed");
 
     if sets.is_empty() {
         return Err("更新フィールドがありません".to_string());
