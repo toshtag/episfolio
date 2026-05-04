@@ -62,7 +62,12 @@ export type {
   InterviewQACategory,
   InterviewQASource,
 } from './domain/interview-qa.js';
-export type { InterviewReport, InterviewStage } from './domain/interview-report.js';
+export type {
+  InterviewerStyle,
+  InterviewReport,
+  InterviewStage,
+  ResponseImpression,
+} from './domain/interview-report.js';
 export type { JobRequirementMapping } from './domain/job-requirement-mapping.js';
 export type {
   ApplicationRoute,
@@ -300,9 +305,11 @@ export type {
   InterviewReportUpdate,
 } from './schemas/interview-report.js';
 export {
+  InterviewerStyleSchema,
   InterviewReportSchema,
   InterviewReportUpdateSchema,
   InterviewStageSchema,
+  ResponseImpressionSchema,
 } from './schemas/interview-report.js';
 export type {
   JobRequirementMappingInput,

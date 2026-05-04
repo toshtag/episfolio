@@ -51,6 +51,14 @@ const buildReport = (id: string, overrides: Partial<InterviewReport> = {}): Inte
   motivationChangeNote: '',
   questionsToBringNote: '',
   conductedAt: null,
+  interviewerRole: null,
+  interviewerStyle: null,
+  talkRatioSelf: null,
+  questionsAskedNote: null,
+  responseImpression: null,
+  blankAreasNote: null,
+  improvementNote: null,
+  passed: null,
   createdAt: '2026-05-02T00:00:00Z',
   updatedAt: '2026-05-02T00:00:00Z',
   ...overrides,
@@ -144,6 +152,24 @@ describe('InterviewReportStoragePort contract', () => {
 
     it('存在しない id の update はエラー', async () => {
       await expect(storage.update('not-found', { qaNote: 'x' })).rejects.toThrow();
+    });
+
+    it('interviewerStyle を patch で更新できる', async () => {
+      await storage.create(buildReport('01HIRPT1'));
+      const updated = await storage.update('01HIRPT1', { interviewerStyle: 'numeric' });
+      expect(updated.interviewerStyle).toBe('numeric');
+    });
+
+    it('passed を true から null に更新できる', async () => {
+      await storage.create(buildReport('01HIRPT1', { passed: true }));
+      const updated = await storage.update('01HIRPT1', { passed: null });
+      expect(updated.passed).toBeNull();
+    });
+
+    it('talkRatioSelf を数値で更新できる', async () => {
+      await storage.create(buildReport('01HIRPT1'));
+      const updated = await storage.update('01HIRPT1', { talkRatioSelf: 60 });
+      expect(updated.talkRatioSelf).toBe(60);
     });
   });
 
