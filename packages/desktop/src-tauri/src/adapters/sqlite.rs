@@ -41,6 +41,12 @@ const MIGRATION_032: &str =
     include_str!("../../migrations/0032_add_business_unit_type_matches.sql");
 const MIGRATION_033: &str =
     include_str!("../../migrations/0033_extend_application_motives.sql");
+const MIGRATION_034: &str = include_str!("../../migrations/0034_extend_job_targets.sql");
+const MIGRATION_035: &str =
+    include_str!("../../migrations/0035_extend_agent_track_records.sql");
+const MIGRATION_036: &str =
+    include_str!("../../migrations/0036_extend_interview_reports.sql");
+const MIGRATION_037: &str = include_str!("../../migrations/0037_add_resignation_plans.sql");
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -90,6 +96,10 @@ fn run_migrations(conn: &Connection) -> Result<()> {
     apply_migration(conn, "0031", MIGRATION_031)?;
     apply_migration(conn, "0032", MIGRATION_032)?;
     apply_migration(conn, "0033", MIGRATION_033)?;
+    apply_migration(conn, "0034", MIGRATION_034)?;
+    apply_migration(conn, "0035", MIGRATION_035)?;
+    apply_migration(conn, "0036", MIGRATION_036)?;
+    apply_migration(conn, "0037", MIGRATION_037)?;
 
     Ok(())
 }
@@ -138,12 +148,111 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0033_apply_to_fresh_db() {
+    fn migrations_0001_through_0037_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 33);
+        assert_eq!(count, 37);
+    }
+
+    fn table_exists(conn: &Connection, table: &str) -> bool {
+        conn.query_row(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
+            rusqlite::params![table],
+            |r| r.get::<_, i64>(0),
+        )
+        .unwrap()
+            > 0
+    }
+
+    fn column_exists(conn: &Connection, table: &str, column: &str) -> bool {
+        let sql = format!("PRAGMA table_info({table})");
+        let mut stmt = conn.prepare(&sql).unwrap();
+        let columns = stmt
+            .query_map([], |r| r.get::<_, String>(1))
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        columns.iter().any(|c| c == column)
+    }
+
+    #[test]
+    fn migration_0034_adds_job_target_extension_columns() {
+        let conn = db();
+        for column in [
+            "annual_holidays",
+            "working_hours_per_day",
+            "commute_time_minutes",
+            "employment_type",
+            "flex_time_available",
+            "remote_work_available",
+            "average_paid_leave_taken",
+            "vacancy_reason",
+            "current_team_size",
+            "application_route",
+            "wage_type",
+            "basic_salary",
+            "fixed_overtime_hours",
+            "bonus_base_months",
+            "has_future_raise_promise",
+            "future_raise_promise_in_contract",
+        ] {
+            assert!(
+                column_exists(&conn, "job_targets", column),
+                "job_targets.{column} should exist after migration 0034"
+            );
+        }
+    }
+
+    #[test]
+    fn migration_0035_adds_agent_track_record_extension_columns() {
+        let conn = db();
+        for column in [
+            "specialty_industries",
+            "specialty_job_types",
+            "consultant_quality",
+            "has_exclusive_jobs",
+            "provides_recommendation_letter",
+            "recommendation_letter_received",
+            "number_of_jobs_introduced",
+            "response_speed_days",
+            "overall_rating",
+        ] {
+            assert!(
+                column_exists(&conn, "agent_track_records", column),
+                "agent_track_records.{column} should exist after migration 0035"
+            );
+        }
+    }
+
+    #[test]
+    fn migration_0036_adds_interview_report_extension_columns() {
+        let conn = db();
+        for column in [
+            "interviewer_role",
+            "interviewer_style",
+            "talk_ratio_self",
+            "questions_asked_note",
+            "response_impression",
+            "blank_areas_note",
+            "improvement_note",
+            "passed",
+        ] {
+            assert!(
+                column_exists(&conn, "interview_reports", column),
+                "interview_reports.{column} should exist after migration 0036"
+            );
+        }
+    }
+
+    #[test]
+    fn migration_0037_creates_resignation_plans_table() {
+        let conn = db();
+        assert!(
+            table_exists(&conn, "resignation_plans"),
+            "resignation_plans should exist after migration 0037"
+        );
     }
 
     // ──────────────────────────────────────────────
