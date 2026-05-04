@@ -22,6 +22,48 @@ import { listJobTargets } from './ipc/job-targets.js';
 type Template = 'resume' | 'skill-summary' | 'blank';
 type ViewState = 'list' | 'new' | 'edit';
 
+type DiffLine = { kind: 'add' | 'del' | 'ctx'; text: string };
+
+function computeDiff(oldText: string, newText: string): DiffLine[] {
+  const oldLines = oldText.split('\n');
+  const newLines = newText.split('\n');
+  const m = oldLines.length;
+  const n = newLines.length;
+
+  // Myers 差分アルゴリズム（簡易 LCS ベース）
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0) as number[]);
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      const row = dp[i] as number[];
+      if (oldLines[i] === newLines[j]) {
+        row[j] = (dp[i + 1]?.[j + 1] ?? 0) + 1;
+      } else {
+        row[j] = Math.max(dp[i + 1]?.[j] ?? 0, dp[i]?.[j + 1] ?? 0);
+      }
+    }
+  }
+
+  const result: DiffLine[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < m || j < n) {
+    const ol = oldLines[i];
+    const nl = newLines[j];
+    if (i < m && j < n && ol === nl) {
+      result.push({ kind: 'ctx', text: ` ${ol ?? ''}` });
+      i++;
+      j++;
+    } else if (j < n && (i >= m || (dp[i]?.[j + 1] ?? 0) >= (dp[i + 1]?.[j] ?? 0))) {
+      result.push({ kind: 'add', text: `+${nl ?? ''}` });
+      j++;
+    } else {
+      result.push({ kind: 'del', text: `-${ol ?? ''}` });
+      i++;
+    }
+  }
+  return result;
+}
+
 const TEMPLATES: { value: Template; label: string }[] = [
   { value: 'resume', label: '職務経歴書' },
   { value: 'skill-summary', label: 'スキルサマリー' },
@@ -211,6 +253,25 @@ class DocumentView extends LitElement {
       overflow-y: auto;
       color: #222;
     }
+    .diff-block {
+      margin-top: 0.6rem;
+      border: 1px solid #ddd;
+      border-radius: 0.3rem;
+      overflow: hidden;
+      max-height: 20rem;
+      overflow-y: auto;
+    }
+    .diff-line {
+      display: block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.78rem;
+      padding: 0 0.5rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .diff-line.add { background: #e6ffec; color: #1a4731; }
+    .diff-line.del { background: #ffeef0; color: #6e1a24; }
+    .diff-line.ctx { background: #f8f8f8; color: #555; }
     .print-overlay {
       position: fixed;
       inset: 0;
@@ -626,6 +687,7 @@ class DocumentView extends LitElement {
         <h3>改訂履歴（${this.revisions.length} 件）</h3>
         ${this.revisions.map((rev, idx) => {
           const isExpanded = this.expandedRevisionId === rev.id;
+          const prev = this.revisions[idx + 1] ?? null;
           return html`
               <div class="history-item ${idx === 0 ? 'current' : ''}">
                 <div class="history-reason">
@@ -637,11 +699,6 @@ class DocumentView extends LitElement {
                   ${rev.createdBy === 'human' ? '手動' : 'AI'}
                   ${this.renderJobTargetLabel(rev.jobTargetId)}
                   ${rev.targetMemo ? html` &nbsp;|&nbsp; 宛先: ${rev.targetMemo}` : ''}
-                  ${
-                    rev.previousRevisionId
-                      ? html` &nbsp;|&nbsp; 前バージョン: ${rev.previousRevisionId.slice(-6)}`
-                      : ''
-                  }
                 </div>
                 <div class="history-actions">
                   <button
@@ -649,12 +706,24 @@ class DocumentView extends LitElement {
                     @click=${() => {
                       this.expandedRevisionId = isExpanded ? '' : rev.id;
                     }}
-                  >${isExpanded ? '閉じる' : '内容を見る'}</button>
+                  >${isExpanded ? '閉じる' : prev ? '差分を見る' : '内容を見る'}</button>
                 </div>
-                ${isExpanded ? html`<div class="revision-content">${rev.content}</div>` : ''}
+                ${isExpanded ? this.renderRevisionExpanded(rev.content, prev?.content ?? null) : ''}
               </div>
             `;
         })}
+      </div>
+    `;
+  }
+
+  private renderRevisionExpanded(content: string, prevContent: string | null) {
+    if (prevContent === null) {
+      return html`<div class="revision-content">${content}</div>`;
+    }
+    const lines = computeDiff(prevContent, content);
+    return html`
+      <div class="diff-block">
+        ${lines.map((line) => html`<span class="diff-line ${line.kind}">${line.text}</span>`)}
       </div>
     `;
   }
