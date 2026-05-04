@@ -1,5 +1,6 @@
 import type {
   ApplicationMotive,
+  IronApplicationMotive,
   JobTarget,
   ResignationMotive,
   StandardApplicationMotive,
@@ -26,6 +27,7 @@ class ApplicationMotiveView extends LitElement {
     jobTargets: { state: true },
     selectedJobTargetId: { state: true },
     applicationMotive: { state: true },
+    activeStyle: { state: true },
     saving: { state: true },
     error: { state: true },
     confirmDeleteType: { state: true },
@@ -35,6 +37,7 @@ class ApplicationMotiveView extends LitElement {
   declare jobTargets: JobTarget[];
   declare selectedJobTargetId: string;
   declare applicationMotive: ApplicationMotive | null;
+  declare activeStyle: 'standard' | 'iron';
   declare saving: boolean;
   declare error: string;
   declare confirmDeleteType: 'resignation' | 'application' | null;
@@ -45,6 +48,7 @@ class ApplicationMotiveView extends LitElement {
     this.jobTargets = [];
     this.selectedJobTargetId = '';
     this.applicationMotive = null;
+    this.activeStyle = 'standard';
     this.saving = false;
     this.error = '';
     this.confirmDeleteType = null;
@@ -52,7 +56,7 @@ class ApplicationMotiveView extends LitElement {
 
   static override styles = css`
     :host { display: block; }
-    .panel { padding: 2rem; max-width: 720px; }
+    .panel { padding: 2rem; max-width: 760px; }
     h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
     .warning-badge {
       display: inline-block;
@@ -76,7 +80,7 @@ class ApplicationMotiveView extends LitElement {
       margin: 0 0 1rem;
     }
     label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 0.2rem; }
-    textarea {
+    textarea, input[type="url"], input[type="text"] {
       width: 100%;
       box-sizing: border-box;
       font-size: 0.9rem;
@@ -85,8 +89,8 @@ class ApplicationMotiveView extends LitElement {
       padding: 0.4rem 0.6rem;
       resize: vertical;
       margin-bottom: 0.8rem;
-      min-height: 56px;
     }
+    textarea { min-height: 56px; }
     .preview-box {
       background: #f8f8f8;
       border: 1px solid #e0e0e0;
@@ -107,7 +111,36 @@ class ApplicationMotiveView extends LitElement {
       width: 100%;
       box-sizing: border-box;
     }
-    .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .style-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .style-tab {
+      flex: 1;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      border: 2px solid #ccc;
+      border-radius: 0.3rem;
+      background: #f5f5f5;
+      cursor: pointer;
+      text-align: center;
+    }
+    .style-tab.active {
+      border-color: #1a1a1a;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    .guide-box {
+      background: #f0f4ff;
+      border: 1px solid #c8d8ff;
+      border-radius: 0.3rem;
+      padding: 0.7rem;
+      font-size: 0.82rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
     button.save-btn {
       padding: 0.4rem 1rem;
       font-size: 0.9rem;
@@ -138,6 +171,7 @@ class ApplicationMotiveView extends LitElement {
     }
     .error { color: #c00; font-size: 0.85rem; margin-bottom: 0.5rem; }
     .empty-note { color: #888; font-size: 0.9rem; }
+    .field-group { margin-bottom: 0.5rem; }
   `;
 
   override async connectedCallback() {
@@ -161,6 +195,9 @@ class ApplicationMotiveView extends LitElement {
     }
     const list = await listApplicationMotivesByJobTarget(this.selectedJobTargetId);
     this.applicationMotive = list[0] ?? null;
+    if (this.applicationMotive) {
+      this.activeStyle = this.applicationMotive.style;
+    }
   }
 
   private getResignationField(field: keyof ResignationMotive): string {
@@ -169,23 +206,39 @@ class ApplicationMotiveView extends LitElement {
     return typeof v === 'string' ? v : '';
   }
 
-  private getApplicationField(field: keyof StandardApplicationMotive): string {
+  private getStandardField(field: keyof StandardApplicationMotive): string {
     if (!this.applicationMotive || this.applicationMotive.style !== 'standard') return '';
     const v = (this.applicationMotive as StandardApplicationMotive)[field];
     return typeof v === 'string' ? v : '';
   }
 
+  private getIronField(field: keyof IronApplicationMotive): string {
+    if (!this.applicationMotive || this.applicationMotive.style !== 'iron') return '';
+    const v = (this.applicationMotive as IronApplicationMotive)[field];
+    return typeof v === 'string' ? v : '';
+  }
+
   private buildPreview(): string {
-    if (!this.applicationMotive || this.applicationMotive.style !== 'standard') return '';
-    return composeApplicationMotiveText(this.applicationMotive as StandardApplicationMotive);
+    if (!this.applicationMotive) return '';
+    return composeApplicationMotiveText(this.applicationMotive);
+  }
+
+  private getShadowValue(id: string): string {
+    return (
+      (
+        this.shadowRoot?.getElementById(id) as
+          | HTMLTextAreaElement
+          | HTMLInputElement
+          | HTMLSelectElement
+      )?.value ?? ''
+    );
   }
 
   private async handleSaveResignation() {
     this.saving = true;
     this.error = '';
     try {
-      const shadow = this.shadowRoot;
-      const get = (id: string) => (shadow?.getElementById(id) as HTMLTextAreaElement)?.value ?? '';
+      const get = (id: string) => this.getShadowValue(id);
       const fields = {
         companyDissatisfaction: get('r-company'),
         jobDissatisfaction: get('r-job'),
@@ -206,32 +259,123 @@ class ApplicationMotiveView extends LitElement {
     }
   }
 
-  private async handleSaveApplication() {
+  private async handleSaveStandard() {
     if (!this.selectedJobTargetId) return;
     this.saving = true;
     this.error = '';
     try {
-      const shadow = this.shadowRoot;
-      const get = (id: string) => (shadow?.getElementById(id) as HTMLTextAreaElement)?.value ?? '';
+      const get = (id: string) => this.getShadowValue(id);
       const companyFuture = get('a-future');
       const contributionAction = get('a-contribution');
       const leveragedExperience = get('a-experience');
+      const infoSourceType = (get('a-info-source-type') || null) as
+        | import('@episfolio/kernel').InfoSourceType
+        | null;
+      const infoSourceUrl = get('a-info-source-url');
+      const targetDepartment = get('a-target-department');
+      const departmentChallenge = get('a-department-challenge');
       const formattedText =
         get('a-formatted') ||
         composeApplicationMotiveText({ companyFuture, contributionAction, leveragedExperience });
-      const patch = { companyFuture, contributionAction, leveragedExperience, formattedText };
+
       if (this.applicationMotive) {
-        this.applicationMotive = await updateApplicationMotive(this.applicationMotive.id, patch);
+        this.applicationMotive = await updateApplicationMotive(this.applicationMotive.id, {
+          companyFuture,
+          contributionAction,
+          leveragedExperience,
+          infoSourceType,
+          infoSourceUrl,
+          targetDepartment,
+          departmentChallenge,
+          formattedText,
+        });
       } else {
         this.applicationMotive = await createApplicationMotive({
           jobTargetId: this.selectedJobTargetId,
-          ...patch,
+          motiveStyle: 'standard',
+          companyFuture,
+          contributionAction,
+          leveragedExperience,
+          infoSourceType,
+          infoSourceUrl,
+          targetDepartment,
+          departmentChallenge,
+          formattedText,
         });
       }
     } catch (e) {
       this.error = String(e);
     } finally {
       this.saving = false;
+    }
+  }
+
+  private async handleSaveIron() {
+    if (!this.selectedJobTargetId) return;
+    this.saving = true;
+    this.error = '';
+    try {
+      const get = (id: string) => this.getShadowValue(id);
+      const positiveInfluence = get('i-positive');
+      const beforeAfterFact = get('i-before-after');
+      const selfIdentification = (get('i-self-id') || null) as
+        | import('@episfolio/kernel').SelfIdentification
+        | null;
+      const providerSwitchMoment = get('i-switch-moment');
+      const valueAnalysisType = (get('i-value-type') || null) as
+        | import('@episfolio/kernel').ValueAnalysisType
+        | null;
+      const valueAnalysisDetail = get('i-value-detail');
+      const postJoinActionPlan = get('i-post-join');
+      const formattedText = get('a-formatted');
+
+      if (this.applicationMotive) {
+        this.applicationMotive = await updateApplicationMotive(this.applicationMotive.id, {
+          positiveInfluence,
+          beforeAfterFact,
+          selfIdentification,
+          providerSwitchMoment,
+          valueAnalysisType,
+          valueAnalysisDetail,
+          postJoinActionPlan,
+          formattedText,
+        });
+      } else {
+        this.applicationMotive = await createApplicationMotive({
+          jobTargetId: this.selectedJobTargetId,
+          motiveStyle: 'iron',
+          positiveInfluence,
+          beforeAfterFact,
+          selfIdentification,
+          providerSwitchMoment,
+          valueAnalysisType,
+          valueAnalysisDetail,
+          postJoinActionPlan,
+          formattedText,
+        });
+      }
+    } catch (e) {
+      this.error = String(e);
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  private async handleStyleSwitch(newStyle: 'standard' | 'iron') {
+    if (this.activeStyle === newStyle) return;
+    this.activeStyle = newStyle;
+    if (this.applicationMotive && this.applicationMotive.style !== newStyle) {
+      this.saving = true;
+      this.error = '';
+      try {
+        this.applicationMotive = await updateApplicationMotive(this.applicationMotive.id, {
+          motiveStyle: newStyle,
+        } as import('@episfolio/kernel').ApplicationMotiveUpdate);
+      } catch (e) {
+        this.error = String(e);
+      } finally {
+        this.saving = false;
+      }
     }
   }
 
@@ -255,14 +399,102 @@ class ApplicationMotiveView extends LitElement {
   }
 
   private handleCopyFormatted() {
-    const text =
-      (this.shadowRoot?.getElementById('a-formatted') as HTMLTextAreaElement)?.value ||
-      this.buildPreview();
+    const text = this.getShadowValue('a-formatted') || this.buildPreview();
     navigator.clipboard.writeText(text).catch(() => {});
+  }
+
+  private renderStandardForm() {
+    const currentInfoSource =
+      this.applicationMotive?.style === 'standard'
+        ? ((this.applicationMotive as StandardApplicationMotive).infoSourceType ?? '')
+        : '';
+
+    return html`
+      <div class="guide-box">
+        💡 <strong>情報源の探し方</strong>: 企業の中期経営計画（IR）・社長挨拶（採用ページ / 会社 HP）・メンバー紹介記事から企業が描く未来を調べましょう。
+      </div>
+
+      <label for="a-future">企業が描く未来（IR・中期経営計画・社長挨拶から）</label>
+      <textarea id="a-future" rows="2">${this.getStandardField('companyFuture')}</textarea>
+
+      <label for="a-contribution">貢献行動（採用情報・中計に書いてある内容）</label>
+      <textarea id="a-contribution" rows="2">${this.getStandardField('contributionAction')}</textarea>
+
+      <label for="a-experience">生かす経験（自分の経験から）</label>
+      <textarea id="a-experience" rows="2">${this.getStandardField('leveragedExperience')}</textarea>
+
+      <label for="a-info-source-type">情報源の種類（任意）</label>
+      <select id="a-info-source-type">
+        <option value="" ?selected=${!currentInfoSource}>— 選択してください —</option>
+        <option value="recruit_info" ?selected=${currentInfoSource === 'recruit_info'}>採用情報</option>
+        <option value="mid_term_plan" ?selected=${currentInfoSource === 'mid_term_plan'}>中期経営計画</option>
+        <option value="president_message" ?selected=${currentInfoSource === 'president_message'}>社長挨拶</option>
+        <option value="member_profile" ?selected=${currentInfoSource === 'member_profile'}>メンバー紹介</option>
+        <option value="other" ?selected=${currentInfoSource === 'other'}>その他</option>
+      </select>
+
+      <label for="a-info-source-url">情報源 URL（任意）</label>
+      <input type="url" id="a-info-source-url" .value=${this.getStandardField('infoSourceUrl')} />
+
+      <label for="a-target-department">志望部署（任意）</label>
+      <input type="text" id="a-target-department" .value=${this.getStandardField('targetDepartment')} />
+
+      <label for="a-department-challenge">部署の課題（任意）</label>
+      <textarea id="a-department-challenge" rows="2">${this.getStandardField('departmentChallenge')}</textarea>
+    `;
+  }
+
+  private renderIronForm() {
+    const currentSelfId =
+      this.applicationMotive?.style === 'iron'
+        ? ((this.applicationMotive as IronApplicationMotive).selfIdentification ?? '')
+        : '';
+    const currentValueType =
+      this.applicationMotive?.style === 'iron'
+        ? ((this.applicationMotive as IronApplicationMotive).valueAnalysisType ?? '')
+        : '';
+
+    return html`
+      <div class="guide-box">
+        💡 <strong>鋼の志望動機</strong>: 「ファンだから」ではなく「提供者として貢献できる」という視点で書きます。自分が受けた肯定的影響から始め、客観的事実で裏付けし、入社後の具体的行動で締めましょう。
+      </div>
+
+      <label for="i-positive">受けた肯定的影響（その企業の製品・サービス・文化から受けた影響）</label>
+      <textarea id="i-positive" rows="3">${this.getIronField('positiveInfluence')}</textarea>
+
+      <label for="i-before-after">Before→After の客観的事実（その影響を受けた前後の変化を数値や行動で）</label>
+      <textarea id="i-before-after" rows="3">${this.getIronField('beforeAfterFact')}</textarea>
+
+      <label for="i-self-id">自己認識（今の自分はどの段階？）</label>
+      <select id="i-self-id">
+        <option value="" ?selected=${!currentSelfId}>— 選択してください —</option>
+        <option value="fan" ?selected=${currentSelfId === 'fan'}>ファン（受益者として好き）</option>
+        <option value="provider" ?selected=${currentSelfId === 'provider'}>提供者（価値を届ける側に立てる）</option>
+        <option value="transitioning" ?selected=${currentSelfId === 'transitioning'}>移行中（ファンから提供者へ転換中）</option>
+      </select>
+
+      <label for="i-switch-moment">提供者に切り替わった瞬間・きっかけ</label>
+      <textarea id="i-switch-moment" rows="2">${this.getIronField('providerSwitchMoment')}</textarea>
+
+      <label for="i-value-type">価値分析タイプ</label>
+      <select id="i-value-type">
+        <option value="" ?selected=${!currentValueType}>— 選択してください —</option>
+        <option value="productOut" ?selected=${currentValueType === 'productOut'}>プロダクトアウト型（自分の強みを起点）</option>
+        <option value="marketIn" ?selected=${currentValueType === 'marketIn'}>マーケットイン型（顧客課題・市場ニーズを起点）</option>
+      </select>
+
+      <label for="i-value-detail">価値分析の詳細</label>
+      <textarea id="i-value-detail" rows="2">${this.getIronField('valueAnalysisDetail')}</textarea>
+
+      <label for="i-post-join">入社後の具体的行動計画</label>
+      <textarea id="i-post-join" rows="2">${this.getIronField('postJoinActionPlan')}</textarea>
+    `;
   }
 
   override render() {
     const preview = this.buildPreview();
+    const isStandard = this.activeStyle === 'standard';
+
     return html`
       <div class="panel">
         <h2>志望動機</h2>
@@ -325,40 +557,45 @@ class ApplicationMotiveView extends LitElement {
           ${
             this.selectedJobTargetId
               ? html`
-              <label for="a-future">企業が描く未来（IR・中期経営計画・社長挨拶から）</label>
-              <textarea id="a-future" rows="2">${this.getApplicationField('companyFuture')}</textarea>
+            <!-- スタイル切替タブ -->
+            <div class="style-tabs">
+              <button
+                class="style-tab ${isStandard ? 'active' : ''}"
+                @click=${() => this.handleStyleSwitch('standard')}
+              >方程式（4 ステップ）</button>
+              <button
+                class="style-tab ${!isStandard ? 'active' : ''}"
+                @click=${() => this.handleStyleSwitch('iron')}
+              >鋼の志望動機（5 ステップ）</button>
+            </div>
 
-              <label for="a-contribution">貢献行動（採用情報・中計に書いてある内容）</label>
-              <textarea id="a-contribution" rows="2">${this.getApplicationField('contributionAction')}</textarea>
+            ${isStandard ? this.renderStandardForm() : this.renderIronForm()}
 
-              <label for="a-experience">生かす経験（自分の経験から）</label>
-              <textarea id="a-experience" rows="2">${this.getApplicationField('leveragedExperience')}</textarea>
+            <label>プレビュー</label>
+            <div class="preview-box">${preview || '（フィールドを入力するとプレビューが生成されます）'}</div>
 
-              <label>プレビュー（書籍フォーマット）</label>
-              <div class="preview-box">${preview || '（3 つのフィールドを入力するとプレビューが生成されます）'}</div>
+            <label for="a-formatted">最終文（手動編集可）</label>
+            <textarea id="a-formatted" rows="4">${this.applicationMotive?.formattedText || preview}</textarea>
 
-              <label for="a-formatted">最終文（手動編集可）</label>
-              <textarea id="a-formatted" rows="3">${this.getApplicationField('formattedText') || preview}</textarea>
-
-              <div class="btn-row">
-                <button class="save-btn" @click=${this.handleSaveApplication} ?disabled=${this.saving}>保存</button>
-                <button class="copy-btn" @click=${this.handleCopyFormatted}>コピー</button>
-                ${
-                  this.applicationMotive
-                    ? this.confirmDeleteType === 'application'
-                      ? html`
-                      <button class="del-btn" @click=${this.handleDeleteApplication}>本当に削除する</button>
-                      <button class="save-btn" @click=${() => {
-                        this.confirmDeleteType = null;
-                      }}>キャンセル</button>
-                    `
-                      : html`<button class="del-btn" @click=${() => {
-                          this.confirmDeleteType = 'application';
-                        }}>削除</button>`
-                    : ''
-                }
-              </div>
-            `
+            <div class="btn-row">
+              <button class="save-btn" @click=${isStandard ? this.handleSaveStandard : this.handleSaveIron} ?disabled=${this.saving}>保存</button>
+              <button class="copy-btn" @click=${this.handleCopyFormatted}>コピー</button>
+              ${
+                this.applicationMotive
+                  ? this.confirmDeleteType === 'application'
+                    ? html`
+                    <button class="del-btn" @click=${this.handleDeleteApplication}>本当に削除する</button>
+                    <button class="save-btn" @click=${() => {
+                      this.confirmDeleteType = null;
+                    }}>キャンセル</button>
+                  `
+                    : html`<button class="del-btn" @click=${() => {
+                        this.confirmDeleteType = 'application';
+                      }}>削除</button>`
+                  : ''
+              }
+            </div>
+          `
               : html`<p class="empty-note">求人を選択すると入力フォームが表示されます</p>`
           }
         </div>
