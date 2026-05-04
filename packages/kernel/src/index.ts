@@ -63,7 +63,14 @@ export type {
 } from './domain/interview-qa.js';
 export type { InterviewReport, InterviewStage } from './domain/interview-report.js';
 export type { JobRequirementMapping } from './domain/job-requirement-mapping.js';
-export type { JobTarget, JobTargetStatus, SkillItem } from './domain/job-target.js';
+export type {
+  ApplicationRoute,
+  EmploymentType,
+  JobTarget,
+  JobTargetStatus,
+  SkillItem,
+  WageType,
+} from './domain/job-target.js';
 export type { JobWishCompany, JobWishSheet } from './domain/job-wish-sheet.js';
 export type {
   LifeTimelineCategory,
@@ -305,10 +312,13 @@ export {
 } from './schemas/job-requirement-mapping.js';
 export type { JobTargetInput, JobTargetUpdate } from './schemas/job-target.js';
 export {
+  ApplicationRouteSchema,
+  EmploymentTypeSchema,
   JobTargetSchema,
   JobTargetStatusSchema,
   JobTargetUpdateSchema,
   SkillItemSchema,
+  WageTypeSchema,
 } from './schemas/job-target.js';
 export type {
   JobWishCompanyInput,
