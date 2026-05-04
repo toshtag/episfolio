@@ -1,4 +1,4 @@
-import type { JobTarget } from '@episfolio/kernel';
+import { computeUnifiedDiff, type JobTarget } from '@episfolio/kernel';
 import { save as saveDialog } from '@tauri-apps/plugin-dialog';
 import { writeFile } from '@tauri-apps/plugin-fs';
 import DOMPurify from 'dompurify';
@@ -25,43 +25,11 @@ type ViewState = 'list' | 'new' | 'edit';
 type DiffLine = { kind: 'add' | 'del' | 'ctx'; text: string };
 
 function computeDiff(oldText: string, newText: string): DiffLine[] {
-  const oldLines = oldText.split('\n');
-  const newLines = newText.split('\n');
-  const m = oldLines.length;
-  const n = newLines.length;
-
-  // Myers 差分アルゴリズム（簡易 LCS ベース）
-  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0) as number[]);
-  for (let i = m - 1; i >= 0; i--) {
-    for (let j = n - 1; j >= 0; j--) {
-      const row = dp[i] as number[];
-      if (oldLines[i] === newLines[j]) {
-        row[j] = (dp[i + 1]?.[j + 1] ?? 0) + 1;
-      } else {
-        row[j] = Math.max(dp[i + 1]?.[j] ?? 0, dp[i]?.[j + 1] ?? 0);
-      }
-    }
-  }
-
-  const result: DiffLine[] = [];
-  let i = 0;
-  let j = 0;
-  while (i < m || j < n) {
-    const ol = oldLines[i];
-    const nl = newLines[j];
-    if (i < m && j < n && ol === nl) {
-      result.push({ kind: 'ctx', text: ` ${ol ?? ''}` });
-      i++;
-      j++;
-    } else if (j < n && (i >= m || (dp[i]?.[j + 1] ?? 0) >= (dp[i + 1]?.[j] ?? 0))) {
-      result.push({ kind: 'add', text: `+${nl ?? ''}` });
-      j++;
-    } else {
-      result.push({ kind: 'del', text: `-${ol ?? ''}` });
-      i++;
-    }
-  }
-  return result;
+  return computeUnifiedDiff(oldText, newText).flatMap((hunk) => {
+    const kind = hunk.kind === 'added' ? 'add' : hunk.kind === 'removed' ? 'del' : 'ctx';
+    const prefix = hunk.kind === 'added' ? '+' : hunk.kind === 'removed' ? '-' : ' ';
+    return hunk.lines.map((line) => ({ kind, text: `${prefix}${line}` }));
+  });
 }
 
 const TEMPLATES: { value: Template; label: string }[] = [
