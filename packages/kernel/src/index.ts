@@ -25,6 +25,7 @@ export type { AgentMeetingEmail } from './domain/agent-meeting-email.js';
 export type {
   AgentTrackRecord,
   AgentTrackRecordStatus,
+  ConsultantQuality,
 } from './domain/agent-track-record.js';
 export type { AIRun, AIRunInputSnapshotMode, AIRunPurpose } from './domain/ai-run.js';
 export type {
@@ -197,6 +198,7 @@ export {
   AgentTrackRecordSchema,
   AgentTrackRecordStatusSchema,
   AgentTrackRecordUpdateSchema,
+  ConsultantQualitySchema,
 } from './schemas/agent-track-record.js';
 export type { AIRunInput } from './schemas/ai-run.js';
 export { AIRunInputSnapshotModeSchema, AIRunSchema } from './schemas/ai-run.js';
