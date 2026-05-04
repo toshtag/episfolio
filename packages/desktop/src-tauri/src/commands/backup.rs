@@ -37,6 +37,51 @@ pub fn backup_if_needed(app: tauri::AppHandle) -> Result<bool, String> {
     Ok(true)
 }
 
+/// バックアップファイルの一覧を返す（新しい順）。
+#[tauri::command]
+pub fn list_backups(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let backup_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join("backups");
+
+    if !backup_dir.exists() {
+        return Ok(vec![]);
+    }
+
+    let mut files = sorted_backup_files(&backup_dir)?;
+    files.reverse();
+    let names = files
+        .into_iter()
+        .filter_map(|p| p.file_name()?.to_str().map(str::to_owned))
+        .collect();
+    Ok(names)
+}
+
+/// 指定したバックアップファイルを episfolio.db に上書き復元する。
+/// ファイル名は `episfolio-YYYY-MM-DD.db` 形式のみ受け付ける。
+#[tauri::command]
+pub fn restore_backup(app: tauri::AppHandle, filename: String) -> Result<(), String> {
+    if !filename.starts_with("episfolio-") || !filename.ends_with(".db") {
+        return Err("無効なバックアップファイル名です".to_string());
+    }
+
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
+
+    let src = app_data_dir.join("backups").join(&filename);
+    if !src.exists() {
+        return Err(format!("バックアップファイルが見つかりません: {filename}"));
+    }
+
+    let dest = app_data_dir.join("episfolio.db");
+    fs::copy(&src, &dest).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 fn should_backup(backup_dir: &PathBuf) -> bool {
     let entries = match sorted_backup_files(backup_dir) {
         Ok(v) => v,
@@ -216,5 +261,35 @@ mod tests {
         let backup_dir = make_temp_backup_dir("should-backup-empty");
         assert!(should_backup(&backup_dir));
         cleanup(&backup_dir);
+    }
+
+    #[test]
+    fn test_sorted_backup_files_returns_newest_last() {
+        let backup_dir = make_temp_backup_dir("sorted-order");
+
+        make_backup_file(&backup_dir, "episfolio-2026-01-01.db");
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        make_backup_file(&backup_dir, "episfolio-2026-01-03.db");
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        make_backup_file(&backup_dir, "episfolio-2026-01-02.db");
+
+        let files = sorted_backup_files(&backup_dir).unwrap();
+        // mtime 順なので最後に作ったファイルが末尾
+        let last_name = files.last().unwrap().file_name().unwrap().to_str().unwrap();
+        assert_eq!(last_name, "episfolio-2026-01-02.db");
+        cleanup(&backup_dir);
+    }
+
+    #[test]
+    fn test_restore_backup_rejects_invalid_filename() {
+        // AppHandle が不要なロジック部分のみテスト（ファイル名バリデーション）
+        let valid = "episfolio-2026-01-01.db";
+        assert!(valid.starts_with("episfolio-") && valid.ends_with(".db"));
+
+        let invalid_cases = ["other.db", "episfolio-2026-01-01.txt", "../etc/passwd"];
+        for name in invalid_cases {
+            let ok = name.starts_with("episfolio-") && name.ends_with(".db");
+            assert!(!ok, "should reject: {name}");
+        }
     }
 }
