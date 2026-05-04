@@ -7,6 +7,24 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.10.0] - 2026-05-04
+
+志望動機の二系統アプローチ（standard / iron）を追加した機能リリース。既存の「方程式スタイル」に加え「鋼スタイル」を選択可能になり、同一求人に対して 2 つのアプローチを書き分け・切替できる。
+
+### Added
+
+- **志望動機スタイル切替 UI**（desktop）: style-tabs で「方程式（4 ステップ）」と「鋼の志望動機（5 ステップ）」を切替可能。既存データを保持したままモードを変更できる
+- **ApplicationMotive discriminated union**（kernel）: `style: 'standard' | 'iron'` による型安全な discriminated union に拡張。`StandardApplicationMotive` / `IronApplicationMotive` を個別にスキーマ検証
+- **方程式スタイル拡張フィールド**（kernel / desktop）: 情報源タイプ（中期経営計画 / IR / 社長挨拶 / メンバープロフィール / その他）/ 情報源 URL / 配属希望部署 / 部署課題を追加
+- **鋼スタイルフィールド**（kernel / desktop）: 肯定的影響 / Before→After の客観的事実 / 自己認識（ファン / 提供者 / 移行中）/ 提供者への転換点 / 価値分析タイプ（プロダクトアウト / マーケットイン）+ 詳細 / 入社後の行動計画
+- **migration 0033**（desktop / SQLite）: `application_motives` テーブルに `motive_style` + standard 系 4 列 + iron 系 7 列を ALTER TABLE で追加。既存行は `motive_style = 'standard'` で後方互換
+
+### Changed
+
+- **version bump to 0.10.0**
+
+---
+
 ## [0.9.0] - 2026-05-04
 
 UX 整理・PDF/DOCX 書き出し・自動バックアップを追加した品質改善リリース。既存機能の使い勝手を高め、データ保護の基盤を整えた。
