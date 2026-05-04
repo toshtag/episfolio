@@ -28,7 +28,7 @@ export const JobTargetSchema = z.object({
   preferredSkills: z.array(SkillItemSchema),
   concerns: z.string(),
   appealPoints: z.string(),
-  // 書籍 B 第 4 章 — 求人票分析フィールド（後方互換: nullable + default null）
+  // 求人票分析フィールド（後方互換: nullable + default null）
   annualHolidays: z.number().int().nonnegative().nullable().default(null),
   workingHoursPerDay: z.number().positive().nullable().default(null),
   commuteTimeMinutes: z.number().int().nonnegative().nullable().default(null),
@@ -44,7 +44,7 @@ export const JobTargetSchema = z.object({
   bonusBaseMonths: z.number().nonnegative().nullable().default(null),
   hasFutureRaisePromise: z.boolean().nullable().default(null),
   futureRaisePromiseInContract: z.boolean().nullable().default(null),
-  // 書籍 B 第 3 章 — 応募経路
+  // 応募経路フィールド
   applicationRoute: ApplicationRouteSchema.nullable().default(null),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),

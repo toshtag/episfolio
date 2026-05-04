@@ -1,4 +1,4 @@
--- 書籍 B 第 4 章（余白設計・面接ログ）由来 8 フィールドを interview_reports に追加
+-- 余白設計・面接ログ用の 8 フィールドを interview_reports に追加
 -- 全列 NULL デフォルトで既存レコードの後方互換を維持
 
 ALTER TABLE interview_reports ADD COLUMN interviewer_role          TEXT;

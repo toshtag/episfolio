@@ -1,6 +1,6 @@
 import type { ISO8601, ULID } from './episode.js';
 
-// 書籍 B 第 5 章（退職交渉設計・藩士意識）由来
+// 退職交渉設計・藩士意識に基づくフィールド
 export type RecruitmentBackground = 'vacancy' | 'expansion' | 'unknown';
 
 export type ResignationPlan = {

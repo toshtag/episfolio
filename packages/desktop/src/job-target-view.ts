@@ -541,7 +541,7 @@ class JobTargetView extends LitElement {
           </div>
 
           <hr class="section-divider" />
-          <div class="full"><h3>求人票分析（書籍 B 第 4 章）</h3></div>
+          <div class="full"><h3>求人票分析</h3></div>
 
           <div>
             <label>雇用形態</label>

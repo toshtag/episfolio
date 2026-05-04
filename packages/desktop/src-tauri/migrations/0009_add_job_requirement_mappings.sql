@@ -1,6 +1,6 @@
 -- 0009: job_requirement_mappings テーブルを追加
 --
--- v0.3 のコア成果物「職務経歴ダイジェスト」(書籍 3-11) のため、
+-- v0.3 のコア成果物「職務経歴ダイジェスト」のため、
 -- JobTarget の必須要件 (`SkillItem.id`) と Episode の紐付けを永続化する。
 --
 -- - job_target_id は job_targets(id) を参照し、JobTarget 削除時には

@@ -15,7 +15,7 @@ pub struct InterviewReportRow {
     pub motivation_change_note: String,
     pub questions_to_bring_note: String,
     pub conducted_at: Option<String>,
-    // 書籍 B 第 4 章 — 余白設計・面接ログフィールド
+    // 余白設計・面接ログフィールド
     pub interviewer_role: Option<String>,
     pub interviewer_style: Option<String>,
     pub talk_ratio_self: Option<f64>,

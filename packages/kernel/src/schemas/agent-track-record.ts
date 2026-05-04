@@ -12,7 +12,7 @@ export const AgentTrackRecordSchema = z.object({
   firstContactDate: z.string().min(1).nullable(),
   memo: z.string(),
   status: AgentTrackRecordStatusSchema,
-  // 書籍 B 第 3 章 — 多経路発想・エージェントを資産として評価するフィールド（後方互換: nullable + default null）
+  // 多経路発想・エージェントを資産として評価するフィールド（後方互換: nullable + default null）
   specialtyIndustries: z.string().nullable().default(null),
   specialtyJobTypes: z.string().nullable().default(null),
   consultantQuality: ConsultantQualitySchema.nullable().default(null),

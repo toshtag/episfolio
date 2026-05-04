@@ -1,6 +1,6 @@
 -- 0018: customer_references テーブルを追加
 --
--- 書籍 A 3-09「顧客リファレンス」。BtoB/BtoC 別の顧客属性・クレーム経験
+-- 「顧客リファレンス」。BtoB/BtoC 別の顧客属性・クレーム経験
 -- 強みエピソード・間接的転換アイデアを管理する。JobTarget 非依存の汎用資料。
 
 CREATE TABLE IF NOT EXISTS customer_references (

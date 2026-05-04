@@ -42,7 +42,7 @@ pub struct SaveJobRequirementMappingArgs {
 }
 
 /// 同じ (job_target_id, requirement_skill_id) ペアが既に存在すれば update、
-/// なければ insert する upsert。書籍 3-11 のワークフローでは要件 1 行に対して
+/// なければ insert する upsert。職務経歴ダイジェストのワークフローでは要件 1 行に対して
 /// マッピングは 0 か 1 つしか持たないため、UI から見たときに「要件カードを保存」
 /// が常に同じ row に書き込めるようにする。
 #[tauri::command]

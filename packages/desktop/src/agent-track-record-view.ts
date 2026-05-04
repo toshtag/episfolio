@@ -22,7 +22,7 @@ type FormState = {
   firstContactDate: string;
   memo: string;
   status: AgentTrackRecord['status'];
-  // 書籍 B 第 3 章 — 多経路発想フィールド
+  // 多経路発想フィールド
   specialtyIndustries: string;
   specialtyJobTypes: string;
   consultantQuality: ConsultantQuality | '';

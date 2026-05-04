@@ -1,4 +1,4 @@
--- 書籍 B 第 5 章（退職交渉設計・藩士意識）由来 ResignationPlan テーブル
+-- 退職交渉設計・藩士意識に基づく ResignationPlan テーブル
 -- jobTargetId で内定先に紐づける（1 JobTarget : N ResignationPlan）
 
 CREATE TABLE resignation_plans (
