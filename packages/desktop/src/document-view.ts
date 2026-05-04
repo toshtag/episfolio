@@ -1,5 +1,8 @@
 import type { JobTarget } from '@episfolio/kernel';
+import DOMPurify from 'dompurify';
 import { css, html, LitElement } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { marked } from 'marked';
 import type { CareerDocumentRow, DocumentRevisionRow } from './ipc/documents.js';
 import {
   type CreateDocumentManualArgs,
@@ -43,6 +46,7 @@ class DocumentView extends LitElement {
     expandedRevisionId: { state: true },
     isSaving: { state: true },
     error: { state: true },
+    showPrintPreview: { state: true },
   };
 
   declare documents: CareerDocumentRow[];
@@ -64,6 +68,7 @@ class DocumentView extends LitElement {
   declare expandedRevisionId: string;
   declare isSaving: boolean;
   declare error: string;
+  declare showPrintPreview: boolean;
 
   constructor() {
     super();
@@ -86,6 +91,7 @@ class DocumentView extends LitElement {
     this.expandedRevisionId = '';
     this.isSaving = false;
     this.error = '';
+    this.showPrintPreview = false;
   }
 
   static override styles = css`
@@ -195,6 +201,68 @@ class DocumentView extends LitElement {
       max-height: 20rem;
       overflow-y: auto;
       color: #222;
+    }
+    .print-overlay {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+    }
+    .print-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+      flex-shrink: 0;
+    }
+    .print-toolbar h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #333;
+      flex: 1;
+    }
+    .print-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem 3rem;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.75;
+      color: #111;
+    }
+    .print-body h1 { font-size: 16pt; margin: 0 0 1rem; border-bottom: 2px solid #111; padding-bottom: 0.3rem; }
+    .print-body h2 { font-size: 13pt; margin: 1.5rem 0 0.5rem; border-bottom: 1px solid #ccc; padding-bottom: 0.2rem; }
+    .print-body h3 { font-size: 11pt; margin: 1.25rem 0 0.4rem; }
+    .print-body p { margin: 0.5rem 0; }
+    .print-body ul, .print-body ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+    .print-body li { margin: 0.25rem 0; }
+    .print-body table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 9.5pt; }
+    .print-body th, .print-body td { border: 1px solid #bbb; padding: 0.3rem 0.5rem; text-align: left; }
+    .print-body th { background: #f0f0f0; }
+    .print-body hr { border: none; border-top: 1px solid #ddd; margin: 1rem 0; }
+    .print-body code { font-family: ui-monospace, Menlo, monospace; font-size: 9pt; background: #f5f5f5; padding: 0.1em 0.3em; border-radius: 2px; }
+    .print-body pre { background: #f5f5f5; padding: 0.75rem; border-radius: 4px; overflow-x: auto; }
+    .print-body pre code { background: none; padding: 0; }
+    @media print {
+      :host {
+        display: block;
+      }
+      .print-overlay {
+        position: fixed;
+        inset: 0;
+        overflow: visible;
+      }
+      .print-toolbar {
+        display: none;
+      }
+      .print-body {
+        padding: 0;
+        overflow: visible;
+      }
     }
   `;
 
@@ -520,6 +588,13 @@ class DocumentView extends LitElement {
         >
           ${this.isSaving ? '保存中...' : '改訂を保存'}
         </button>
+        <button
+          class="secondary"
+          @click=${() => {
+            this.showPrintPreview = true;
+          }}
+          ?disabled=${!this.editContent.trim()}
+        >印刷プレビュー</button>
       </div>
       ${this.renderHistory()}
     `;
@@ -574,6 +649,28 @@ class DocumentView extends LitElement {
     return html` &nbsp;|&nbsp; 対象求人: ${target.companyName} — ${target.jobTitle}`;
   }
 
+  private renderPrintPreview() {
+    if (!this.showPrintPreview) return html``;
+    const title = this.selected?.title ?? 'ドキュメント';
+    const raw = marked(this.editContent) as string;
+    const safe = DOMPurify.sanitize(raw);
+    return html`
+      <div class="print-overlay">
+        <div class="print-toolbar">
+          <h3>${title} — 印刷プレビュー</h3>
+          <button class="secondary" @click=${() => window.print()}>印刷する</button>
+          <button
+            class="secondary"
+            @click=${() => {
+              this.showPrintPreview = false;
+            }}
+          >閉じる</button>
+        </div>
+        <div class="print-body">${unsafeHTML(safe)}</div>
+      </div>
+    `;
+  }
+
   private renderInsertRow() {
     if (this.acceptedEvidences.length === 0) return html``;
     return html`
@@ -599,8 +696,9 @@ class DocumentView extends LitElement {
   }
 
   override render() {
-    if (this.viewState === 'new') return this.renderNew();
-    if (this.viewState === 'edit') return this.renderEdit();
+    const preview = this.renderPrintPreview();
+    if (this.viewState === 'new') return html`${preview}${this.renderNew()}`;
+    if (this.viewState === 'edit') return html`${preview}${this.renderEdit()}`;
     return this.renderList();
   }
 }
