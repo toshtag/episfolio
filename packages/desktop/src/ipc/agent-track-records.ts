@@ -1,4 +1,8 @@
-import type { AgentTrackRecord, AgentTrackRecordUpdate } from '@episfolio/kernel';
+import type {
+  AgentTrackRecord,
+  AgentTrackRecordUpdate,
+  ConsultantQuality,
+} from '@episfolio/kernel';
 import { invoke } from '@tauri-apps/api/core';
 
 export type CreateAgentTrackRecordArgs = {
@@ -9,6 +13,15 @@ export type CreateAgentTrackRecordArgs = {
   firstContactDate?: string | null;
   memo?: string;
   status?: AgentTrackRecord['status'];
+  specialtyIndustries?: string | null;
+  specialtyJobTypes?: string | null;
+  consultantQuality?: ConsultantQuality | null;
+  hasExclusiveJobs?: boolean | null;
+  providesRecommendationLetter?: boolean | null;
+  recommendationLetterReceived?: boolean | null;
+  numberOfJobsIntroduced?: number | null;
+  responseSpeedDays?: number | null;
+  overallRating?: number | null;
 };
 
 export async function createAgentTrackRecord(

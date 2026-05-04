@@ -1,4 +1,4 @@
-import type { AgentTrackRecord } from '@episfolio/kernel';
+import type { AgentTrackRecord, ConsultantQuality } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
 import {
   createAgentTrackRecord,
@@ -6,6 +6,13 @@ import {
   listAgentTrackRecords,
   updateAgentTrackRecord,
 } from './ipc/agent-track-records.js';
+
+const CONSULTANT_QUALITY_OPTIONS: { value: ConsultantQuality; label: string }[] = [
+  { value: 'excellent', label: '★★★★ 非常に良い' },
+  { value: 'good', label: '★★★ 良い' },
+  { value: 'fair', label: '★★ 普通' },
+  { value: 'poor', label: '★ 悪い' },
+];
 
 type FormState = {
   companyName: string;
@@ -15,6 +22,16 @@ type FormState = {
   firstContactDate: string;
   memo: string;
   status: AgentTrackRecord['status'];
+  // 書籍 B 第 3 章 — 多経路発想フィールド
+  specialtyIndustries: string;
+  specialtyJobTypes: string;
+  consultantQuality: ConsultantQuality | '';
+  hasExclusiveJobs: boolean | null;
+  providesRecommendationLetter: boolean | null;
+  recommendationLetterReceived: boolean | null;
+  numberOfJobsIntroduced: string;
+  responseSpeedDays: string;
+  overallRating: string;
 };
 
 function emptyForm(): FormState {
@@ -26,6 +43,59 @@ function emptyForm(): FormState {
     firstContactDate: '',
     memo: '',
     status: 'active',
+    specialtyIndustries: '',
+    specialtyJobTypes: '',
+    consultantQuality: '',
+    hasExclusiveJobs: null,
+    providesRecommendationLetter: null,
+    recommendationLetterReceived: null,
+    numberOfJobsIntroduced: '',
+    responseSpeedDays: '',
+    overallRating: '',
+  };
+}
+
+function recordToForm(r: AgentTrackRecord): FormState {
+  return {
+    companyName: r.companyName,
+    contactName: r.contactName,
+    contactEmail: r.contactEmail,
+    contactPhone: r.contactPhone,
+    firstContactDate: r.firstContactDate ?? '',
+    memo: r.memo,
+    status: r.status,
+    specialtyIndustries: r.specialtyIndustries ?? '',
+    specialtyJobTypes: r.specialtyJobTypes ?? '',
+    consultantQuality: r.consultantQuality ?? '',
+    hasExclusiveJobs: r.hasExclusiveJobs,
+    providesRecommendationLetter: r.providesRecommendationLetter,
+    recommendationLetterReceived: r.recommendationLetterReceived,
+    numberOfJobsIntroduced:
+      r.numberOfJobsIntroduced != null ? String(r.numberOfJobsIntroduced) : '',
+    responseSpeedDays: r.responseSpeedDays != null ? String(r.responseSpeedDays) : '',
+    overallRating: r.overallRating != null ? String(r.overallRating) : '',
+  };
+}
+
+function formToPayload(form: FormState) {
+  return {
+    companyName: form.companyName.trim(),
+    contactName: form.contactName,
+    contactEmail: form.contactEmail,
+    contactPhone: form.contactPhone,
+    firstContactDate: form.firstContactDate.trim() || null,
+    memo: form.memo,
+    status: form.status,
+    specialtyIndustries: form.specialtyIndustries.trim() || null,
+    specialtyJobTypes: form.specialtyJobTypes.trim() || null,
+    consultantQuality: (form.consultantQuality as ConsultantQuality) || null,
+    hasExclusiveJobs: form.hasExclusiveJobs,
+    providesRecommendationLetter: form.providesRecommendationLetter,
+    recommendationLetterReceived: form.recommendationLetterReceived,
+    numberOfJobsIntroduced:
+      form.numberOfJobsIntroduced !== '' ? parseInt(form.numberOfJobsIntroduced, 10) : null,
+    responseSpeedDays: form.responseSpeedDays !== '' ? parseFloat(form.responseSpeedDays) : null,
+    overallRating: form.overallRating !== '' ? parseFloat(form.overallRating) : null,
   };
 }
 
@@ -63,6 +133,7 @@ class AgentTrackRecordView extends LitElement {
     :host { display: block; }
     .panel { padding: 2rem; }
     h1 { margin: 0 0 1.5rem; font-size: 1.4rem; }
+    h3 { margin: 1rem 0 0.5rem; font-size: 0.95rem; color: #444; border-bottom: 1px solid #eee; padding-bottom: 0.25rem; }
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -169,6 +240,36 @@ class AgentTrackRecordView extends LitElement {
     .memo-text { font-size: 0.85rem; color: #444; white-space: pre-wrap; margin-top: 0.5rem; }
     .first-contact { font-size: 0.8rem; color: #888; }
     .empty-state { color: #999; font-size: 0.9rem; padding: 1rem 0; }
+    .tristate { display: flex; gap: 0.3rem; }
+    .tristate button {
+      padding: 0.3rem 0.7rem;
+      font-size: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 0.3rem;
+      background: #f5f5f5;
+      cursor: pointer;
+    }
+    .tristate button.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+    .meta-badge {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 1rem;
+      background: #f0f4ff;
+      color: #3949ab;
+    }
+    .rating-badge {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 1rem;
+      background: #fff8e1;
+      color: #f57f17;
+    }
   `;
 
   override connectedCallback() {
@@ -186,15 +287,7 @@ class AgentTrackRecordView extends LitElement {
 
   private startEdit(r: AgentTrackRecord) {
     this.editingId = r.id;
-    this.form = {
-      companyName: r.companyName,
-      contactName: r.contactName,
-      contactEmail: r.contactEmail,
-      contactPhone: r.contactPhone,
-      firstContactDate: r.firstContactDate ?? '',
-      memo: r.memo,
-      status: r.status,
-    };
+    this.form = recordToForm(r);
     this.error = '';
   }
 
@@ -204,8 +297,34 @@ class AgentTrackRecordView extends LitElement {
     this.error = '';
   }
 
-  private updateField(field: keyof FormState, value: string) {
+  private updateField(field: keyof FormState, value: FormState[keyof FormState]) {
     this.form = { ...this.form, [field]: value };
+  }
+
+  private renderTristate(
+    label: string,
+    field: 'hasExclusiveJobs' | 'providesRecommendationLetter' | 'recommendationLetterReceived',
+  ) {
+    const val = this.form[field];
+    return html`
+      <div>
+        <label>${label}</label>
+        <div class="tristate">
+          <button
+            class=${val === true ? 'active' : ''}
+            @click=${() => this.updateField(field, val === true ? null : true)}
+          >はい</button>
+          <button
+            class=${val === false ? 'active' : ''}
+            @click=${() => this.updateField(field, val === false ? null : false)}
+          >いいえ</button>
+          <button
+            class=${val === null ? 'active' : ''}
+            @click=${() => this.updateField(field, null)}
+          >未設定</button>
+        </div>
+      </div>
+    `;
   }
 
   private async save() {
@@ -217,27 +336,11 @@ class AgentTrackRecordView extends LitElement {
     this.saving = true;
     this.error = '';
     try {
-      const firstContactDate = this.form.firstContactDate.trim() || null;
+      const payload = formToPayload(this.form);
       if (this.editingId) {
-        await updateAgentTrackRecord(this.editingId, {
-          companyName: this.form.companyName.trim(),
-          contactName: this.form.contactName,
-          contactEmail: this.form.contactEmail,
-          contactPhone: this.form.contactPhone,
-          firstContactDate,
-          memo: this.form.memo,
-          status: this.form.status,
-        });
+        await updateAgentTrackRecord(this.editingId, payload);
       } else {
-        await createAgentTrackRecord({
-          companyName: this.form.companyName.trim(),
-          contactName: this.form.contactName,
-          contactEmail: this.form.contactEmail,
-          contactPhone: this.form.contactPhone,
-          firstContactDate,
-          memo: this.form.memo,
-          status: this.form.status,
-        });
+        await createAgentTrackRecord(payload);
       }
       this.editingId = '';
       this.form = emptyForm();
@@ -267,6 +370,8 @@ class AgentTrackRecordView extends LitElement {
     return html`
       <div class="add-section">
         <h2>${this.editingId ? 'エージェント情報を編集' : 'エージェントを追加'}</h2>
+
+        <h3>基本情報</h3>
         <div class="form-grid">
           <div class="full">
             <label>会社名 *</label>
@@ -341,6 +446,90 @@ class AgentTrackRecordView extends LitElement {
             ></textarea>
           </div>
         </div>
+
+        <h3>エージェント評価（多経路発想）</h3>
+        <div class="form-grid">
+          <div>
+            <label>得意業界</label>
+            <input
+              type="text"
+              .value=${this.form.specialtyIndustries}
+              @input=${(e: Event) =>
+                this.updateField('specialtyIndustries', (e.target as HTMLInputElement).value)}
+              placeholder="例: IT・通信、メーカー"
+            />
+          </div>
+          <div>
+            <label>得意職種</label>
+            <input
+              type="text"
+              .value=${this.form.specialtyJobTypes}
+              @input=${(e: Event) =>
+                this.updateField('specialtyJobTypes', (e.target as HTMLInputElement).value)}
+              placeholder="例: エンジニア、PM"
+            />
+          </div>
+          <div>
+            <label>担当者の質</label>
+            <select
+              @change=${(e: Event) =>
+                this.updateField(
+                  'consultantQuality',
+                  (e.target as HTMLSelectElement).value as ConsultantQuality | '',
+                )}
+            >
+              <option value="" ?selected=${!this.form.consultantQuality}>未設定</option>
+              ${CONSULTANT_QUALITY_OPTIONS.map(
+                (o) => html`
+                  <option value=${o.value} ?selected=${this.form.consultantQuality === o.value}>
+                    ${o.label}
+                  </option>
+                `,
+              )}
+            </select>
+          </div>
+          <div>
+            <label>紹介件数</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              .value=${this.form.numberOfJobsIntroduced}
+              @input=${(e: Event) =>
+                this.updateField('numberOfJobsIntroduced', (e.target as HTMLInputElement).value)}
+              placeholder="例: 10"
+            />
+          </div>
+          <div>
+            <label>レスポンス速度（日）</label>
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              .value=${this.form.responseSpeedDays}
+              @input=${(e: Event) =>
+                this.updateField('responseSpeedDays', (e.target as HTMLInputElement).value)}
+              placeholder="例: 1.5"
+            />
+          </div>
+          <div>
+            <label>総合評価（1〜5）</label>
+            <input
+              type="number"
+              min="1"
+              max="5"
+              step="0.5"
+              .value=${this.form.overallRating}
+              @input=${(e: Event) =>
+                this.updateField('overallRating', (e.target as HTMLInputElement).value)}
+              placeholder="例: 4"
+            />
+          </div>
+          ${this.renderTristate('独自求人あり', 'hasExclusiveJobs')}
+          ${this.renderTristate('推薦状を提供', 'providesRecommendationLetter')}
+          ${this.renderTristate('推薦状を受領済み', 'recommendationLetterReceived')}
+        </div>
+
         <div class="actions">
           <button class="save-btn" ?disabled=${this.saving} @click=${this.save}>
             ${this.saving ? '保存中...' : '保存'}
@@ -358,6 +547,9 @@ class AgentTrackRecordView extends LitElement {
 
   private renderRecord(r: AgentTrackRecord) {
     if (this.editingId === r.id) return this.renderForm();
+
+    const qualityLabel =
+      CONSULTANT_QUALITY_OPTIONS.find((o) => o.value === r.consultantQuality)?.label ?? null;
 
     return html`
       <div class="record-card ${r.status === 'archived' ? 'archived' : ''}">
@@ -389,6 +581,17 @@ class AgentTrackRecordView extends LitElement {
         ${r.contactEmail ? html`<div class="contact-row">メール: ${r.contactEmail}</div>` : ''}
         ${r.contactPhone ? html`<div class="contact-row">電話: ${r.contactPhone}</div>` : ''}
         ${r.memo ? html`<div class="memo-text">${r.memo}</div>` : ''}
+        <div class="card-meta">
+          ${r.specialtyIndustries ? html`<span class="meta-badge">業界: ${r.specialtyIndustries}</span>` : ''}
+          ${r.specialtyJobTypes ? html`<span class="meta-badge">職種: ${r.specialtyJobTypes}</span>` : ''}
+          ${qualityLabel ? html`<span class="meta-badge">担当者: ${qualityLabel}</span>` : ''}
+          ${r.hasExclusiveJobs ? html`<span class="meta-badge">独自求人あり</span>` : ''}
+          ${r.providesRecommendationLetter ? html`<span class="meta-badge">推薦状提供</span>` : ''}
+          ${r.recommendationLetterReceived ? html`<span class="meta-badge">推薦状受領済</span>` : ''}
+          ${r.numberOfJobsIntroduced != null ? html`<span class="meta-badge">紹介${r.numberOfJobsIntroduced}件</span>` : ''}
+          ${r.responseSpeedDays != null ? html`<span class="meta-badge">レス${r.responseSpeedDays}日</span>` : ''}
+          ${r.overallRating != null ? html`<span class="rating-badge">評価 ${r.overallRating}/5</span>` : ''}
+        </div>
       </div>
     `;
   }

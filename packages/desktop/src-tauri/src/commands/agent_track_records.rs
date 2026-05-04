@@ -15,13 +15,31 @@ pub struct AgentTrackRecordRow {
     pub first_contact_date: Option<String>,
     pub memo: String,
     pub status: String,
+    // 書籍 B 第 3 章 — 多経路発想・エージェントを資産として評価するフィールド
+    pub specialty_industries: Option<String>,
+    pub specialty_job_types: Option<String>,
+    pub consultant_quality: Option<String>,
+    pub has_exclusive_jobs: Option<bool>,
+    pub provides_recommendation_letter: Option<bool>,
+    pub recommendation_letter_received: Option<bool>,
+    pub number_of_jobs_introduced: Option<i64>,
+    pub response_speed_days: Option<f64>,
+    pub overall_rating: Option<f64>,
     pub created_at: String,
     pub updated_at: String,
 }
 
+fn int_to_bool(v: Option<i64>) -> Option<bool> {
+    v.map(|n| n != 0)
+}
+
 const SELECT_COLUMNS: &str =
     "id, company_name, contact_name, contact_email, contact_phone, \
-     first_contact_date, memo, status, created_at, updated_at";
+     first_contact_date, memo, status, \
+     specialty_industries, specialty_job_types, consultant_quality, \
+     has_exclusive_jobs, provides_recommendation_letter, recommendation_letter_received, \
+     number_of_jobs_introduced, response_speed_days, overall_rating, \
+     created_at, updated_at";
 
 fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<AgentTrackRecordRow> {
     Ok(AgentTrackRecordRow {
@@ -33,8 +51,17 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<AgentTrackRecordR
         first_contact_date: row.get(5)?,
         memo: row.get(6)?,
         status: row.get(7)?,
-        created_at: row.get(8)?,
-        updated_at: row.get(9)?,
+        specialty_industries: row.get(8)?,
+        specialty_job_types: row.get(9)?,
+        consultant_quality: row.get(10)?,
+        has_exclusive_jobs: int_to_bool(row.get(11)?),
+        provides_recommendation_letter: int_to_bool(row.get(12)?),
+        recommendation_letter_received: int_to_bool(row.get(13)?),
+        number_of_jobs_introduced: row.get(14)?,
+        response_speed_days: row.get(15)?,
+        overall_rating: row.get(16)?,
+        created_at: row.get(17)?,
+        updated_at: row.get(18)?,
     })
 }
 
@@ -48,6 +75,15 @@ pub struct CreateAgentTrackRecordArgs {
     pub first_contact_date: Option<String>,
     pub memo: Option<String>,
     pub status: Option<String>,
+    pub specialty_industries: Option<String>,
+    pub specialty_job_types: Option<String>,
+    pub consultant_quality: Option<String>,
+    pub has_exclusive_jobs: Option<bool>,
+    pub provides_recommendation_letter: Option<bool>,
+    pub recommendation_letter_received: Option<bool>,
+    pub number_of_jobs_introduced: Option<i64>,
+    pub response_speed_days: Option<f64>,
+    pub overall_rating: Option<f64>,
 }
 
 #[tauri::command]
@@ -63,8 +99,12 @@ pub fn create_agent_track_record(
     conn.execute(
         "INSERT INTO agent_track_records \
          (id, company_name, contact_name, contact_email, contact_phone, \
-          first_contact_date, memo, status, created_at, updated_at) \
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?9)",
+          first_contact_date, memo, status, \
+          specialty_industries, specialty_job_types, consultant_quality, \
+          has_exclusive_jobs, provides_recommendation_letter, recommendation_letter_received, \
+          number_of_jobs_introduced, response_speed_days, overall_rating, \
+          created_at, updated_at) \
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?18)",
         rusqlite::params![
             id,
             args.company_name,
@@ -74,6 +114,15 @@ pub fn create_agent_track_record(
             args.first_contact_date,
             args.memo.unwrap_or_default(),
             status,
+            args.specialty_industries,
+            args.specialty_job_types,
+            args.consultant_quality,
+            args.has_exclusive_jobs.map(|b| b as i64),
+            args.provides_recommendation_letter.map(|b| b as i64),
+            args.recommendation_letter_received.map(|b| b as i64),
+            args.number_of_jobs_introduced,
+            args.response_speed_days,
+            args.overall_rating,
             now,
         ],
     )
@@ -128,6 +177,15 @@ pub struct UpdateAgentTrackRecordArgs {
     pub first_contact_date: Option<Option<String>>,
     pub memo: Option<String>,
     pub status: Option<String>,
+    pub specialty_industries: Option<Option<String>>,
+    pub specialty_job_types: Option<Option<String>>,
+    pub consultant_quality: Option<Option<String>>,
+    pub has_exclusive_jobs: Option<Option<bool>>,
+    pub provides_recommendation_letter: Option<Option<bool>>,
+    pub recommendation_letter_received: Option<Option<bool>>,
+    pub number_of_jobs_introduced: Option<Option<i64>>,
+    pub response_speed_days: Option<Option<f64>>,
+    pub overall_rating: Option<Option<f64>>,
 }
 
 #[tauri::command]
@@ -141,6 +199,24 @@ pub fn update_agent_track_record(
 
     let mut sets: Vec<String> = Vec::new();
     let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+
+    macro_rules! push_nullable {
+        ($field:expr, $col:expr) => {
+            if let Some(v) = $field {
+                sets.push(format!("{} = ?", $col));
+                params.push(Box::new(v));
+            }
+        };
+    }
+
+    macro_rules! push_nullable_bool {
+        ($field:expr, $col:expr) => {
+            if let Some(v) = $field {
+                sets.push(format!("{} = ?", $col));
+                params.push(Box::new(v.map(|b: bool| b as i64)));
+            }
+        };
+    }
 
     if let Some(v) = patch.company_name {
         sets.push("company_name = ?".to_string());
@@ -170,6 +246,15 @@ pub fn update_agent_track_record(
         sets.push("status = ?".to_string());
         params.push(Box::new(v));
     }
+    push_nullable!(patch.specialty_industries, "specialty_industries");
+    push_nullable!(patch.specialty_job_types, "specialty_job_types");
+    push_nullable!(patch.consultant_quality, "consultant_quality");
+    push_nullable_bool!(patch.has_exclusive_jobs, "has_exclusive_jobs");
+    push_nullable_bool!(patch.provides_recommendation_letter, "provides_recommendation_letter");
+    push_nullable_bool!(patch.recommendation_letter_received, "recommendation_letter_received");
+    push_nullable!(patch.number_of_jobs_introduced, "number_of_jobs_introduced");
+    push_nullable!(patch.response_speed_days, "response_speed_days");
+    push_nullable!(patch.overall_rating, "overall_rating");
 
     if sets.is_empty() {
         return Err("更新フィールドがありません".to_string());
