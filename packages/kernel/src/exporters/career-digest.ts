@@ -3,7 +3,7 @@ import type { JobRequirementMapping } from '../domain/job-requirement-mapping.js
 import type { JobTarget } from '../domain/job-target.js';
 
 /**
- * 書籍 3-11「職務経歴ダイジェスト」用の Markdown を生成する。
+ * 職務経歴ダイジェスト用の Markdown を生成する。
  *
  * 求人の必須要件 (`JobTarget.requiredSkills`) を順に並べ、各要件に対して
  * `JobRequirementMapping` で紐付けられたユーザーノートと関連 Episode を
