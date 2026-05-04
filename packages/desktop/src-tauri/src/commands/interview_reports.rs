@@ -32,8 +32,7 @@ fn int_to_bool(v: Option<i64>) -> Option<bool> {
     v.map(|n| n != 0)
 }
 
-const SELECT_COLUMNS: &str =
-    "id, job_target_id, stage, interviewer_note, qa_note, \
+const SELECT_COLUMNS: &str = "id, job_target_id, stage, interviewer_note, qa_note, \
      motivation_change_note, questions_to_bring_note, conducted_at, \
      interviewer_role, interviewer_style, talk_ratio_self, questions_asked_note, \
      response_impression, blank_areas_note, improvement_note, passed, \
@@ -88,6 +87,13 @@ pub fn create_interview_report(
     args: CreateInterviewReportArgs,
 ) -> Result<InterviewReportRow, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    create_interview_report_with_conn(&conn, args)
+}
+
+fn create_interview_report_with_conn(
+    conn: &Connection,
+    args: CreateInterviewReportArgs,
+) -> Result<InterviewReportRow, String> {
     let id = Ulid::new().to_string();
     let now = chrono_now();
     let stage = args.stage.unwrap_or_else(|| "first".to_string());
@@ -134,6 +140,13 @@ pub fn list_interview_reports_by_job_target(
     job_target_id: String,
 ) -> Result<Vec<InterviewReportRow>, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    list_interview_reports_by_job_target_with_conn(&conn, &job_target_id)
+}
+
+fn list_interview_reports_by_job_target_with_conn(
+    conn: &Connection,
+    job_target_id: &str,
+) -> Result<Vec<InterviewReportRow>, String> {
     let sql = format!(
         "SELECT {SELECT_COLUMNS} FROM interview_reports \
          WHERE job_target_id = ?1 ORDER BY created_at ASC, id ASC"
@@ -152,6 +165,13 @@ pub fn get_interview_report(
     id: String,
 ) -> Result<Option<InterviewReportRow>, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    get_interview_report_with_conn(&conn, &id)
+}
+
+fn get_interview_report_with_conn(
+    conn: &Connection,
+    id: &str,
+) -> Result<Option<InterviewReportRow>, String> {
     let sql = format!("SELECT {SELECT_COLUMNS} FROM interview_reports WHERE id = ?1");
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let mut rows = stmt
@@ -189,6 +209,14 @@ pub fn update_interview_report(
     patch: UpdateInterviewReportArgs,
 ) -> Result<InterviewReportRow, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    update_interview_report_with_conn(&conn, &id, patch)
+}
+
+fn update_interview_report_with_conn(
+    conn: &Connection,
+    id: &str,
+    patch: UpdateInterviewReportArgs,
+) -> Result<InterviewReportRow, String> {
     let now = chrono_now();
 
     let mut sets: Vec<String> = Vec::new();
@@ -248,7 +276,7 @@ pub fn update_interview_report(
 
     sets.push("updated_at = ?".to_string());
     params.push(Box::new(now));
-    params.push(Box::new(id.clone()));
+    params.push(Box::new(id.to_string()));
 
     let sql = format!(
         "UPDATE interview_reports SET {} WHERE id = ?",
@@ -269,11 +297,12 @@ pub fn update_interview_report(
 }
 
 #[tauri::command]
-pub fn delete_interview_report(
-    db: State<'_, Mutex<Connection>>,
-    id: String,
-) -> Result<(), String> {
+pub fn delete_interview_report(db: State<'_, Mutex<Connection>>, id: String) -> Result<(), String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    delete_interview_report_with_conn(&conn, &id)
+}
+
+fn delete_interview_report_with_conn(conn: &Connection, id: &str) -> Result<(), String> {
     let affected = conn
         .execute(
             "DELETE FROM interview_reports WHERE id = ?1",
@@ -342,4 +371,135 @@ fn epoch_to_parts(secs: u64) -> (u64, u64, u64, u64, u64, u64) {
 
 fn is_leap(y: u64) -> bool {
     (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::adapters::sqlite;
+
+    const TS: &str = "2026-05-04T00:00:00Z";
+
+    fn insert_job_target(conn: &Connection, id: &str) {
+        conn.execute(
+            "INSERT INTO job_targets \
+             (id, company_name, job_title, job_description, status, \
+              required_skills, preferred_skills, concerns, appeal_points, created_at, updated_at) \
+             VALUES (?1, 'Acme', 'Engineer', '', 'researching', '[]', '[]', '', '', ?2, ?2)",
+            rusqlite::params![id, TS],
+        )
+        .unwrap();
+    }
+
+    fn create_args(job_target_id: &str) -> CreateInterviewReportArgs {
+        CreateInterviewReportArgs {
+            job_target_id: job_target_id.to_string(),
+            stage: Some("final".to_string()),
+            interviewer_note: Some("VP interview".to_string()),
+            qa_note: Some("architecture discussion".to_string()),
+            motivation_change_note: Some("more interested".to_string()),
+            questions_to_bring_note: Some("team structure".to_string()),
+            conducted_at: Some("2026-05-04T10:00:00.000Z".to_string()),
+            interviewer_role: Some("VP Engineering".to_string()),
+            interviewer_style: Some("process".to_string()),
+            talk_ratio_self: Some(45.0),
+            questions_asked_note: Some("delivery ownership".to_string()),
+            response_impression: Some("good".to_string()),
+            blank_areas_note: Some("ask about hiring plan".to_string()),
+            improvement_note: Some("shorten STAR answer".to_string()),
+            passed: Some(true),
+        }
+    }
+
+    fn empty_patch() -> UpdateInterviewReportArgs {
+        UpdateInterviewReportArgs {
+            stage: None,
+            interviewer_note: None,
+            qa_note: None,
+            motivation_change_note: None,
+            questions_to_bring_note: None,
+            conducted_at: None,
+            interviewer_role: None,
+            interviewer_style: None,
+            talk_ratio_self: None,
+            questions_asked_note: None,
+            response_impression: None,
+            blank_areas_note: None,
+            improvement_note: None,
+            passed: None,
+        }
+    }
+
+    #[test]
+    fn interview_report_command_core_crud_smoke() {
+        let conn = sqlite::open_in_memory_with_migrations().unwrap();
+        insert_job_target(&conn, "jt_interview");
+
+        let created = create_interview_report_with_conn(&conn, create_args("jt_interview"))
+            .expect("create should store v0.11 interview fields");
+        assert_eq!(created.job_target_id, "jt_interview");
+        assert_eq!(created.interviewer_role.as_deref(), Some("VP Engineering"));
+        assert_eq!(created.interviewer_style.as_deref(), Some("process"));
+        assert_eq!(created.talk_ratio_self, Some(45.0));
+        assert_eq!(
+            created.questions_asked_note.as_deref(),
+            Some("delivery ownership")
+        );
+        assert_eq!(created.response_impression.as_deref(), Some("good"));
+        assert_eq!(
+            created.blank_areas_note.as_deref(),
+            Some("ask about hiring plan")
+        );
+        assert_eq!(
+            created.improvement_note.as_deref(),
+            Some("shorten STAR answer")
+        );
+        assert_eq!(created.passed, Some(true));
+
+        let listed = list_interview_reports_by_job_target_with_conn(&conn, "jt_interview")
+            .expect("list should return created report");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].id, created.id);
+
+        let fetched = get_interview_report_with_conn(&conn, &created.id)
+            .unwrap()
+            .expect("created report should be fetchable");
+        assert_eq!(fetched.id, created.id);
+
+        let mut patch = empty_patch();
+        patch.interviewer_style = Some(None);
+        patch.response_impression = Some(Some("neutral".to_string()));
+        patch.passed = Some(None);
+        patch.improvement_note = Some(Some("更新後改善".to_string()));
+
+        let updated = update_interview_report_with_conn(&conn, &created.id, patch).unwrap();
+        assert_eq!(updated.interviewer_style, None);
+        assert_eq!(updated.response_impression.as_deref(), Some("neutral"));
+        assert_eq!(updated.passed, None);
+        assert_eq!(updated.improvement_note.as_deref(), Some("更新後改善"));
+
+        delete_interview_report_with_conn(&conn, &created.id).unwrap();
+        assert!(get_interview_report_with_conn(&conn, &created.id)
+            .unwrap()
+            .is_none());
+    }
+
+    #[test]
+    fn interview_report_fk_and_empty_patch_smoke() {
+        let conn = sqlite::open_in_memory_with_migrations().unwrap();
+
+        let missing = create_interview_report_with_conn(&conn, create_args("missing_job_target"));
+        assert!(
+            missing.is_err(),
+            "missing job_target_id should be rejected by FK"
+        );
+
+        insert_job_target(&conn, "jt_empty_patch");
+        let created = create_interview_report_with_conn(&conn, create_args("jt_empty_patch"))
+            .expect("create should succeed for existing job target");
+
+        let error = update_interview_report_with_conn(&conn, &created.id, empty_patch())
+            .expect_err("empty patch should be rejected");
+        assert!(error.contains("更新フィールドがありません"));
+    }
 }
