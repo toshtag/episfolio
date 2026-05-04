@@ -106,6 +106,13 @@ pub fn create_resignation_plan(
     args: CreateResignationPlanArgs,
 ) -> Result<ResignationPlanRow, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    create_resignation_plan_with_conn(&conn, args)
+}
+
+fn create_resignation_plan_with_conn(
+    conn: &Connection,
+    args: CreateResignationPlanArgs,
+) -> Result<ResignationPlanRow, String> {
     let id = Ulid::new().to_string();
     let now = chrono_now();
 
@@ -160,6 +167,13 @@ pub fn list_resignation_plans_by_job_target(
     job_target_id: String,
 ) -> Result<Vec<ResignationPlanRow>, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    list_resignation_plans_by_job_target_with_conn(&conn, &job_target_id)
+}
+
+fn list_resignation_plans_by_job_target_with_conn(
+    conn: &Connection,
+    job_target_id: &str,
+) -> Result<Vec<ResignationPlanRow>, String> {
     let sql = format!(
         "SELECT {SELECT_COLUMNS} FROM resignation_plans \
          WHERE job_target_id = ?1 ORDER BY created_at ASC, id ASC"
@@ -178,6 +192,13 @@ pub fn get_resignation_plan(
     id: String,
 ) -> Result<Option<ResignationPlanRow>, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    get_resignation_plan_with_conn(&conn, &id)
+}
+
+fn get_resignation_plan_with_conn(
+    conn: &Connection,
+    id: &str,
+) -> Result<Option<ResignationPlanRow>, String> {
     let sql = format!("SELECT {SELECT_COLUMNS} FROM resignation_plans WHERE id = ?1");
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let mut rows = stmt
@@ -222,6 +243,14 @@ pub fn update_resignation_plan(
     patch: UpdateResignationPlanArgs,
 ) -> Result<ResignationPlanRow, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    update_resignation_plan_with_conn(&conn, &id, patch)
+}
+
+fn update_resignation_plan_with_conn(
+    conn: &Connection,
+    id: &str,
+    patch: UpdateResignationPlanArgs,
+) -> Result<ResignationPlanRow, String> {
     let now = chrono_now();
 
     let mut sets: Vec<String> = Vec::new();
@@ -273,7 +302,7 @@ pub fn update_resignation_plan(
 
     sets.push("updated_at = ?".to_string());
     params.push(Box::new(now));
-    params.push(Box::new(id.clone()));
+    params.push(Box::new(id.to_string()));
 
     let sql = format!(
         "UPDATE resignation_plans SET {} WHERE id = ?",
@@ -294,11 +323,12 @@ pub fn update_resignation_plan(
 }
 
 #[tauri::command]
-pub fn delete_resignation_plan(
-    db: State<'_, Mutex<Connection>>,
-    id: String,
-) -> Result<(), String> {
+pub fn delete_resignation_plan(db: State<'_, Mutex<Connection>>, id: String) -> Result<(), String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
+    delete_resignation_plan_with_conn(&conn, &id)
+}
+
+fn delete_resignation_plan_with_conn(conn: &Connection, id: &str) -> Result<(), String> {
     let affected = conn
         .execute(
             "DELETE FROM resignation_plans WHERE id = ?1",
@@ -367,4 +397,185 @@ fn epoch_to_parts(secs: u64) -> (u64, u64, u64, u64, u64, u64) {
 
 fn is_leap(y: u64) -> bool {
     (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::adapters::sqlite;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+
+    const TS: &str = "2026-05-04T00:00:00Z";
+
+    fn sidecar_path(path: &Path, suffix: &str) -> PathBuf {
+        PathBuf::from(format!("{}{}", path.display(), suffix))
+    }
+
+    fn cleanup_db(path: &Path) {
+        let _ = fs::remove_file(path);
+        let _ = fs::remove_file(sidecar_path(path, "-wal"));
+        let _ = fs::remove_file(sidecar_path(path, "-shm"));
+    }
+
+    fn db(suffix: &str) -> (Connection, PathBuf) {
+        let path = std::env::temp_dir().join(format!(
+            "episfolio-resignation-plan-test-{suffix}-{}.db",
+            std::process::id()
+        ));
+        cleanup_db(&path);
+        let conn = sqlite::open(path.clone()).unwrap();
+        (conn, path)
+    }
+
+    fn insert_job_target(conn: &Connection, id: &str) {
+        conn.execute(
+            "INSERT INTO job_targets \
+             (id, company_name, job_title, job_description, status, \
+              required_skills, preferred_skills, concerns, appeal_points, created_at, updated_at) \
+             VALUES (?1, 'Acme', 'Engineer', '', 'researching', '[]', '[]', '', '', ?2, ?2)",
+            rusqlite::params![id, TS],
+        )
+        .unwrap();
+    }
+
+    fn create_args(job_target_id: &str) -> CreateResignationPlanArgs {
+        CreateResignationPlanArgs {
+            job_target_id: job_target_id.to_string(),
+            annual_salary: Some(6_000_000),
+            annual_holidays: Some(125),
+            daily_working_hours: Some(7.5),
+            commute_minutes: Some(35),
+            position_note: Some("Tech lead".to_string()),
+            recruitment_background: Some("expansion".to_string()),
+            risk_memo: Some("引き継ぎリスク".to_string()),
+            final_interview_at: Some("2026-05-10".to_string()),
+            offer_notified_at: Some("2026-05-12".to_string()),
+            offer_accepted_at: Some("2026-05-13".to_string()),
+            resignation_notified_at: Some("2026-05-14".to_string()),
+            handover_started_at: Some("2026-05-15".to_string()),
+            last_working_day_at: Some("2026-06-20".to_string()),
+            paid_leave_start_at: Some("2026-06-21".to_string()),
+            joined_at: Some("2026-07-01".to_string()),
+            available_date_from: Some("2026-06-24".to_string()),
+            available_date_to: Some("2026-06-30".to_string()),
+            negotiation_note: Some("入社日調整".to_string()),
+            samurai_loss_note: Some("失うもの".to_string()),
+            samurai_gain_note: Some("得るもの".to_string()),
+            next_exit_plan: Some("次の出口".to_string()),
+        }
+    }
+
+    fn empty_patch() -> UpdateResignationPlanArgs {
+        UpdateResignationPlanArgs {
+            annual_salary: None,
+            annual_holidays: None,
+            daily_working_hours: None,
+            commute_minutes: None,
+            position_note: None,
+            recruitment_background: None,
+            risk_memo: None,
+            final_interview_at: None,
+            offer_notified_at: None,
+            offer_accepted_at: None,
+            resignation_notified_at: None,
+            handover_started_at: None,
+            last_working_day_at: None,
+            paid_leave_start_at: None,
+            joined_at: None,
+            available_date_from: None,
+            available_date_to: None,
+            negotiation_note: None,
+            samurai_loss_note: None,
+            samurai_gain_note: None,
+            next_exit_plan: None,
+        }
+    }
+
+    #[test]
+    fn resignation_plan_command_core_crud_smoke() {
+        let (conn, path) = db("crud");
+        insert_job_target(&conn, "jt_resignation");
+
+        let created = create_resignation_plan_with_conn(&conn, create_args("jt_resignation"))
+            .expect("create should store a complete resignation plan");
+        assert_eq!(created.job_target_id, "jt_resignation");
+        assert_eq!(created.annual_salary, Some(6_000_000));
+        assert_eq!(created.recruitment_background.as_deref(), Some("expansion"));
+        assert_eq!(created.next_exit_plan, "次の出口");
+
+        let listed =
+            list_resignation_plans_by_job_target_with_conn(&conn, "jt_resignation").unwrap();
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].id, created.id);
+
+        let fetched = get_resignation_plan_with_conn(&conn, &created.id)
+            .unwrap()
+            .expect("created plan should be fetchable");
+        assert_eq!(fetched.id, created.id);
+
+        let mut patch = empty_patch();
+        patch.annual_salary = Some(Some(7_000_000));
+        patch.recruitment_background = Some(None);
+        patch.risk_memo = Some("更新後リスク".to_string());
+        patch.final_interview_at = Some(None);
+        patch.next_exit_plan = Some("更新後の出口".to_string());
+
+        let updated = update_resignation_plan_with_conn(&conn, &created.id, patch).unwrap();
+        assert_eq!(updated.annual_salary, Some(7_000_000));
+        assert_eq!(updated.recruitment_background, None);
+        assert_eq!(updated.final_interview_at, None);
+        assert_eq!(updated.risk_memo, "更新後リスク");
+        assert_eq!(updated.next_exit_plan, "更新後の出口");
+
+        delete_resignation_plan_with_conn(&conn, &created.id).unwrap();
+        assert!(get_resignation_plan_with_conn(&conn, &created.id)
+            .unwrap()
+            .is_none());
+
+        drop(conn);
+        cleanup_db(&path);
+    }
+
+    #[test]
+    fn resignation_plan_fk_and_cascade_smoke() {
+        let (conn, path) = db("fk-cascade");
+
+        let missing = create_resignation_plan_with_conn(&conn, create_args("missing_job_target"));
+        assert!(
+            missing.is_err(),
+            "missing job_target_id should be rejected by FK"
+        );
+
+        insert_job_target(&conn, "jt_cascade");
+        create_resignation_plan_with_conn(&conn, create_args("jt_cascade")).unwrap();
+
+        conn.execute(
+            "DELETE FROM job_targets WHERE id = ?1",
+            rusqlite::params!["jt_cascade"],
+        )
+        .unwrap();
+
+        let remaining = list_resignation_plans_by_job_target_with_conn(&conn, "jt_cascade")
+            .expect("list after cascade should succeed");
+        assert!(remaining.is_empty());
+
+        drop(conn);
+        cleanup_db(&path);
+    }
+
+    #[test]
+    fn resignation_plan_update_rejects_empty_patch() {
+        let (conn, path) = db("empty-patch");
+        insert_job_target(&conn, "jt_empty_patch");
+        let created =
+            create_resignation_plan_with_conn(&conn, create_args("jt_empty_patch")).unwrap();
+
+        let error = update_resignation_plan_with_conn(&conn, &created.id, empty_patch())
+            .expect_err("empty patch should be rejected");
+        assert!(error.contains("更新フィールドがありません"));
+
+        drop(conn);
+        cleanup_db(&path);
+    }
 }
