@@ -1,4 +1,11 @@
-import type { JobTarget, JobTargetUpdate, SkillItem } from '@episfolio/kernel';
+import type {
+  ApplicationRoute,
+  EmploymentType,
+  JobTarget,
+  JobTargetUpdate,
+  SkillItem,
+  WageType,
+} from '@episfolio/kernel';
 import { invoke } from '@tauri-apps/api/core';
 
 export type CreateJobTargetArgs = {
@@ -10,6 +17,22 @@ export type CreateJobTargetArgs = {
   preferredSkills?: SkillItem[];
   concerns?: string;
   appealPoints?: string;
+  annualHolidays?: number | null;
+  workingHoursPerDay?: number | null;
+  commuteTimeMinutes?: number | null;
+  employmentType?: EmploymentType | null;
+  flexTimeAvailable?: boolean | null;
+  remoteWorkAvailable?: boolean | null;
+  averagePaidLeaveTaken?: number | null;
+  vacancyReason?: string | null;
+  currentTeamSize?: number | null;
+  applicationRoute?: ApplicationRoute | null;
+  wageType?: WageType | null;
+  basicSalary?: number | null;
+  fixedOvertimeHours?: number | null;
+  bonusBaseMonths?: number | null;
+  hasFutureRaisePromise?: boolean | null;
+  futureRaisePromiseInContract?: boolean | null;
 };
 
 export async function createJobTarget(args: CreateJobTargetArgs): Promise<JobTarget> {
