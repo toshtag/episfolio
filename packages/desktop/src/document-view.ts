@@ -1,4 +1,6 @@
 import type { JobTarget } from '@episfolio/kernel';
+import { save as saveDialog } from '@tauri-apps/plugin-dialog';
+import { writeFile } from '@tauri-apps/plugin-fs';
 import DOMPurify from 'dompurify';
 import { css, html, LitElement } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
@@ -47,6 +49,7 @@ class DocumentView extends LitElement {
     isSaving: { state: true },
     error: { state: true },
     showPrintPreview: { state: true },
+    isExportingPdf: { state: true },
   };
 
   declare documents: CareerDocumentRow[];
@@ -69,6 +72,7 @@ class DocumentView extends LitElement {
   declare isSaving: boolean;
   declare error: string;
   declare showPrintPreview: boolean;
+  declare isExportingPdf: boolean;
 
   constructor() {
     super();
@@ -92,6 +96,7 @@ class DocumentView extends LitElement {
     this.isSaving = false;
     this.error = '';
     this.showPrintPreview = false;
+    this.isExportingPdf = false;
   }
 
   static override styles = css`
@@ -595,6 +600,11 @@ class DocumentView extends LitElement {
           }}
           ?disabled=${!this.editContent.trim()}
         >印刷プレビュー</button>
+        <button
+          class="secondary"
+          @click=${this.handleExportPdf}
+          ?disabled=${!this.editContent.trim() || this.isExportingPdf}
+        >${this.isExportingPdf ? 'PDF 生成中...' : 'PDF 書き出し'}</button>
       </div>
       ${this.renderHistory()}
     `;
@@ -647,6 +657,57 @@ class DocumentView extends LitElement {
       return html` &nbsp;|&nbsp; 対象求人: <span class="ghost-target">削除済み (${id.slice(-6)})</span>`;
     }
     return html` &nbsp;|&nbsp; 対象求人: ${target.companyName} — ${target.jobTitle}`;
+  }
+
+  private async handleExportPdf() {
+    if (!this.editContent.trim()) return;
+    this.isExportingPdf = true;
+    this.error = '';
+    try {
+      const title = this.selected?.title ?? 'document';
+      const filePath = await saveDialog({
+        defaultPath: `${title}.pdf`,
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      });
+      if (!filePath) return;
+
+      const raw = marked(this.editContent) as string;
+      const safe = DOMPurify.sanitize(raw);
+
+      const container = document.createElement('div');
+      container.style.cssText = [
+        'position:absolute',
+        'left:-9999px',
+        'top:0',
+        'width:170mm',
+        'font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif',
+        'font-size:10.5pt',
+        'line-height:1.75',
+        'color:#111',
+        'background:#fff',
+        'padding:0',
+      ].join(';');
+      container.innerHTML = safe;
+      document.body.appendChild(container);
+
+      const { jsPDF } = await import('jspdf');
+      await import('html2canvas');
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      await doc.html(container, {
+        margin: [15, 20, 15, 20],
+        autoPaging: 'text',
+        width: 170,
+        windowWidth: container.scrollWidth,
+      });
+      document.body.removeChild(container);
+
+      const buf = doc.output('arraybuffer');
+      await writeFile(filePath, new Uint8Array(buf));
+    } catch (e) {
+      this.error = `PDF 書き出しに失敗しました: ${String(e)}`;
+    } finally {
+      this.isExportingPdf = false;
+    }
   }
 
   private renderPrintPreview() {
