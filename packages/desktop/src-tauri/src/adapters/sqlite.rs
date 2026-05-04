@@ -1,52 +1,53 @@
 use rusqlite::{Connection, Result};
 use std::path::PathBuf;
 
-const MIGRATION_001: &str = include_str!("../../migrations/0001_init.sql");
-const MIGRATION_002: &str = include_str!("../../migrations/0002_add_skill_evidence_ai_runs.sql");
-const MIGRATION_003: &str = include_str!("../../migrations/0003_add_career_documents.sql");
-const MIGRATION_004: &str = include_str!("../../migrations/0004_add_skill_evidence_source.sql");
-const MIGRATION_005: &str = include_str!("../../migrations/0005_add_life_timeline.sql");
-const MIGRATION_006: &str = include_str!("../../migrations/0006_add_document_revision_fields.sql");
-const MIGRATION_007: &str = include_str!("../../migrations/0007_enum_check_constraints.sql");
-const MIGRATION_008: &str = include_str!("../../migrations/0008_add_job_targets.sql");
-const MIGRATION_009: &str =
-    include_str!("../../migrations/0009_add_job_requirement_mappings.sql");
-const MIGRATION_010: &str =
-    include_str!("../../migrations/0010_add_revision_job_target_id.sql");
-const MIGRATION_011: &str = include_str!("../../migrations/0011_add_interview_qas.sql");
-const MIGRATION_012: &str = include_str!("../../migrations/0012_add_interview_reports.sql");
-const MIGRATION_013: &str = include_str!("../../migrations/0013_add_agent_track_records.sql");
-const MIGRATION_014: &str = include_str!("../../migrations/0014_add_agent_meeting_emails.sql");
-const MIGRATION_015: &str = include_str!("../../migrations/0015_add_job_wish_sheets.sql");
-const MIGRATION_016: &str =
-    include_str!("../../migrations/0016_add_resignation_application_motives.sql");
-const MIGRATION_017: &str = include_str!("../../migrations/0017_add_boss_references.sql");
-const MIGRATION_018: &str = include_str!("../../migrations/0018_add_customer_references.sql");
-const MIGRATION_019: &str = include_str!("../../migrations/0019_add_work_asset_summaries.sql");
-const MIGRATION_020: &str = include_str!("../../migrations/0020_add_subordinate_summaries.sql");
-const MIGRATION_021: &str = include_str!("../../migrations/0021_add_strength_arrows.sql");
-const MIGRATION_022: &str = include_str!("../../migrations/0022_add_result_by_type.sql");
-const MIGRATION_023: &str = include_str!("../../migrations/0023_add_strength_from_weakness.sql");
-const MIGRATION_024: &str = include_str!("../../migrations/0024_add_microchop_skill.sql");
-const MIGRATION_025: &str = include_str!("../../migrations/0025_add_weak_connection.sql");
-const MIGRATION_026: &str = include_str!("../../migrations/0026_add_monster_company_checks.sql");
-const MIGRATION_027: &str =
-    include_str!("../../migrations/0027_add_recruitment_impressions.sql");
-const MIGRATION_028: &str = include_str!("../../migrations/0028_add_salary_benchmarks.sql");
-const MIGRATION_029: &str = include_str!("../../migrations/0029_add_hidden_gem_notes.sql");
-const MIGRATION_030: &str = include_str!("../../migrations/0030_add_growth_cycle_notes.sql");
-const MIGRATION_031: &str =
-    include_str!("../../migrations/0031_add_company_certifications.sql");
-const MIGRATION_032: &str =
-    include_str!("../../migrations/0032_add_business_unit_type_matches.sql");
-const MIGRATION_033: &str =
-    include_str!("../../migrations/0033_extend_application_motives.sql");
-const MIGRATION_034: &str = include_str!("../../migrations/0034_extend_job_targets.sql");
-const MIGRATION_035: &str =
-    include_str!("../../migrations/0035_extend_agent_track_records.sql");
-const MIGRATION_036: &str =
-    include_str!("../../migrations/0036_extend_interview_reports.sql");
-const MIGRATION_037: &str = include_str!("../../migrations/0037_add_resignation_plans.sql");
+type Migration = (&'static str, &'static str);
+
+macro_rules! migration {
+    ($version:literal, $file:literal) => {
+        ($version, include_str!(concat!("../../migrations/", $file)))
+    };
+}
+
+const MIGRATIONS: &[Migration] = &[
+    migration!("0001", "0001_init.sql"),
+    migration!("0002", "0002_add_skill_evidence_ai_runs.sql"),
+    migration!("0003", "0003_add_career_documents.sql"),
+    migration!("0004", "0004_add_skill_evidence_source.sql"),
+    migration!("0005", "0005_add_life_timeline.sql"),
+    migration!("0006", "0006_add_document_revision_fields.sql"),
+    migration!("0007", "0007_enum_check_constraints.sql"),
+    migration!("0008", "0008_add_job_targets.sql"),
+    migration!("0009", "0009_add_job_requirement_mappings.sql"),
+    migration!("0010", "0010_add_revision_job_target_id.sql"),
+    migration!("0011", "0011_add_interview_qas.sql"),
+    migration!("0012", "0012_add_interview_reports.sql"),
+    migration!("0013", "0013_add_agent_track_records.sql"),
+    migration!("0014", "0014_add_agent_meeting_emails.sql"),
+    migration!("0015", "0015_add_job_wish_sheets.sql"),
+    migration!("0016", "0016_add_resignation_application_motives.sql"),
+    migration!("0017", "0017_add_boss_references.sql"),
+    migration!("0018", "0018_add_customer_references.sql"),
+    migration!("0019", "0019_add_work_asset_summaries.sql"),
+    migration!("0020", "0020_add_subordinate_summaries.sql"),
+    migration!("0021", "0021_add_strength_arrows.sql"),
+    migration!("0022", "0022_add_result_by_type.sql"),
+    migration!("0023", "0023_add_strength_from_weakness.sql"),
+    migration!("0024", "0024_add_microchop_skill.sql"),
+    migration!("0025", "0025_add_weak_connection.sql"),
+    migration!("0026", "0026_add_monster_company_checks.sql"),
+    migration!("0027", "0027_add_recruitment_impressions.sql"),
+    migration!("0028", "0028_add_salary_benchmarks.sql"),
+    migration!("0029", "0029_add_hidden_gem_notes.sql"),
+    migration!("0030", "0030_add_growth_cycle_notes.sql"),
+    migration!("0031", "0031_add_company_certifications.sql"),
+    migration!("0032", "0032_add_business_unit_type_matches.sql"),
+    migration!("0033", "0033_extend_application_motives.sql"),
+    migration!("0034", "0034_extend_job_targets.sql"),
+    migration!("0035", "0035_extend_agent_track_records.sql"),
+    migration!("0036", "0036_extend_interview_reports.sql"),
+    migration!("0037", "0037_add_resignation_plans.sql"),
+];
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
     let conn = Connection::open(db_path)?;
@@ -63,43 +64,9 @@ fn run_migrations(conn: &Connection) -> Result<()> {
          );",
     )?;
 
-    apply_migration(conn, "0001", MIGRATION_001)?;
-    apply_migration(conn, "0002", MIGRATION_002)?;
-    apply_migration(conn, "0003", MIGRATION_003)?;
-    apply_migration(conn, "0004", MIGRATION_004)?;
-    apply_migration(conn, "0005", MIGRATION_005)?;
-    apply_migration(conn, "0006", MIGRATION_006)?;
-    apply_migration(conn, "0007", MIGRATION_007)?;
-    apply_migration(conn, "0008", MIGRATION_008)?;
-    apply_migration(conn, "0009", MIGRATION_009)?;
-    apply_migration(conn, "0010", MIGRATION_010)?;
-    apply_migration(conn, "0011", MIGRATION_011)?;
-    apply_migration(conn, "0012", MIGRATION_012)?;
-    apply_migration(conn, "0013", MIGRATION_013)?;
-    apply_migration(conn, "0014", MIGRATION_014)?;
-    apply_migration(conn, "0015", MIGRATION_015)?;
-    apply_migration(conn, "0016", MIGRATION_016)?;
-    apply_migration(conn, "0017", MIGRATION_017)?;
-    apply_migration(conn, "0018", MIGRATION_018)?;
-    apply_migration(conn, "0019", MIGRATION_019)?;
-    apply_migration(conn, "0020", MIGRATION_020)?;
-    apply_migration(conn, "0021", MIGRATION_021)?;
-    apply_migration(conn, "0022", MIGRATION_022)?;
-    apply_migration(conn, "0023", MIGRATION_023)?;
-    apply_migration(conn, "0024", MIGRATION_024)?;
-    apply_migration(conn, "0025", MIGRATION_025)?;
-    apply_migration(conn, "0026", MIGRATION_026)?;
-    apply_migration(conn, "0027", MIGRATION_027)?;
-    apply_migration(conn, "0028", MIGRATION_028)?;
-    apply_migration(conn, "0029", MIGRATION_029)?;
-    apply_migration(conn, "0030", MIGRATION_030)?;
-    apply_migration(conn, "0031", MIGRATION_031)?;
-    apply_migration(conn, "0032", MIGRATION_032)?;
-    apply_migration(conn, "0033", MIGRATION_033)?;
-    apply_migration(conn, "0034", MIGRATION_034)?;
-    apply_migration(conn, "0035", MIGRATION_035)?;
-    apply_migration(conn, "0036", MIGRATION_036)?;
-    apply_migration(conn, "0037", MIGRATION_037)?;
+    for (version, sql) in MIGRATIONS {
+        apply_migration(conn, version, sql)?;
+    }
 
     Ok(())
 }
@@ -153,7 +120,23 @@ mod tests {
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 37);
+        assert_eq!(count, MIGRATIONS.len() as i64);
+    }
+
+    #[test]
+    fn migration_registry_is_contiguous() {
+        assert_eq!(MIGRATIONS.len(), 37);
+        for (idx, (version, sql)) in MIGRATIONS.iter().enumerate() {
+            let expected = format!("{:04}", idx + 1);
+            assert_eq!(
+                *version, expected,
+                "migration registry has a gap or reorder"
+            );
+            assert!(
+                !sql.trim().is_empty(),
+                "migration {version} should not be empty"
+            );
+        }
     }
 
     fn table_exists(conn: &Connection, table: &str) -> bool {
