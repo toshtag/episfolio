@@ -7,6 +7,30 @@ Keep a Changelog 形式（https://keepachangelog.com/ja/1.1.0/）
 
 ---
 
+## [0.9.0] - 2026-05-04
+
+UX 整理・PDF/DOCX 書き出し・自動バックアップを追加した品質改善リリース。既存機能の使い勝手を高め、データ保護の基盤を整えた。
+
+### Added
+
+- **印刷プレビュー / PDF 書き出し**（desktop）: jsPDF + html2canvas による PDF 出力。document-view からワンクリックで生成可能
+- **DOCX 書き出し**（desktop）: docx library による Word 形式出力
+- **自動バックアップ**（desktop, Rust）: 起動時に 24h 経過判定 → `episfolio-YYYY-MM-DD.db` を隣接ディレクトリに保存、7 世代ローテーション。外部クレート不使用（JDN 算法で日付計算）
+- **Restore UI**（desktop）: 設定タブにバックアップ一覧 select + 2 ステップ確認付き復元機能を追加
+- **改訂履歴 diff 表示**（desktop）: ドキュメント改訂履歴で前バージョンとの行単位差分（追加/削除/共通）を表示。LCS アルゴリズムで外部ライブラリ不使用
+
+### Changed
+
+- **ダイジェスト UI 2 列レイアウト**（desktop）: digest-view をグリッド 2 列に変更し一覧性を向上
+- **改訂履歴 content インライン展開**（desktop）: 改訂履歴から過去バージョンの本文をインライン表示
+- **用語統一**（desktop/kernel）: UI 全体の表記ゆれを統一
+- **Rust コマンド整理**（desktop）: `commands/mod.rs` に `pub use *` を導入し `generate_handler!` のパスを短縮
+- **Lit コンポーネント整理**（desktop）: `main.ts` を TABS 配列 + TAB_CONTENT マップに置換（486 → 341 行）
+- **desktop Vitest 導入**（desktop）: `packages/desktop` に Vitest + jsdom を追加し UI コンポーネントのユニットテストを整備
+- **version bump to 0.9.0**
+
+---
+
 ## [0.8.0] - 2026-05-03
 
 企業分析チェックリスト（7 機能）を追加した機能リリース。転職先候補の企業を多面的に評価するチェックリスト群が end-to-end で動作する。全機能が JobTarget に紐づく 1:N 構造で設計され、求人ごとに詳細な企業分析を記録・管理できる。
