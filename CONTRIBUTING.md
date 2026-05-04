@@ -1,6 +1,6 @@
 # Contributing to Episfolio
 
-Episfolio は現在 Phase 0（運用整備中）です。実装段階に入るまで外部 contribution は受け付けていません。本ドキュメントは将来のために運用ルールを先に定めるものです。
+Episfolio は現在 v0.11 系の実装段階です。外部 contribution は v1.0 までは受け付けていません。本ドキュメントは、当面の solo 開発でも履歴と意図を残すための運用ルールを定めるものです。
 
 ## 言語ポリシー
 
@@ -54,19 +54,19 @@ feat(episode): エピソード作成 UI を追加
 
 ## Pull Request
 
-Phase 0 段階では Solo 開発のため簡易運用：
+現段階では solo 開発のため簡易運用：
 
 - self-review でも構わない
 - main へ self-merge OK
 - ただし PR は必ず作る（履歴と意図を残すため）
 
-Phase 1 以降、外部 contributor を受け入れる際にレビュー要件を再定義します。
+外部 contributor を受け入れる段階でレビュー要件を再定義します。
 
 ## 開発環境
 
-実装段階に入った後で更新します（pnpm のバージョン、Rust toolchain、Tauri 依存等）。
+必要に応じて更新します（pnpm のバージョン、Rust toolchain、Tauri 依存等）。
 
 ## 質問・問題報告
 
 - バグ報告：GitHub Issues
-- セキュリティ問題：[SECURITY.md](./SECURITY.md)（Phase 1 で公開予定）— public issue ではなく private 窓口へ
+- セキュリティ問題：[SECURITY.md](./SECURITY.md) — public issue ではなく private 窓口へ
