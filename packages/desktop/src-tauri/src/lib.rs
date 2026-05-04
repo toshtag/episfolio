@@ -21,6 +21,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::backup::backup_if_needed,
+            commands::backup::list_backups,
+            commands::backup::restore_backup,
             commands::episodes::create_episode,
             commands::episodes::list_episodes,
             commands::episodes::get_episode,
