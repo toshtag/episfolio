@@ -32,10 +32,9 @@ WebView 内で任意 JavaScript が実行された場合、保存ダイアログ
 
 セキュリティ上の問題を発見した場合、**GitHub Issues には投稿しないでください**。
 
-以下のいずれかの方法でご連絡ください：
+以下の方法でご連絡ください：
 
 - GitHub の [Private vulnerability reporting](https://github.com/toshtag/episfolio/security/advisories/new)
-- メール: mog2to4aki@gmail.com
 
 報告内容には以下を含めてください：
 
