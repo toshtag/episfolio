@@ -261,7 +261,7 @@ v0.2.0 の security / integrity hotfix。
 - **DocumentRevision UI**: 改訂理由（必須）・宛先メモ（任意）入力欄、改訂履歴一覧セクション
 - **`.github/workflows/ci.yml`**: Node (typecheck / lint / test / build) と Rust (cargo test / clippy) の CI gate
 - **CSP strict policy**: `tauri.conf.json` の `csp: null` を `default-src 'self'; ...; connect-src 'self' ipc: http://ipc.localhost; ...` に変更
-- **AI 送信 surface の削除方針**: AI 送信 / API key command を feature gate ではなくコード削除する判断と、v0.5 復活時の方針
+- **AI 送信 surface の削除方針**: AI 送信 / API key command を feature gate ではなくコード削除する判断と、AI 復活時の方針（ADR-0008）
 
 ### Changed
 
@@ -301,8 +301,8 @@ v0.2.0 の security / integrity hotfix。
 ### Added
 
 - **Episode 管理**: エピソードの作成・編集・削除 UI（Tauri + Lit）
-- **エビデンス管理**: 手書きエビデンスの作成 UI（`source: 'manual'`）、AI/手書きバッジ表示（ADR-0007）
-- **キャリアドキュメント**: Document / DocumentRevision ドメイン型、手動編集 UI（ADR-0007）
+- **エビデンス管理**: 手書きエビデンスの作成 UI（`source: 'manual'`）、AI/手書きバッジ表示（ADR-0008）
+- **キャリアドキュメント**: Document / DocumentRevision ドメイン型、手動編集 UI（ADR-0008）
 - **Settings 画面**: OS keychain への API key 保存・接続テスト・削除
 - **SQLite ストレージ**: migration 0001〜0004（episodes / ai_runs / skill_evidence / source カラム）
 - **kernel ドメイン層**: Episode / AIRun / SkillEvidence / CareerDocument / DocumentRevision 型、Zod スキーマ、StoragePorts
@@ -314,9 +314,9 @@ v0.2.0 の security / integrity hotfix。
 
 ### Known limitations
 
-- AI による Evidence 自動抽出・Document 自動生成は v0.1 では提供しない（ADR-0007）。信頼担保 UX が完成する v0.2 以降で実装予定
+- AI による Evidence 自動抽出・Document 自動生成は v0.1 では提供しない（ADR-0008）。信頼担保 UX が完成してから再導入予定
 - 配布バイナリ・署名・notarize 未対応（`pnpm tauri dev` での動作確認のみ）
-- macOS 専用（Windows / Linux は v0.8 予定）
+- macOS 専用（Windows / Linux は後続フェーズで対応予定）
 
 ---
 

@@ -40,7 +40,7 @@
 | --------------- | --------------------------------- |
 | Desktop shell   | Tauri v2                          |
 | UI              | Lit (Web Components) + TypeScript |
-| Native boundary | Rust（SQLite / OS keychain / FS） |
+| Native boundary | Rust（SQLite / backup / FS）      |
 | Database        | SQLite                            |
 | Schema          | Zod                               |
 | Build           | Vite + Cargo                      |

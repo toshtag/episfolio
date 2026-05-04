@@ -11,13 +11,15 @@
 
 **Tauri v2** を採用する。
 
-Rust バックエンドが SQLite・ファイルシステム・キーチェーン・HTTP クライアントを担い、フロントエンド（TypeScript）とは Tauri command 経由で通信する。
+Rust バックエンドが SQLite・バックアップ・ファイルシステム境界を担い、フロントエンド（TypeScript）とは Tauri command 経由で通信する。
+
+remote AI 送信・API key 管理・HTTP クライアントは現行ビルドでは提供しない。再導入する場合は、ADR-0008 に基づき送信前プレビューと最小権限の設計を先に行う。
 
 ## Consequences
 
 - バイナリサイズが小さい（Chromium を同梱しないため）
 - OS のネイティブ WebView を使用するため、macOS は WebKit ベースとなる
-- ビジネスロジックの多くを Rust で実装する必要があり、Rust の習熟が前提
+- SQLite と OS 境界の実装には Rust の習熟が前提
 - セキュリティモデルが明確（capabilities による権限制御）
 
 ## Alternatives Considered
