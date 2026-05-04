@@ -103,6 +103,8 @@ pub fn open_in_memory_with_migrations() -> Result<Connection> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use std::path::Path;
 
     const TS: &str = "2026-05-01T00:00:00Z";
 
@@ -137,6 +139,42 @@ mod tests {
                 "migration {version} should not be empty"
             );
         }
+    }
+
+    #[test]
+    fn migration_registry_matches_sql_files() {
+        let migration_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("migrations");
+        let mut file_versions = fs::read_dir(&migration_dir)
+            .expect("migration directory should be readable")
+            .map(|entry| {
+                entry
+                    .expect("migration directory entry should be readable")
+                    .path()
+            })
+            .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("sql"))
+            .map(|path| {
+                let file_name = path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .expect("migration file should have a UTF-8 filename");
+                file_name
+                    .split_once('_')
+                    .expect("migration file should start with a version prefix")
+                    .0
+                    .to_string()
+            })
+            .collect::<Vec<_>>();
+        file_versions.sort();
+
+        let registered_versions = MIGRATIONS
+            .iter()
+            .map(|(version, _)| version.to_string())
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            registered_versions, file_versions,
+            "every migration SQL file should be registered in MIGRATIONS"
+        );
     }
 
     fn table_exists(conn: &Connection, table: &str) -> bool {
