@@ -1,20 +1,22 @@
+use rusqlite::{Connection, MAIN_DB};
 use std::fs;
-use std::path::PathBuf;
-use tauri::Manager;
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
+use tauri::{Manager, State};
 
 const MAX_GENERATIONS: usize = 7;
 const BACKUP_INTERVAL_SECS: u64 = 24 * 60 * 60;
 
 /// バックアップが必要かどうかを判定し、必要なら実行する。
-/// 前回バックアップから 24h 以上経過していれば episfolio.db を
-/// {appDataDir}/backups/episfolio-{date}.db にコピーし、
+/// 前回バックアップから 24h 以上経過していれば SQLite の online backup API で
+/// {appDataDir}/backups/episfolio-{date}.db を作成し、
 /// 7 世代を超えた古いファイルを削除する。
 #[tauri::command]
-pub fn backup_if_needed(app: tauri::AppHandle) -> Result<bool, String> {
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| e.to_string())?;
+pub fn backup_if_needed(
+    app: tauri::AppHandle,
+    db: State<'_, Mutex<Connection>>,
+) -> Result<bool, String> {
+    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
 
     let db_path = app_data_dir.join("episfolio.db");
     if !db_path.exists() {
@@ -29,8 +31,8 @@ pub fn backup_if_needed(app: tauri::AppHandle) -> Result<bool, String> {
     }
 
     let date = current_date_str();
-    let dest = backup_dir.join(format!("episfolio-{date}.db"));
-    fs::copy(&db_path, &dest).map_err(|e| e.to_string())?;
+    let conn = db.lock().map_err(|e| e.to_string())?;
+    create_backup(&conn, &backup_dir, &date)?;
 
     rotate_backups(&backup_dir)?;
 
@@ -62,24 +64,93 @@ pub fn list_backups(app: tauri::AppHandle) -> Result<Vec<String>, String> {
 /// 指定したバックアップファイルを episfolio.db に上書き復元する。
 /// ファイル名は `episfolio-YYYY-MM-DD.db` 形式のみ受け付ける。
 #[tauri::command]
-pub fn restore_backup(app: tauri::AppHandle, filename: String) -> Result<(), String> {
-    if !filename.starts_with("episfolio-") || !filename.ends_with(".db") {
+pub fn restore_backup(
+    app: tauri::AppHandle,
+    db: State<'_, Mutex<Connection>>,
+    filename: String,
+) -> Result<(), String> {
+    if !is_backup_filename(&filename) {
         return Err("無効なバックアップファイル名です".to_string());
     }
 
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| e.to_string())?;
+    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
 
     let src = app_data_dir.join("backups").join(&filename);
-    if !src.exists() {
-        return Err(format!("バックアップファイルが見つかりません: {filename}"));
+    let metadata = fs::symlink_metadata(&src)
+        .map_err(|_| format!("バックアップファイルが見つかりません: {filename}"))?;
+    if !metadata.file_type().is_file() {
+        return Err("無効なバックアップファイルです".to_string());
     }
 
-    let dest = app_data_dir.join("episfolio.db");
-    fs::copy(&src, &dest).map_err(|e| e.to_string())?;
+    let mut conn = db.lock().map_err(|e| e.to_string())?;
+    restore_from_backup(&mut conn, &src)?;
     Ok(())
+}
+
+fn create_backup(conn: &Connection, backup_dir: &Path, date: &str) -> Result<PathBuf, String> {
+    fs::create_dir_all(backup_dir).map_err(|e| e.to_string())?;
+
+    let filename = format!("episfolio-{date}.db");
+    let dest = backup_dir.join(&filename);
+    let tmp = backup_dir.join(format!("{filename}.tmp"));
+
+    if tmp.exists() {
+        fs::remove_file(&tmp).map_err(|e| e.to_string())?;
+    }
+
+    conn.backup(MAIN_DB, &tmp, None)
+        .map_err(|e| e.to_string())?;
+
+    if dest.exists() {
+        fs::remove_file(&dest).map_err(|e| e.to_string())?;
+    }
+    fs::rename(&tmp, &dest).map_err(|e| {
+        let _ = fs::remove_file(&tmp);
+        e.to_string()
+    })?;
+
+    Ok(dest)
+}
+
+fn restore_from_backup(conn: &mut Connection, backup_path: &Path) -> Result<(), String> {
+    conn.restore(MAIN_DB, backup_path, None::<fn(rusqlite::backup::Progress)>)
+        .map_err(|e| e.to_string())
+}
+
+fn is_backup_filename(filename: &str) -> bool {
+    const PREFIX: &str = "episfolio-";
+    const SUFFIX: &str = ".db";
+
+    if filename.len() != PREFIX.len() + "YYYY-MM-DD".len() + SUFFIX.len()
+        || !filename.starts_with(PREFIX)
+        || !filename.ends_with(SUFFIX)
+    {
+        return false;
+    }
+
+    let date = &filename[PREFIX.len()..filename.len() - SUFFIX.len()];
+    let bytes = date.as_bytes();
+    bytes[4] == b'-'
+        && bytes[7] == b'-'
+        && bytes
+            .iter()
+            .enumerate()
+            .all(|(i, b)| i == 4 || i == 7 || b.is_ascii_digit())
+        && date[5..7]
+            .parse::<u32>()
+            .is_ok_and(|month| (1..=12).contains(&month))
+        && date[8..10]
+            .parse::<u32>()
+            .is_ok_and(|day| (1..=31).contains(&day))
+}
+
+fn is_backup_file(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|s| s.to_str())
+        .is_some_and(is_backup_filename)
+        && fs::symlink_metadata(path)
+            .map(|m| m.file_type().is_file())
+            .unwrap_or(false)
 }
 
 fn should_backup(backup_dir: &PathBuf) -> bool {
@@ -120,13 +191,7 @@ fn sorted_backup_files(backup_dir: &PathBuf) -> Result<Vec<PathBuf>, String> {
         .map_err(|e| e.to_string())?
         .filter_map(|e| e.ok())
         .map(|e| e.path())
-        .filter(|p| {
-            p.extension().and_then(|s| s.to_str()) == Some("db")
-                && p.file_name()
-                    .and_then(|s| s.to_str())
-                    .map(|s| s.starts_with("episfolio-"))
-                    .unwrap_or(false)
-        })
+        .filter(|p| is_backup_file(p))
         .collect();
 
     files.sort_by(|a, b| {
@@ -171,6 +236,7 @@ mod tests {
 
     fn make_temp_backup_dir(suffix: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("episfolio-backup-test-{suffix}"));
+        let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -243,6 +309,9 @@ mod tests {
 
         make_backup_file(&backup_dir, "episfolio-2026-01-01.db");
         make_backup_file(&backup_dir, "other.db");
+        make_backup_file(&backup_dir, "episfolio-2026-01-01.db.tmp");
+        make_backup_file(&backup_dir, "episfolio-2026-1-1.db");
+        fs::create_dir(backup_dir.join("episfolio-2026-01-03.db")).unwrap();
         fs::write(backup_dir.join("episfolio-2026-01-02.txt"), b"x").unwrap();
 
         let files = sorted_backup_files(&backup_dir).unwrap();
@@ -282,14 +351,91 @@ mod tests {
 
     #[test]
     fn test_restore_backup_rejects_invalid_filename() {
-        // AppHandle が不要なロジック部分のみテスト（ファイル名バリデーション）
-        let valid = "episfolio-2026-01-01.db";
-        assert!(valid.starts_with("episfolio-") && valid.ends_with(".db"));
+        assert!(is_backup_filename("episfolio-2026-01-01.db"));
 
-        let invalid_cases = ["other.db", "episfolio-2026-01-01.txt", "../etc/passwd"];
+        let invalid_cases = [
+            "other.db",
+            "episfolio-2026-01-01.txt",
+            "../etc/passwd",
+            "episfolio-2026-01-01.db/../x.db",
+            "episfolio-2026-1-1.db",
+            "episfolio-2026-01-aa.db",
+            "episfolio-../../evil.db",
+            "episfolio-2026-00-01.db",
+            "episfolio-2026-13-01.db",
+            "episfolio-2026-01-00.db",
+            "episfolio-2026-01-32.db",
+        ];
         for name in invalid_cases {
-            let ok = name.starts_with("episfolio-") && name.ends_with(".db");
-            assert!(!ok, "should reject: {name}");
+            assert!(!is_backup_filename(name), "should reject: {name}");
         }
+    }
+
+    #[test]
+    fn test_create_backup_captures_wal_changes() {
+        let root = make_temp_backup_dir("wal-captures");
+        let live_path = root.join("live.db");
+        let backup_dir = root.join("backups");
+        let conn = Connection::open(&live_path).unwrap();
+        conn.execute_batch(
+            "
+            PRAGMA journal_mode=WAL;
+            PRAGMA wal_autocheckpoint=0;
+            CREATE TABLE items (id INTEGER PRIMARY KEY, value TEXT NOT NULL);
+            INSERT INTO items (value) VALUES ('from wal');
+            ",
+        )
+        .unwrap();
+        assert!(root.join("live.db-wal").exists());
+
+        let backup_path = create_backup(&conn, &backup_dir, "2026-05-04").unwrap();
+        {
+            let backup_conn = Connection::open(&backup_path).unwrap();
+            let value: String = backup_conn
+                .query_row("SELECT value FROM items WHERE id = 1", [], |row| row.get(0))
+                .unwrap();
+            assert_eq!(value, "from wal");
+        }
+
+        drop(conn);
+        cleanup(&root);
+    }
+
+    #[test]
+    fn test_restore_from_backup_replaces_live_connection() {
+        let root = make_temp_backup_dir("restore-online");
+        let live_path = root.join("live.db");
+        let backup_path = root.join("source.db");
+        let mut conn = Connection::open(&live_path).unwrap();
+        conn.execute_batch(
+            "
+            PRAGMA journal_mode=WAL;
+            CREATE TABLE items (id INTEGER PRIMARY KEY, value TEXT NOT NULL);
+            INSERT INTO items (value) VALUES ('before');
+            ",
+        )
+        .unwrap();
+
+        {
+            let backup_conn = Connection::open(&backup_path).unwrap();
+            backup_conn
+                .execute_batch(
+                    "
+                    CREATE TABLE items (id INTEGER PRIMARY KEY, value TEXT NOT NULL);
+                    INSERT INTO items (value) VALUES ('after');
+                    ",
+                )
+                .unwrap();
+        }
+
+        restore_from_backup(&mut conn, &backup_path).unwrap();
+
+        let value: String = conn
+            .query_row("SELECT value FROM items WHERE id = 1", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(value, "after");
+
+        drop(conn);
+        cleanup(&root);
     }
 }
