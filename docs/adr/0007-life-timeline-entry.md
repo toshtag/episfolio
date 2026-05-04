@@ -29,4 +29,4 @@ v0.2 では「素材レイヤー」として「人生年表（自分大全）」
 - `packages/kernel/src/schemas/life-timeline-entry.ts` に Zod スキーマを定義
 - `packages/kernel/src/ports/life-timeline-storage-port.ts` に StoragePort を定義
 - `packages/kernel/src/exporters/jibun-taizen.ts` に Markdown エクスポーターを実装
-- SQLite アダプターは PR 1b（desktop 側）で別途追加する
+- desktop 側は `life_timeline_entries` テーブルと Tauri CRUD command として実装済み
