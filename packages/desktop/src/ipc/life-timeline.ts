@@ -9,7 +9,6 @@ export type CreateLifeTimelineEntryArgs = {
   category: string;
   summary: string;
   detail?: string;
-  relatedEpisodeIds?: string[];
   tags?: string[];
 };
 
