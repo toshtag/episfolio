@@ -19,7 +19,6 @@ export const LifeTimelineEntrySchema = z
     category: LifeTimelineCategorySchema,
     summary: z.string().min(1),
     detail: z.string(),
-    relatedEpisodeIds: z.array(z.string()),
     tags: z.array(z.string()),
     createdAt: z.string().min(1),
     updatedAt: z.string().min(1),
@@ -42,7 +41,6 @@ export const LifeTimelineEntryUpdateSchema = z
     category: LifeTimelineCategorySchema,
     summary: z.string().min(1),
     detail: z.string(),
-    relatedEpisodeIds: z.array(z.string()),
     tags: z.array(z.string()),
   })
   .partial();

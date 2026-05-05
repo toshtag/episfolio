@@ -15,15 +15,13 @@ pub struct LifeTimelineEntryRow {
     pub category: String,
     pub summary: String,
     pub detail: String,
-    pub related_episode_ids: Vec<String>,
     pub tags: Vec<String>,
     pub created_at: String,
     pub updated_at: String,
 }
 
 fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<LifeTimelineEntryRow> {
-    let related_json: String = row.get(8)?;
-    let tags_json: String = row.get(9)?;
+    let tags_json: String = row.get(8)?;
     Ok(LifeTimelineEntryRow {
         id: row.get(0)?,
         age_range_start: row.get(1)?,
@@ -33,16 +31,15 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<LifeTimelineEntry
         category: row.get(5)?,
         summary: row.get(6)?,
         detail: row.get(7)?,
-        related_episode_ids: super::parse_json_column(8, &related_json)?,
-        tags: super::parse_json_column(9, &tags_json)?,
-        created_at: row.get(10)?,
-        updated_at: row.get(11)?,
+        tags: super::parse_json_column(8, &tags_json)?,
+        created_at: row.get(9)?,
+        updated_at: row.get(10)?,
     })
 }
 
 const SELECT_COLUMNS: &str =
     "id, age_range_start, age_range_end, year_start, year_end, category, \
-     summary, detail, related_episode_ids, tags, created_at, updated_at";
+     summary, detail, tags, created_at, updated_at";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,7 +51,6 @@ pub struct CreateLifeTimelineEntryArgs {
     pub category: String,
     pub summary: String,
     pub detail: Option<String>,
-    pub related_episode_ids: Option<Vec<String>>,
     pub tags: Option<Vec<String>>,
 }
 
@@ -67,16 +63,14 @@ pub fn create_life_timeline_entry(
     let id = Ulid::new().to_string();
     let now = chrono_now();
     let detail = args.detail.unwrap_or_default();
-    let related = serde_json::to_string(&args.related_episode_ids.unwrap_or_default())
-        .map_err(|e| e.to_string())?;
     let tags =
         serde_json::to_string(&args.tags.unwrap_or_default()).map_err(|e| e.to_string())?;
 
     conn.execute(
         "INSERT INTO life_timeline_entries \
          (id, age_range_start, age_range_end, year_start, year_end, category, \
-          summary, detail, related_episode_ids, tags, created_at, updated_at) \
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
+          summary, detail, tags, created_at, updated_at) \
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)",
         rusqlite::params![
             id,
             args.age_range_start,
@@ -86,7 +80,6 @@ pub fn create_life_timeline_entry(
             args.category,
             args.summary,
             detail,
-            related,
             tags,
             now,
             now
@@ -142,7 +135,6 @@ pub struct UpdateLifeTimelineEntryArgs {
     pub category: Option<String>,
     pub summary: Option<String>,
     pub detail: Option<String>,
-    pub related_episode_ids: Option<Vec<String>>,
     pub tags: Option<Vec<String>>,
 }
 
@@ -191,12 +183,6 @@ pub fn update_life_timeline_entry(
     push_str!(patch.summary, "summary");
     push_str!(patch.detail, "detail");
 
-    if let Some(v) = patch.related_episode_ids {
-        sets.push("related_episode_ids = ?");
-        params.push(Box::new(
-            serde_json::to_string(&v).map_err(|e| e.to_string())?,
-        ));
-    }
     if let Some(v) = patch.tags {
         sets.push("tags = ?");
         params.push(Box::new(

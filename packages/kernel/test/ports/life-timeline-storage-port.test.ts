@@ -48,7 +48,6 @@ const buildEntry = (id: string, overrides: Partial<LifeTimelineEntry> = {}): Lif
   category: 'work',
   summary: '新卒で入社、プロダクト開発を担当',
   detail: '',
-  relatedEpisodeIds: [],
   tags: [],
   createdAt: '2026-04-29T00:00:00Z',
   updatedAt: '2026-04-29T00:00:00Z',

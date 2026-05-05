@@ -8,7 +8,6 @@ const buildArrow = (overrides: Partial<StrengthArrow> = {}): StrengthArrow => ({
   description: 'なぜそんなに詳しいんですか？と聞かれた',
   source: '営業部の先輩',
   occurredAt: '2024-03-01',
-  relatedEpisodeIds: [],
   note: null,
   createdAt: '2026-05-03T00:00:00Z',
   updatedAt: '2026-05-03T00:00:00Z',
@@ -74,18 +73,6 @@ describe('toStrengthArrowMarkdown', () => {
     const arrow = buildArrow({ occurredAt: '2024-03-01' });
     const md = toStrengthArrowMarkdown([arrow]);
     expect(md).toContain('**時期**: 2024-03-01');
-  });
-
-  it('relatedEpisodeIds が空のとき関連エピソード行を出力しない', () => {
-    const arrow = buildArrow({ relatedEpisodeIds: [] });
-    const md = toStrengthArrowMarkdown([arrow]);
-    expect(md).not.toContain('**関連エピソード**');
-  });
-
-  it('relatedEpisodeIds があるとき出力する', () => {
-    const arrow = buildArrow({ relatedEpisodeIds: ['01EP0001', '01EP0002'] });
-    const md = toStrengthArrowMarkdown([arrow]);
-    expect(md).toContain('**関連エピソード**: 01EP0001, 01EP0002');
   });
 
   it('note が null のとき出力しない', () => {

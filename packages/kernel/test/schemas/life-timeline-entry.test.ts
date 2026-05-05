@@ -14,7 +14,6 @@ const baseEntry = {
   category: 'work' as const,
   summary: '初職',
   detail: '',
-  relatedEpisodeIds: [],
   tags: [],
   createdAt: '2026-04-30T00:00:00Z',
   updatedAt: '2026-04-30T00:00:00Z',

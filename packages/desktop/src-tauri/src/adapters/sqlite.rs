@@ -51,6 +51,7 @@ const MIGRATIONS: &[Migration] = &[
         "0038",
         "0038_change_job_requirement_mapping_to_life_timeline.sql"
     ),
+    migration!("0039", "0039_drop_related_episode_ids.sql"),
 ];
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
@@ -121,7 +122,7 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0038_apply_to_fresh_db() {
+    fn migrations_0001_through_0039_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
@@ -131,7 +132,7 @@ mod tests {
 
     #[test]
     fn migration_registry_is_contiguous() {
-        assert_eq!(MIGRATIONS.len(), 38);
+        assert_eq!(MIGRATIONS.len(), 39);
         for (idx, (version, sql)) in MIGRATIONS.iter().enumerate() {
             let expected = format!("{:04}", idx + 1);
             assert_eq!(
@@ -433,8 +434,8 @@ mod tests {
         conn.execute(
             "INSERT INTO life_timeline_entries \
              (id, age_range_start, age_range_end, year_start, year_end, category, \
-              summary, detail, related_episode_ids, tags, created_at, updated_at) \
-             VALUES (?1, ?2, ?3, NULL, NULL, ?4, 'sum', '', '[]', '[]', ?5, ?5)",
+              summary, detail, tags, created_at, updated_at) \
+             VALUES (?1, ?2, ?3, NULL, NULL, ?4, 'sum', '', '[]', ?5, ?5)",
             rusqlite::params![id, start, end, category, TS],
         )
     }

@@ -13,14 +13,13 @@ pub struct StrengthArrowRow {
     pub description: String,
     pub source: String,
     pub occurred_at: Option<String>,
-    pub related_episode_ids: String,
     pub note: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
 
 const SELECT_COLUMNS: &str =
-    "id, type, description, source, occurred_at, related_episode_ids, note, created_at, updated_at";
+    "id, type, description, source, occurred_at, note, created_at, updated_at";
 
 fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<StrengthArrowRow> {
     Ok(StrengthArrowRow {
@@ -29,10 +28,9 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<StrengthArrowRow>
         description: row.get(2)?,
         source: row.get(3)?,
         occurred_at: row.get(4)?,
-        related_episode_ids: row.get(5)?,
-        note: row.get(6)?,
-        created_at: row.get(7)?,
-        updated_at: row.get(8)?,
+        note: row.get(5)?,
+        created_at: row.get(6)?,
+        updated_at: row.get(7)?,
     })
 }
 
@@ -44,7 +42,6 @@ pub struct CreateStrengthArrowArgs {
     pub description: Option<String>,
     pub source: Option<String>,
     pub occurred_at: Option<String>,
-    pub related_episode_ids: Option<String>,
     pub note: Option<String>,
 }
 
@@ -59,15 +56,14 @@ pub fn create_strength_arrow(
 
     conn.execute(
         "INSERT INTO strength_arrows \
-         (id, type, description, source, occurred_at, related_episode_ids, note, created_at, updated_at) \
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?8)",
+         (id, type, description, source, occurred_at, note, created_at, updated_at) \
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?7)",
         rusqlite::params![
             id,
             args.arrow_type,
             args.description.unwrap_or_default(),
             args.source.unwrap_or_default(),
             args.occurred_at,
-            args.related_episode_ids.unwrap_or_else(|| "[]".to_string()),
             args.note,
             now,
         ],
@@ -138,7 +134,6 @@ pub struct UpdateStrengthArrowArgs {
     pub description: Option<String>,
     pub source: Option<String>,
     pub occurred_at: Option<Option<String>>,
-    pub related_episode_ids: Option<String>,
     pub note: Option<Option<String>>,
 }
 
@@ -168,10 +163,6 @@ pub fn update_strength_arrow(
     }
     if let Some(v) = patch.occurred_at {
         sets.push("occurred_at = ?".to_string());
-        params.push(Box::new(v));
-    }
-    if let Some(v) = patch.related_episode_ids {
-        sets.push("related_episode_ids = ?".to_string());
         params.push(Box::new(v));
     }
     if let Some(v) = patch.note {

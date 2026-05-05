@@ -10,7 +10,6 @@ const buildEntry = (overrides: Partial<LifeTimelineEntry> & { id: string }): Lif
   category: 'work',
   summary: '新卒で入社',
   detail: '',
-  relatedEpisodeIds: [],
   tags: [],
   createdAt: '2026-04-29T00:00:00Z',
   updatedAt: '2026-04-29T00:00:00Z',

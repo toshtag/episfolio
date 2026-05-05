@@ -8,7 +8,6 @@ export type StrengthArrow = {
   description: string;
   source: string;
   occurredAt: ISO8601 | null;
-  relatedEpisodeIds: ULID[];
   note: string | null;
   createdAt: ISO8601;
   updatedAt: ISO8601;

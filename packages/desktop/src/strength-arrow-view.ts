@@ -14,7 +14,6 @@ type FormState = {
   description: string;
   source: string;
   occurredAt: string;
-  relatedEpisodeIds: string;
   note: string;
 };
 
@@ -36,7 +35,6 @@ function emptyForm(): FormState {
     description: '',
     source: '',
     occurredAt: '',
-    relatedEpisodeIds: '',
     note: '',
   };
 }
@@ -47,16 +45,8 @@ function arrowToForm(a: StrengthArrow): FormState {
     description: a.description,
     source: a.source,
     occurredAt: a.occurredAt ?? '',
-    relatedEpisodeIds: a.relatedEpisodeIds.join(', '),
     note: a.note ?? '',
   };
-}
-
-function parseRelatedIds(raw: string): string[] {
-  return raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
 }
 
 class StrengthArrowView extends LitElement {
@@ -134,7 +124,6 @@ class StrengthArrowView extends LitElement {
     this.error = '';
     try {
       const f = this.form;
-      const relatedEpisodeIds = parseRelatedIds(f.relatedEpisodeIds);
       const occurredAt = f.occurredAt.trim() || null;
       const note = f.note.trim() || null;
 
@@ -144,7 +133,6 @@ class StrengthArrowView extends LitElement {
           description: f.description,
           source: f.source,
           occurredAt,
-          relatedEpisodeIds,
           note,
         });
         this.arrows = this.arrows.map((a) => (a.id === updated.id ? updated : a));
@@ -155,7 +143,6 @@ class StrengthArrowView extends LitElement {
           description: f.description,
           source: f.source,
           occurredAt,
-          relatedEpisodeIds,
           note,
         });
         this.arrows = [...this.arrows, created];
@@ -396,11 +383,6 @@ class StrengthArrowView extends LitElement {
         <div class="section-title">詳細</div>
         <div class="detail-field"><span class="detail-label">相手: </span>${a.source || '（未入力）'}</div>
         ${a.occurredAt ? html`<div class="detail-field"><span class="detail-label">時期: </span>${a.occurredAt}</div>` : ''}
-        ${
-          a.relatedEpisodeIds.length > 0
-            ? html`<div class="detail-field"><span class="detail-label">関連エピソード: </span>${a.relatedEpisodeIds.join(', ')}</div>`
-            : ''
-        }
         ${a.note ? html`<div class="detail-field"><span class="detail-label">メモ: </span>${a.note}</div>` : ''}
       </div>
       ${this.showPreview ? this._renderPreview() : ''}
@@ -452,12 +434,6 @@ class StrengthArrowView extends LitElement {
           @input=${(e: Event) => {
             this.form = { ...f, occurredAt: (e.target as HTMLInputElement).value };
           }} />
-        <label>関連エピソード ID（任意・カンマ区切り）</label>
-        <input type="text" placeholder="例: 01EP0001, 01EP0002" .value=${f.relatedEpisodeIds}
-          @input=${(e: Event) => {
-            this.form = { ...f, relatedEpisodeIds: (e.target as HTMLInputElement).value };
-          }} />
-        <p class="hint">エピソードタブの ID をカンマ区切りで入力してください</p>
         <label>メモ（任意）</label>
         <textarea placeholder="面接で補足したいことなど" .value=${f.note}
           @input=${(e: Event) => {

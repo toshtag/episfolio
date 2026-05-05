@@ -8,7 +8,6 @@ export const StrengthArrowSchema = z.object({
   description: z.string(),
   source: z.string(),
   occurredAt: z.string().min(1).nullable(),
-  relatedEpisodeIds: z.array(z.string().min(1)),
   note: z.string().nullable(),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
@@ -28,7 +27,6 @@ export const StrengthArrowUpdateSchema = StrengthArrowSchema.pick({
   description: true,
   source: true,
   occurredAt: true,
-  relatedEpisodeIds: true,
   note: true,
 }).partial();
 
