@@ -37,6 +37,7 @@ type Tab =
 
 type LazyTab = Exclude<Tab, 'episodes'>;
 type LazyView = LazyTab | 'episode-detail';
+type TabGroup = 'core' | 'application' | 'interview' | 'proof' | 'company' | 'system';
 
 const VIEW_LOADERS: Record<LazyView, () => Promise<unknown>> = {
   'episode-detail': () => import('./episode-detail-view.js'),
@@ -71,37 +72,46 @@ const VIEW_LOADERS: Record<LazyView, () => Promise<unknown>> = {
   settings: () => import('./settings-view.js'),
 };
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'episodes', label: 'エピソード' },
-  { id: 'evidence', label: 'エビデンス' },
-  { id: 'documents', label: 'ドキュメント' },
-  { id: 'timeline', label: '年表' },
-  { id: 'job-targets', label: '求人' },
-  { id: 'interview-qa', label: '面接の赤本' },
-  { id: 'interview-report', label: '面接後報告' },
-  { id: 'agent-track-records', label: 'エージェント' },
-  { id: 'agent-meeting-emails', label: '面談メール' },
-  { id: 'job-wish-sheets', label: '希望シート' },
-  { id: 'application-motives', label: '志望動機' },
-  { id: 'boss-references', label: '上司リファレンス' },
-  { id: 'customer-references', label: '顧客リファレンス' },
-  { id: 'strength-arrows', label: '三つの矢印' },
-  { id: 'work-asset-summaries', label: '仕事資料' },
-  { id: 'subordinate-summaries', label: '部下まとめ' },
-  { id: 'result-by-types', label: '3 タイプの実績' },
-  { id: 'strength-from-weakness', label: '弱みを武器に' },
-  { id: 'microchop-skill', label: 'みじん切り' },
-  { id: 'weak-connection', label: '弱いつながり' },
-  { id: 'company-certification', label: '認定・認証' },
-  { id: 'business-unit-type-match', label: '事業部タイプ相性' },
-  { id: 'monster-company-check', label: 'モンスター企業判定' },
-  { id: 'recruitment-impression', label: '採用印象メモ' },
-  { id: 'salary-benchmark', label: '給料分析' },
-  { id: 'hidden-gem-note', label: '隠れ優良企業' },
-  { id: 'growth-cycle-note', label: '成長サイクル' },
-  { id: 'resignation-plan', label: '退職交渉' },
-  { id: 'digest', label: 'ダイジェスト' },
-  { id: 'settings', label: '設定' },
+const TAB_GROUPS: { id: TabGroup; label: string }[] = [
+  { id: 'core', label: '素材' },
+  { id: 'application', label: '応募' },
+  { id: 'interview', label: '面接' },
+  { id: 'proof', label: '実績' },
+  { id: 'company', label: '企業' },
+  { id: 'system', label: '設定' },
+];
+
+const TABS: { id: Tab; label: string; group: TabGroup }[] = [
+  { id: 'episodes', label: 'エピソード', group: 'core' },
+  { id: 'evidence', label: 'エビデンス', group: 'core' },
+  { id: 'documents', label: 'ドキュメント', group: 'core' },
+  { id: 'timeline', label: '年表', group: 'core' },
+  { id: 'digest', label: 'ダイジェスト', group: 'core' },
+  { id: 'job-targets', label: '求人', group: 'application' },
+  { id: 'job-wish-sheets', label: '希望シート', group: 'application' },
+  { id: 'application-motives', label: '志望動機', group: 'application' },
+  { id: 'resignation-plan', label: '退職交渉', group: 'application' },
+  { id: 'interview-qa', label: '面接の赤本', group: 'interview' },
+  { id: 'interview-report', label: '面接後報告', group: 'interview' },
+  { id: 'agent-track-records', label: 'エージェント', group: 'interview' },
+  { id: 'agent-meeting-emails', label: '面談メール', group: 'interview' },
+  { id: 'boss-references', label: '上司リファレンス', group: 'proof' },
+  { id: 'customer-references', label: '顧客リファレンス', group: 'proof' },
+  { id: 'strength-arrows', label: '三つの矢印', group: 'proof' },
+  { id: 'work-asset-summaries', label: '仕事資料', group: 'proof' },
+  { id: 'subordinate-summaries', label: '部下まとめ', group: 'proof' },
+  { id: 'result-by-types', label: '3 タイプの実績', group: 'proof' },
+  { id: 'strength-from-weakness', label: '弱みを武器に', group: 'proof' },
+  { id: 'microchop-skill', label: 'みじん切り', group: 'proof' },
+  { id: 'weak-connection', label: '弱いつながり', group: 'proof' },
+  { id: 'company-certification', label: '認定・認証', group: 'company' },
+  { id: 'business-unit-type-match', label: '事業部タイプ相性', group: 'company' },
+  { id: 'monster-company-check', label: 'モンスター企業判定', group: 'company' },
+  { id: 'recruitment-impression', label: '採用印象メモ', group: 'company' },
+  { id: 'salary-benchmark', label: '給料分析', group: 'company' },
+  { id: 'hidden-gem-note', label: '隠れ優良企業', group: 'company' },
+  { id: 'growth-cycle-note', label: '成長サイクル', group: 'company' },
+  { id: 'settings', label: '設定', group: 'system' },
 ];
 
 const TAB_CONTENT: Record<LazyTab, () => TemplateResult> = {
@@ -141,6 +151,10 @@ function isLazyTab(tab: Tab): tab is LazyTab {
   return tab !== 'episodes';
 }
 
+function groupForTab(tab: Tab): TabGroup {
+  return TABS.find((item) => item.id === tab)?.group ?? 'core';
+}
+
 class EpisodeApp extends LitElement {
   static override properties = {
     episodes: { state: true },
@@ -149,6 +163,7 @@ class EpisodeApp extends LitElement {
     error: { state: true },
     backupError: { state: true },
     tab: { state: true },
+    tabGroup: { state: true },
     selectedId: { state: true },
   };
 
@@ -158,6 +173,7 @@ class EpisodeApp extends LitElement {
   declare error: string;
   declare backupError: string;
   declare tab: Tab;
+  declare tabGroup: TabGroup;
   declare selectedId: string;
 
   private readonly loadedViews = new Set<LazyView>();
@@ -172,6 +188,7 @@ class EpisodeApp extends LitElement {
     this.error = '';
     this.backupError = '';
     this.tab = 'episodes';
+    this.tabGroup = 'core';
     this.selectedId = '';
   }
 
@@ -182,23 +199,46 @@ class EpisodeApp extends LitElement {
       color: #1a1a1a;
       max-width: 720px;
     }
-    nav {
+    .group-nav,
+    .tab-nav {
       display: flex;
       gap: 0;
-      border-bottom: 2px solid #ddd;
       padding: 0 1.5rem;
+      overflow-x: auto;
+      white-space: nowrap;
     }
-    nav button {
+    .group-nav {
+      background: #f7f7f7;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .tab-nav {
+      border-bottom: 2px solid #ddd;
+    }
+    .group-nav button,
+    .tab-nav button {
       background: none;
       border: none;
       border-bottom: 2px solid transparent;
+      cursor: pointer;
+    }
+    .group-nav button {
+      margin-bottom: -1px;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.82rem;
+      color: #555;
+    }
+    .tab-nav button {
       margin-bottom: -2px;
       padding: 0.6rem 1rem;
       font-size: 0.9rem;
-      cursor: pointer;
       color: #888;
     }
-    nav button.active {
+    .group-nav button.active {
+      color: #1a1a1a;
+      border-bottom-color: #1a1a1a;
+      font-weight: 600;
+    }
+    .tab-nav button.active {
       color: #1a1a1a;
       border-bottom-color: #1a1a1a;
       font-weight: 600;
@@ -287,6 +327,20 @@ class EpisodeApp extends LitElement {
     void this.ensureView('episode-detail');
   }
 
+  private activateTab(id: Tab) {
+    this.tab = id;
+    this.tabGroup = groupForTab(id);
+    if (id === 'episodes') this.selectedId = '';
+    if (isLazyTab(id)) void this.ensureView(id);
+  }
+
+  private activateGroup(group: TabGroup) {
+    this.tabGroup = group;
+    if (groupForTab(this.tab) === group) return;
+    const firstTab = TABS.find((item) => item.group === group);
+    if (firstTab) this.activateTab(firstTab.id);
+  }
+
   private async handleBack() {
     this.selectedId = '';
     await this.loadEpisodes();
@@ -298,17 +352,24 @@ class EpisodeApp extends LitElement {
   }
 
   private renderNav() {
+    const visibleTabs = TABS.filter((item) => item.group === this.tabGroup);
     return html`
-      <nav>
-        ${TABS.map(
+      <nav class="group-nav" aria-label="機能カテゴリ">
+        ${TAB_GROUPS.map(
+          ({ id, label }) => html`
+          <button
+            class=${this.tabGroup === id ? 'active' : ''}
+            @click=${() => this.activateGroup(id)}
+          >${label}</button>
+        `,
+        )}
+      </nav>
+      <nav class="tab-nav" aria-label="機能">
+        ${visibleTabs.map(
           ({ id, label }) => html`
           <button
             class=${this.tab === id ? 'active' : ''}
-            @click=${() => {
-              this.tab = id;
-              if (id === 'episodes') this.selectedId = '';
-              if (isLazyTab(id)) void this.ensureView(id);
-            }}
+            @click=${() => this.activateTab(id)}
           >${label}</button>
         `,
         )}
