@@ -15,8 +15,6 @@ import {
   getDocument,
   listDocuments,
 } from './ipc/documents.js';
-import type { SkillEvidenceRow } from './ipc/evidence.js';
-import { listSkillEvidence } from './ipc/evidence.js';
 import { listJobTargets } from './ipc/job-targets.js';
 import { waitForTauri } from './ipc/tauri-ready.js';
 
@@ -44,7 +42,6 @@ class DocumentView extends LitElement {
     documents: { state: true },
     selected: { state: true },
     revisions: { state: true },
-    acceptedEvidences: { state: true },
     jobTargets: { state: true },
     viewState: { state: true },
     newTitle: { state: true },
@@ -56,7 +53,6 @@ class DocumentView extends LitElement {
     editRevisionReason: { state: true },
     editTargetMemo: { state: true },
     editJobTargetId: { state: true },
-    selectedEvidenceId: { state: true },
     expandedRevisionId: { state: true },
     isSaving: { state: true },
     error: { state: true },
@@ -68,7 +64,6 @@ class DocumentView extends LitElement {
   declare documents: CareerDocumentRow[];
   declare selected: CareerDocumentRow | null;
   declare revisions: DocumentRevisionRow[];
-  declare acceptedEvidences: SkillEvidenceRow[];
   declare jobTargets: JobTarget[];
   declare viewState: ViewState;
   declare newTitle: string;
@@ -80,7 +75,6 @@ class DocumentView extends LitElement {
   declare editRevisionReason: string;
   declare editTargetMemo: string;
   declare editJobTargetId: string;
-  declare selectedEvidenceId: string;
   declare expandedRevisionId: string;
   declare isSaving: boolean;
   declare error: string;
@@ -93,7 +87,6 @@ class DocumentView extends LitElement {
     this.documents = [];
     this.selected = null;
     this.revisions = [];
-    this.acceptedEvidences = [];
     this.jobTargets = [];
     this.viewState = 'list';
     this.newTitle = '';
@@ -105,7 +98,6 @@ class DocumentView extends LitElement {
     this.editRevisionReason = '';
     this.editTargetMemo = '';
     this.editJobTargetId = '';
-    this.selectedEvidenceId = '';
     this.expandedRevisionId = '';
     this.isSaving = false;
     this.error = '';
@@ -313,13 +305,8 @@ class DocumentView extends LitElement {
 
   private async loadAll() {
     try {
-      const [docs, evidences, targets] = await Promise.all([
-        listDocuments(),
-        listSkillEvidence(),
-        listJobTargets(),
-      ]);
+      const [docs, targets] = await Promise.all([listDocuments(), listJobTargets()]);
       this.documents = docs;
-      this.acceptedEvidences = evidences.filter((ev) => ev.status === 'accepted');
       this.jobTargets = targets;
     } catch (e) {
       this.error = String(e);
@@ -366,14 +353,6 @@ class DocumentView extends LitElement {
     this.viewState = 'list';
   }
 
-  private handleInsertEvidence() {
-    const ev = this.acceptedEvidences.find((e) => e.id === this.selectedEvidenceId);
-    if (!ev) return;
-    const line = `- ${ev.strengthLabel}: ${ev.description}`;
-    this.editContent = this.editContent ? `${this.editContent}\n${line}` : line;
-    this.selectedEvidenceId = '';
-  }
-
   private async handleCreate() {
     const title = this.newTitle.trim();
     if (!title) {
@@ -390,7 +369,6 @@ class DocumentView extends LitElement {
         title,
         template: this.newTemplate,
         content: this.editContent,
-        sourceEvidenceIds: [],
         ...(reason ? { revisionReason: reason } : {}),
         ...(memo ? { targetMemo: memo } : {}),
         ...(jobTargetId ? { jobTargetId } : {}),
@@ -420,7 +398,6 @@ class DocumentView extends LitElement {
       const args: CreateRevisionManualArgs = {
         documentId: this.selected.id,
         content: this.editContent,
-        sourceEvidenceIds: [],
         revisionReason: reason,
         ...(memo ? { targetMemo: memo } : {}),
         ...(jobTargetId ? { jobTargetId } : {}),
@@ -529,7 +506,6 @@ class DocumentView extends LitElement {
           placeholder="例: A 社書類選考用"
         />
       </div>
-      ${this.renderInsertRow()}
       <div class="field">
         <label>本文（Markdown）</label>
         <textarea
@@ -609,7 +585,6 @@ class DocumentView extends LitElement {
           placeholder="例: B 社一次面接用"
         />
       </div>
-      ${this.renderInsertRow()}
       <div class="field">
         <label>本文（Markdown）</label>
         <textarea
@@ -797,30 +772,6 @@ class DocumentView extends LitElement {
           >閉じる</button>
         </div>
         <div class="print-body">${unsafeHTML(safe)}</div>
-      </div>
-    `;
-  }
-
-  private renderInsertRow() {
-    if (this.acceptedEvidences.length === 0) return html``;
-    return html`
-      <div class="insert-row">
-        <select
-          .value=${this.selectedEvidenceId}
-          @change=${(e: Event) => {
-            this.selectedEvidenceId = (e.target as HTMLSelectElement).value;
-          }}
-        >
-          <option value="">— Evidence を選択して挿入 —</option>
-          ${this.acceptedEvidences.map(
-            (ev) => html`<option value=${ev.id}>${ev.strengthLabel}</option>`,
-          )}
-        </select>
-        <button
-          class="secondary"
-          @click=${this.handleInsertEvidence}
-          ?disabled=${!this.selectedEvidenceId}
-        >挿入</button>
       </div>
     `;
   }
