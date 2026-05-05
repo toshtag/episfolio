@@ -25,7 +25,6 @@ pub struct DocumentRevisionRow {
     pub id: String,
     pub document_id: String,
     pub content: String,
-    pub source_ai_run_id: Option<String>,
     pub created_by: String,
     pub revision_reason: String,
     pub target_memo: String,
@@ -50,18 +49,17 @@ fn revision_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DocumentRevisi
         id: row.get(0)?,
         document_id: row.get(1)?,
         content: row.get(2)?,
-        source_ai_run_id: row.get(3)?,
-        created_by: row.get(4)?,
-        revision_reason: row.get(5).unwrap_or_default(),
-        target_memo: row.get(6).unwrap_or_default(),
-        job_target_id: row.get(7).unwrap_or(None),
-        previous_revision_id: row.get(8).unwrap_or(None),
-        created_at: row.get(9)?,
+        created_by: row.get(3)?,
+        revision_reason: row.get(4).unwrap_or_default(),
+        target_memo: row.get(5).unwrap_or_default(),
+        job_target_id: row.get(6).unwrap_or(None),
+        previous_revision_id: row.get(7).unwrap_or(None),
+        created_at: row.get(8)?,
     })
 }
 
 const REVISION_SELECT_COLUMNS: &str =
-    "id, document_id, content, source_ai_run_id, created_by, \
+    "id, document_id, content, created_by, \
      revision_reason, target_memo, job_target_id, previous_revision_id, created_at";
 
 // ──────────────────────────────────────────────
@@ -189,9 +187,9 @@ pub fn create_document_manual(
         let conn = db.lock().map_err(|e| e.to_string())?;
         conn.execute(
             "INSERT INTO document_revisions \
-             (id, document_id, content, source_ai_run_id, created_by, \
+             (id, document_id, content, created_by, \
               revision_reason, target_memo, job_target_id, previous_revision_id, created_at) \
-             VALUES (?1, ?2, ?3, NULL, 'human', ?4, ?5, ?6, NULL, ?7)",
+             VALUES (?1, ?2, ?3, 'human', ?4, ?5, ?6, NULL, ?7)",
             rusqlite::params![
                 rev_id,
                 doc_id,
@@ -207,7 +205,6 @@ pub fn create_document_manual(
             id: rev_id,
             document_id: doc_id.clone(),
             content,
-            source_ai_run_id: None,
             created_by: "human".to_string(),
             revision_reason,
             target_memo,
@@ -282,9 +279,9 @@ pub fn create_document_revision_manual(
 
     conn.execute(
         "INSERT INTO document_revisions \
-         (id, document_id, content, source_ai_run_id, created_by, \
+         (id, document_id, content, created_by, \
           revision_reason, target_memo, job_target_id, previous_revision_id, created_at) \
-         VALUES (?1, ?2, ?3, NULL, 'human', ?4, ?5, ?6, ?7, ?8)",
+         VALUES (?1, ?2, ?3, 'human', ?4, ?5, ?6, ?7, ?8)",
         rusqlite::params![
             rev_id,
             args.document_id,
@@ -310,7 +307,6 @@ pub fn create_document_revision_manual(
         id: rev_id,
         document_id: args.document_id,
         content: args.content,
-        source_ai_run_id: None,
         created_by: "human".to_string(),
         revision_reason,
         target_memo,
