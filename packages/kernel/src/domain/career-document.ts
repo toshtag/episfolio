@@ -19,7 +19,6 @@ export type DocumentRevision = {
   id: ULID;
   documentId: ULID;
   content: string;
-  sourceEvidenceIds: ULID[];
   sourceAIRunId: ULID | null;
   createdBy: 'human' | 'ai';
   revisionReason: string;
