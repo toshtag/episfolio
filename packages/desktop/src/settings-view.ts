@@ -37,7 +37,6 @@ class SettingsView extends LitElement {
       padding: 2rem;
       font-family: system-ui, -apple-system, sans-serif;
       color: #1a1a1a;
-      max-width: 520px;
     }
     h2 { margin: 0 0 1.5rem; font-size: 1.2rem; }
     h3 { margin: 0 0 0.75rem; font-size: 1rem; }

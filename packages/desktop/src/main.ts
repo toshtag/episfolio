@@ -197,7 +197,8 @@ class EpisodeApp extends LitElement {
       display: block;
       font-family: system-ui, -apple-system, sans-serif;
       color: #1a1a1a;
-      max-width: 720px;
+      width: 100%;
+      min-height: 100vh;
     }
     .group-nav,
     .tab-nav {
