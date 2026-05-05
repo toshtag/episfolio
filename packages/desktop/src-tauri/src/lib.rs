@@ -30,10 +30,6 @@ pub fn run() {
             commands::get_episode,
             commands::update_episode,
             commands::delete_episode,
-            // evidence
-            commands::create_skill_evidence_manual,
-            commands::list_skill_evidence,
-            commands::update_skill_evidence_status,
             // documents
             commands::list_documents,
             commands::get_document,
