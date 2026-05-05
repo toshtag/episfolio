@@ -207,6 +207,7 @@ class EpisodeApp extends LitElement {
       gap: 0;
       padding: 0 1.5rem;
       overflow-x: auto;
+      overflow-y: hidden;
       white-space: nowrap;
     }
     .group-nav {
