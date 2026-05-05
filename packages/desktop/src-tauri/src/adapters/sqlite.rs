@@ -54,6 +54,7 @@ const MIGRATIONS: &[Migration] = &[
     migration!("0039", "0039_drop_related_episode_ids.sql"),
     migration!("0040", "0040_drop_source_evidence_ids.sql"),
     migration!("0041", "0041_drop_skill_evidence_and_ai_runs.sql"),
+    migration!("0042", "0042_drop_episodes.sql"),
 ];
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
@@ -124,7 +125,7 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0041_apply_to_fresh_db() {
+    fn migrations_0001_through_0042_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
@@ -134,7 +135,7 @@ mod tests {
 
     #[test]
     fn migration_registry_is_contiguous() {
-        assert_eq!(MIGRATIONS.len(), 41);
+        assert_eq!(MIGRATIONS.len(), 42);
         for (idx, (version, sql)) in MIGRATIONS.iter().enumerate() {
             let expected = format!("{:04}", idx + 1);
             assert_eq!(
@@ -413,24 +414,6 @@ mod tests {
     // ──────────────────────────────────────────────
     // 各テーブル INSERT/SELECT スモーク
     // ──────────────────────────────────────────────
-
-    #[test]
-    fn episodes_insert_and_select_smoke() {
-        let conn = db();
-        conn.execute(
-            "INSERT INTO episodes \
-             (id, title, background, problem, action, ingenuity, result, metrics, before_after, \
-              reproducibility, related_skills, personal_feeling, external_feedback, \
-              remote_llm_allowed, tags, created_at, updated_at) \
-             VALUES ('ep1', 't', '', '', '', '', '', '', '', '', '[]', '', '', 0, '[]', ?1, ?1)",
-            rusqlite::params![TS],
-        )
-        .unwrap();
-        let title: String = conn
-            .query_row("SELECT title FROM episodes WHERE id = 'ep1'", [], |r| r.get(0))
-            .unwrap();
-        assert_eq!(title, "t");
-    }
 
     #[test]
     fn document_revisions_foreign_key_rejects_orphan_document_id() {
