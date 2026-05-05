@@ -6,6 +6,7 @@ import {
   listAgentTrackRecords,
   updateAgentTrackRecord,
 } from './ipc/agent-track-records.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 const CONSULTANT_QUALITY_OPTIONS: { value: ConsultantQuality; label: string }[] = [
   { value: 'excellent', label: '★★★★ 非常に良い' },
@@ -274,7 +275,10 @@ class AgentTrackRecordView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    void this.loadRecords();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this.loadRecords();
+    })();
   }
 
   private async loadRecords() {

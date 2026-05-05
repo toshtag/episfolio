@@ -8,6 +8,7 @@ import {
   updateBusinessUnitTypeMatch,
 } from './ipc/business-unit-type-matches.js';
 import { listJobTargets } from './ipc/job-targets.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   companyUnitType: BusinessUnitType | '';
@@ -140,6 +141,7 @@ export class BusinessUnitTypeMatchView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this._loadJobTargets();
   }
 

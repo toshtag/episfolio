@@ -7,6 +7,7 @@ import {
   listBossReferences,
   updateBossReference,
 } from './ipc/boss-references.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 const AXIS_LABELS: Array<{ key: keyof BossReferenceAxisValues; left: string; right: string }> = [
   { key: 'logicVsEmotion', left: '論理重視', right: '感性重視' },
@@ -117,7 +118,10 @@ class BossReferenceView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this._load();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this._load();
+    })();
   }
 
   async _load() {

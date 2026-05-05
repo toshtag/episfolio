@@ -1,5 +1,6 @@
 import { css, html, LitElement } from 'lit';
 import { listBackups, restoreBackup } from './ipc/backup.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 class SettingsView extends LitElement {
   static override properties = {
@@ -97,6 +98,7 @@ class SettingsView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.loadBackups();
   }
 

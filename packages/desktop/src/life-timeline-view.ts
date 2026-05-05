@@ -6,6 +6,7 @@ import {
   listLifeTimelineEntries,
   updateLifeTimelineEntry,
 } from './ipc/life-timeline.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 const CATEGORIES = [
   { value: 'education', label: '学業' },
@@ -196,6 +197,7 @@ class LifeTimelineView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.load();
   }
 

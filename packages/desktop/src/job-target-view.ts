@@ -12,6 +12,7 @@ import {
   listJobTargets,
   updateJobTarget,
 } from './ipc/job-targets.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 const STATUSES: { value: JobTarget['status']; label: string }[] = [
   { value: 'researching', label: '調査中' },
@@ -355,6 +356,7 @@ class JobTargetView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.load();
   }
 

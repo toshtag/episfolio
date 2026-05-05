@@ -1,6 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import type { SkillEvidenceRow } from './ipc/evidence.js';
 import { listSkillEvidence, updateSkillEvidenceStatus } from './ipc/evidence.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type Status = 'idle' | 'loading' | 'updating' | 'error';
 
@@ -118,6 +119,7 @@ class EvidenceListView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.load();
   }
 

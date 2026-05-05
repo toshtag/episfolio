@@ -12,6 +12,7 @@ import {
   updateInterviewReport,
 } from './ipc/interview-reports.js';
 import { listJobTargets } from './ipc/job-targets.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 const STAGES: { value: InterviewReport['stage']; label: string }[] = [
   { value: 'first', label: '一次面接' },
@@ -310,7 +311,10 @@ class InterviewReportView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    void this.loadJobTargets();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this.loadJobTargets();
+    })();
   }
 
   private async loadJobTargets() {

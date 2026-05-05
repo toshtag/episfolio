@@ -7,6 +7,7 @@ import {
   listStrengthArrows,
   updateStrengthArrow,
 } from './ipc/strength-arrows.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   type: StrengthArrowType;
@@ -96,7 +97,10 @@ class StrengthArrowView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this._load();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this._load();
+    })();
   }
 
   async _load() {

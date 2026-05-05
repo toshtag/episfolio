@@ -8,6 +8,7 @@ import {
   listSalaryBenchmarksByJobTarget,
   updateSalaryBenchmark,
 } from './ipc/salary-benchmarks.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   averageSalaryAtCompany: string;
@@ -154,6 +155,7 @@ export class SalaryBenchmarkView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this._loadJobTargets();
   }
 

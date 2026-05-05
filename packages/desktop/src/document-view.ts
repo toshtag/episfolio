@@ -18,6 +18,7 @@ import {
 import type { SkillEvidenceRow } from './ipc/evidence.js';
 import { listSkillEvidence } from './ipc/evidence.js';
 import { listJobTargets } from './ipc/job-targets.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type Template = 'resume' | 'skill-summary' | 'blank';
 type ViewState = 'list' | 'new' | 'edit';
@@ -306,6 +307,7 @@ class DocumentView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.loadAll();
   }
 

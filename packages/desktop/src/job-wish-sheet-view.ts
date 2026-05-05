@@ -8,6 +8,7 @@ import {
   listJobWishSheets,
   updateJobWishSheet,
 } from './ipc/job-wish-sheets.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type CompanyGroup = 'groupACompanies' | 'groupBCompanies' | 'groupCCompanies';
 
@@ -194,7 +195,10 @@ class JobWishSheetView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this.load();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this.load();
+    })();
   }
 
   private async load() {

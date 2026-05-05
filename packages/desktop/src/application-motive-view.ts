@@ -20,6 +20,7 @@ import {
   listResignationMotives,
   updateResignationMotive,
 } from './ipc/resignation-motives.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 class ApplicationMotiveView extends LitElement {
   static override properties = {
@@ -176,6 +177,7 @@ class ApplicationMotiveView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.load();
   }
 

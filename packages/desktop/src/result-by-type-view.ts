@@ -7,6 +7,7 @@ import {
   listResultByType,
   updateResultByType,
 } from './ipc/result-by-type.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type SkillType = 'outcome' | 'cause';
 
@@ -169,6 +170,7 @@ class ResultByTypeView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this._load();
   }
 
