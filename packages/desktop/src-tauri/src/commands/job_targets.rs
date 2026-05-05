@@ -129,8 +129,8 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<JobTargetRow> {
         job_title: row.get(2)?,
         job_description: row.get(3)?,
         status: row.get(4)?,
-        required_skills: serde_json::from_str(&required_json).unwrap_or_default(),
-        preferred_skills: serde_json::from_str(&preferred_json).unwrap_or_default(),
+        required_skills: super::parse_json_column(5, &required_json)?,
+        preferred_skills: super::parse_json_column(6, &preferred_json)?,
         concerns: row.get(7)?,
         appeal_points: row.get(8)?,
         annual_holidays: row.get(9)?,
@@ -483,6 +483,7 @@ fn is_leap(y: u64) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::adapters::sqlite;
 
     fn create_args() -> CreateJobTargetArgs {
         CreateJobTargetArgs {
@@ -581,5 +582,34 @@ mod tests {
         assert!(validate_job_target_update_args(&patch)
             .unwrap_err()
             .contains("fixedOvertimeHours"));
+    }
+
+    #[test]
+    fn job_target_row_rejects_malformed_skill_json() {
+        let conn = sqlite::open_in_memory_with_migrations().unwrap();
+        let ts = "2026-05-04T00:00:00Z";
+        conn.execute(
+            "INSERT INTO job_targets \
+             (id, company_name, job_title, job_description, status, \
+              required_skills, preferred_skills, concerns, appeal_points, created_at, updated_at) \
+             VALUES (?1, 'Acme', 'Engineer', '', 'researching', '{bad json', '[]', '', '', ?2, ?2)",
+            rusqlite::params!["jt_bad_json", ts],
+        )
+        .unwrap();
+
+        let sql = format!("SELECT {SELECT_COLUMNS} FROM job_targets WHERE id = ?1");
+        let mut stmt = conn.prepare(&sql).unwrap();
+        let error = stmt
+            .query_row(rusqlite::params!["jt_bad_json"], row_from_query)
+            .unwrap_err();
+
+        assert!(matches!(
+            error,
+            rusqlite::Error::FromSqlConversionFailure(
+                5,
+                rusqlite::types::Type::Text,
+                _
+            )
+        ));
     }
 }

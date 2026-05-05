@@ -25,7 +25,7 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<JobRequirementMap
         id: row.get(0)?,
         job_target_id: row.get(1)?,
         requirement_skill_id: row.get(2)?,
-        episode_ids: serde_json::from_str(&episode_ids_json).unwrap_or_default(),
+        episode_ids: super::parse_json_column(3, &episode_ids_json)?,
         user_note: row.get(4)?,
         created_at: row.get(5)?,
         updated_at: row.get(6)?,

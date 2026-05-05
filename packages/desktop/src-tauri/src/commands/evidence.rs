@@ -32,7 +32,7 @@ fn evidence_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<SkillEvidenceR
         id: row.get(0)?,
         strength_label: row.get(1)?,
         description: row.get(2)?,
-        evidence_episode_ids: serde_json::from_str(&ids_json).unwrap_or_default(),
+        evidence_episode_ids: super::parse_json_column(3, &ids_json)?,
         reproducibility: row.get(4)?,
         evaluated_context: row.get(5)?,
         confidence: row.get(6)?,
