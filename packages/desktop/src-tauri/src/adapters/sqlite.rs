@@ -47,6 +47,10 @@ const MIGRATIONS: &[Migration] = &[
     migration!("0035", "0035_extend_agent_track_records.sql"),
     migration!("0036", "0036_extend_interview_reports.sql"),
     migration!("0037", "0037_add_resignation_plans.sql"),
+    migration!(
+        "0038",
+        "0038_change_job_requirement_mapping_to_life_timeline.sql"
+    ),
 ];
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
@@ -117,7 +121,7 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0037_apply_to_fresh_db() {
+    fn migrations_0001_through_0038_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
@@ -127,7 +131,7 @@ mod tests {
 
     #[test]
     fn migration_registry_is_contiguous() {
-        assert_eq!(MIGRATIONS.len(), 37);
+        assert_eq!(MIGRATIONS.len(), 38);
         for (idx, (version, sql)) in MIGRATIONS.iter().enumerate() {
             let expected = format!("{:04}", idx + 1);
             assert_eq!(
@@ -632,13 +636,19 @@ mod tests {
         id: &str,
         job_target_id: &str,
         requirement_skill_id: &str,
-        episode_ids_json: &str,
+        life_timeline_entry_ids_json: &str,
     ) -> rusqlite::Result<usize> {
         conn.execute(
             "INSERT INTO job_requirement_mappings \
-             (id, job_target_id, requirement_skill_id, episode_ids, user_note, created_at, updated_at) \
+             (id, job_target_id, requirement_skill_id, life_timeline_entry_ids, user_note, created_at, updated_at) \
              VALUES (?1, ?2, ?3, ?4, '', ?5, ?5)",
-            rusqlite::params![id, job_target_id, requirement_skill_id, episode_ids_json, TS],
+            rusqlite::params![
+                id,
+                job_target_id,
+                requirement_skill_id,
+                life_timeline_entry_ids_json,
+                TS
+            ],
         )
     }
 
@@ -651,19 +661,19 @@ mod tests {
             "jrm1",
             "jt1",
             "skill_1",
-            r#"["ep1","ep2"]"#,
+            r#"["lt1","lt2"]"#,
         )
         .unwrap();
 
-        let (req_skill, eps_json): (String, String) = conn
+        let (req_skill, entries_json): (String, String) = conn
             .query_row(
-                "SELECT requirement_skill_id, episode_ids FROM job_requirement_mappings WHERE id = 'jrm1'",
+                "SELECT requirement_skill_id, life_timeline_entry_ids FROM job_requirement_mappings WHERE id = 'jrm1'",
                 [],
                 |r| Ok((r.get(0)?, r.get(1)?)),
             )
             .unwrap();
         assert_eq!(req_skill, "skill_1");
-        assert_eq!(eps_json, r#"["ep1","ep2"]"#);
+        assert_eq!(entries_json, r#"["lt1","lt2"]"#);
     }
 
     #[test]
