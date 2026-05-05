@@ -32,7 +32,6 @@ export type {
 export type { CompanyCertification } from './domain/company-certification.js';
 export type { CustomerReference, CustomerType } from './domain/customer-reference.js';
 // domain
-export type { Episode } from './domain/episode.js';
 export type { GrowthCycleNote, GrowthStage } from './domain/growth-cycle-note.js';
 export type { HiddenGemNote } from './domain/hidden-gem-note.js';
 export type {
@@ -137,7 +136,6 @@ export type { ResignationPlanStoragePort } from './ports/resignation-plan-storag
 export type { ResultByTypeStoragePort } from './ports/result-by-type-storage-port.js';
 export type { SalaryBenchmarkStoragePort } from './ports/salary-benchmark-storage-port.js';
 export type { SettingsStoragePort } from './ports/settings-storage-port.js';
-export type { EpisodeStoragePort } from './ports/storage-port.js';
 export type { StrengthArrowStoragePort } from './ports/strength-arrow-storage-port.js';
 export type { StrengthFromWeaknessStoragePort } from './ports/strength-from-weakness-storage-port.js';
 export type { SubordinateSummaryStoragePort } from './ports/subordinate-summary-storage-port.js';
@@ -224,8 +222,6 @@ export {
   CustomerReferenceUpdateSchema,
   CustomerTypeSchema,
 } from './schemas/customer-reference.js';
-export type { EpisodeDraft, EpisodeInput, EpisodeUpdate } from './schemas/episode.js';
-export { EpisodeDraftSchema, EpisodeSchema, EpisodeUpdateSchema } from './schemas/episode.js';
 export type {
   GrowthCycleNoteCreate,
   GrowthCycleNoteInput,
