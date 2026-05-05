@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 import type { GenerateDocumentOutput } from '../../src/contracts/generate-document.js';
 import type { AIRun } from '../../src/domain/ai-run.js';
 import type { CareerDocument, DocumentRevision } from '../../src/domain/career-document.js';
+import type { Episode } from '../../src/domain/episode.js';
 import type { SkillEvidence } from '../../src/domain/skill-evidence.js';
+import { RemoteLLMBlockedError } from '../../src/errors.js';
 import type {
   AIProviderPort,
   AIRequest,
@@ -12,6 +14,7 @@ import type {
 import type { AIRunStoragePort } from '../../src/ports/ai-run-storage-port.js';
 import type { CareerDocumentStoragePort } from '../../src/ports/career-document-storage-port.js';
 import type { DocumentRevisionStoragePort } from '../../src/ports/document-revision-storage-port.js';
+import type { EpisodeStoragePort } from '../../src/ports/storage-port.js';
 import type { GenerateDocumentDeps } from '../../src/usecases/generate-document.js';
 import { generateDocument } from '../../src/usecases/generate-document.js';
 
@@ -40,6 +43,27 @@ const makeEvidence = (overrides: Partial<SkillEvidence> = {}): SkillEvidence => 
   status: 'accepted',
   createdBy: 'ai',
   sourceAIRunId: null,
+  createdAt: '2026-04-29T00:00:00Z',
+  updatedAt: '2026-04-29T00:00:00Z',
+  ...overrides,
+});
+
+const makeEpisode = (overrides: Partial<Episode> = {}): Episode => ({
+  id: '01EP0001',
+  title: 'タイトル',
+  background: '',
+  problem: '',
+  action: '',
+  ingenuity: '',
+  result: '',
+  metrics: '',
+  beforeAfter: '',
+  reproducibility: '',
+  relatedSkills: [],
+  personalFeeling: '',
+  externalFeedback: '',
+  remoteLLMAllowed: true,
+  tags: [],
   createdAt: '2026-04-29T00:00:00Z',
   updatedAt: '2026-04-29T00:00:00Z',
   ...overrides,
@@ -80,6 +104,14 @@ function makeDeps(): GenerateDocumentDeps {
     testConnection: vi.fn(),
   };
 
+  const episodeStorage: EpisodeStoragePort = {
+    create: vi.fn().mockImplementation(async (episode: Episode) => episode),
+    list: vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockImplementation(async (id: string) => makeEpisode({ id })),
+    update: vi.fn(),
+    delete: vi.fn(),
+  };
+
   const documentStorage: CareerDocumentStoragePort = {
     save: vi.fn().mockImplementation(async (doc: CareerDocument) => doc),
     list: vi.fn().mockResolvedValue([]),
@@ -101,6 +133,7 @@ function makeDeps(): GenerateDocumentDeps {
 
   return {
     aiProvider,
+    episodeStorage,
     documentStorage,
     revisionStorage,
     aiRunStorage,
@@ -153,6 +186,38 @@ describe('generateDocument usecase', () => {
     expect(savedRun.promptHash).toBe('mock-hash');
     expect(savedRun.purpose).toBe('generate_document');
     expect(savedRun.inputReferences?.evidenceIds).toEqual(['01EVIDENCE0001']);
+  });
+
+  it('remote provider に remoteLLMAllowed=false の元エピソードを持つ Evidence を渡すとブロックする', async () => {
+    const deps = makeDeps();
+    vi.mocked(deps.episodeStorage.get).mockResolvedValue(
+      makeEpisode({ id: 'blocked-001', remoteLLMAllowed: false }),
+    );
+
+    await expect(
+      generateDocument([makeEvidence({ evidenceEpisodeIds: ['blocked-001'] })], 'PM', deps),
+    ).rejects.toThrow(RemoteLLMBlockedError);
+    expect(deps.aiProvider.generate).not.toHaveBeenCalled();
+  });
+
+  it('local provider は remoteLLMAllowed=false の元エピソードを持つ Evidence でもブロックしない', async () => {
+    const deps = makeDeps();
+    deps.aiProvider = {
+      ...deps.aiProvider,
+      config: { ...remoteConfig, id: 'ollama', privacyLevel: 'local' },
+    };
+    vi.mocked(deps.episodeStorage.get).mockResolvedValue(
+      makeEpisode({ id: 'local-only', remoteLLMAllowed: false }),
+    );
+
+    const result = await generateDocument(
+      [makeEvidence({ evidenceEpisodeIds: ['local-only'] })],
+      'PM',
+      deps,
+    );
+
+    expect(result.revision.sourceAIRunId).toBe('run-id-001');
+    expect(deps.aiProvider.generate).toHaveBeenCalledOnce();
   });
 
   it('parse エラー時は空コンテンツのリビジョンを返し AIRun は保存する', async () => {

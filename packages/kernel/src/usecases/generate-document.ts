@@ -7,14 +7,17 @@ import type { AIRun } from '../domain/ai-run.js';
 import type { CareerDocument, DocumentRevision } from '../domain/career-document.js';
 import type { ISO8601, ULID } from '../domain/episode.js';
 import type { SkillEvidence } from '../domain/skill-evidence.js';
+import { RemoteLLMBlockedError } from '../errors.js';
 import type { AIProviderPort } from '../ports/ai-provider-port.js';
 import type { AIRunStoragePort } from '../ports/ai-run-storage-port.js';
 import type { CareerDocumentStoragePort } from '../ports/career-document-storage-port.js';
 import type { DocumentRevisionStoragePort } from '../ports/document-revision-storage-port.js';
+import type { EpisodeStoragePort } from '../ports/storage-port.js';
 import { PROMPT_ID, PROMPT_TEMPLATE, PROMPT_VERSION } from '../prompts/generate-document-v1.js';
 
 export type GenerateDocumentDeps = {
   aiProvider: AIProviderPort;
+  episodeStorage: EpisodeStoragePort;
   documentStorage: CareerDocumentStoragePort;
   revisionStorage: DocumentRevisionStoragePort;
   aiRunStorage: AIRunStoragePort;
@@ -50,6 +53,29 @@ function buildPrompt(evidences: SkillEvidence[], jobTarget: string): GenerateDoc
     systemPrompt,
     userPrompt: `上記 ${evidences.length} 件のエビデンスをもとに、「${jobTarget}」向けの職務経歴書強みセクションを生成してください。`,
   };
+}
+
+async function ensureRemoteProviderCanUseEvidences(
+  evidences: SkillEvidence[],
+  deps: GenerateDocumentDeps,
+): Promise<void> {
+  if (deps.aiProvider.config.privacyLevel !== 'remote') {
+    return;
+  }
+
+  const episodeIds = [...new Set(evidences.flatMap((ev) => ev.evidenceEpisodeIds))];
+  if (episodeIds.length === 0) {
+    return;
+  }
+
+  const sourceEpisodes = await Promise.all(episodeIds.map((id) => deps.episodeStorage.get(id)));
+  const blockedEpisodeIds = sourceEpisodes.flatMap((episode) =>
+    episode !== null && !episode.remoteLLMAllowed ? [episode.id] : [],
+  );
+
+  if (blockedEpisodeIds.length > 0) {
+    throw new RemoteLLMBlockedError(blockedEpisodeIds);
+  }
 }
 
 export async function generateDocument(
@@ -88,6 +114,8 @@ export async function generateDocument(
     const savedRevision = await deps.revisionStorage.save(emptyRevision);
     return { document: savedDoc, revision: savedRevision };
   }
+
+  await ensureRemoteProviderCanUseEvidences(evidences, deps);
 
   const promptHash = await deps.hashFn(PROMPT_TEMPLATE);
   const inputs = buildPrompt(evidences, jobTarget);
