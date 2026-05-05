@@ -11,6 +11,8 @@ const invokeMock = vi.mocked(invoke);
 describe('backup ipc', () => {
   beforeEach(() => {
     invokeMock.mockReset();
+    // happy-dom 環境は __TAURI_INTERNALS__ が未設定のため手動でセットする
+    Object.assign(window, { __TAURI_INTERNALS__: {} });
   });
 
   it('backupIfNeeded は command 名だけで呼び出す', async () => {
