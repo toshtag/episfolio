@@ -33,8 +33,8 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<LifeTimelineEntry
         category: row.get(5)?,
         summary: row.get(6)?,
         detail: row.get(7)?,
-        related_episode_ids: serde_json::from_str(&related_json).unwrap_or_default(),
-        tags: serde_json::from_str(&tags_json).unwrap_or_default(),
+        related_episode_ids: super::parse_json_column(8, &related_json)?,
+        tags: super::parse_json_column(9, &tags_json)?,
         created_at: row.get(10)?,
         updated_at: row.get(11)?,
     })

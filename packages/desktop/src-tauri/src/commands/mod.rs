@@ -1,3 +1,16 @@
+fn parse_json_column<T: serde::de::DeserializeOwned>(
+    column_index: usize,
+    raw: &str,
+) -> rusqlite::Result<T> {
+    serde_json::from_str(raw).map_err(|e| {
+        rusqlite::Error::FromSqlConversionFailure(
+            column_index,
+            rusqlite::types::Type::Text,
+            Box::new(e),
+        )
+    })
+}
+
 pub mod agent_meeting_emails;
 pub mod agent_track_records;
 pub mod application_motives;

@@ -101,11 +101,11 @@ pub fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<EpisodeRow> {
         metrics: row.get(7)?,
         before_after: row.get(8)?,
         reproducibility: row.get(9)?,
-        related_skills: serde_json::from_str(&related_skills_json).unwrap_or_default(),
+        related_skills: super::parse_json_column(10, &related_skills_json)?,
         personal_feeling: row.get(11)?,
         external_feedback: row.get(12)?,
         remote_llm_allowed: remote_llm_allowed != 0,
-        tags: serde_json::from_str(&tags_json).unwrap_or_default(),
+        tags: super::parse_json_column(14, &tags_json)?,
         created_at: row.get(15)?,
         updated_at: row.get(16)?,
     })

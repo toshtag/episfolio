@@ -52,7 +52,7 @@ fn revision_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DocumentRevisi
         id: row.get(0)?,
         document_id: row.get(1)?,
         content: row.get(2)?,
-        source_evidence_ids: serde_json::from_str(&ids_json).unwrap_or_default(),
+        source_evidence_ids: super::parse_json_column(3, &ids_json)?,
         source_ai_run_id: row.get(4)?,
         created_by: row.get(5)?,
         revision_reason: row.get(6).unwrap_or_default(),
@@ -189,7 +189,7 @@ pub fn create_document_manual(
     let target_memo = args.target_memo.unwrap_or_default();
     let job_target_id = args.job_target_id.filter(|s| !s.is_empty());
     let doc = save_document(&db, &doc_id, &title, "", &now)?;
-    let ids_json = serde_json::to_string(&args.source_evidence_ids).unwrap_or_default();
+    let ids_json = serde_json::to_string(&args.source_evidence_ids).map_err(|e| e.to_string())?;
     let rev = {
         let conn = db.lock().map_err(|e| e.to_string())?;
         conn.execute(
@@ -263,7 +263,7 @@ pub fn create_document_revision_manual(
     let job_target_id = args.job_target_id.filter(|s| !s.is_empty());
     let now = chrono_now();
     let rev_id = Ulid::new().to_string();
-    let ids_json = serde_json::to_string(&args.source_evidence_ids).unwrap_or_default();
+    let ids_json = serde_json::to_string(&args.source_evidence_ids).map_err(|e| e.to_string())?;
 
     let conn = db.lock().map_err(|e| e.to_string())?;
 
