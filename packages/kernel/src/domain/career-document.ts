@@ -19,8 +19,7 @@ export type DocumentRevision = {
   id: ULID;
   documentId: ULID;
   content: string;
-  sourceAIRunId: ULID | null;
-  createdBy: 'human' | 'ai';
+  createdBy: 'human';
   revisionReason: string;
   targetMemo: string;
   jobTargetId: ULID | null;

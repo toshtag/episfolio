@@ -13,8 +13,7 @@ export type DocumentRevisionRow = {
   id: string;
   documentId: string;
   content: string;
-  sourceAiRunId: string | null;
-  createdBy: 'human' | 'ai';
+  createdBy: 'human';
   revisionReason: string;
   targetMemo: string;
   jobTargetId: string | null;

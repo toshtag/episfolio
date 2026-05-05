@@ -6,7 +6,6 @@ import { waitForTauri } from './ipc/tauri-ready.js';
 
 type Tab =
   | 'episodes'
-  | 'evidence'
   | 'documents'
   | 'timeline'
   | 'job-targets'
@@ -42,7 +41,6 @@ type TabGroup = 'core' | 'application' | 'interview' | 'proof' | 'company' | 'sy
 
 const VIEW_LOADERS: Record<LazyView, () => Promise<unknown>> = {
   'episode-detail': () => import('./episode-detail-view.js'),
-  evidence: () => import('./evidence-list-view.js'),
   documents: () => import('./document-view.js'),
   timeline: () => import('./life-timeline-view.js'),
   'job-targets': () => import('./job-target-view.js'),
@@ -84,7 +82,6 @@ const TAB_GROUPS: { id: TabGroup; label: string }[] = [
 
 const TABS: { id: Tab; label: string; group: TabGroup }[] = [
   { id: 'episodes', label: 'エピソード', group: 'core' },
-  { id: 'evidence', label: 'エビデンス', group: 'core' },
   { id: 'documents', label: 'ドキュメント', group: 'core' },
   { id: 'timeline', label: '年表', group: 'core' },
   { id: 'digest', label: 'ダイジェスト', group: 'core' },
@@ -116,7 +113,6 @@ const TABS: { id: Tab; label: string; group: TabGroup }[] = [
 ];
 
 const TAB_CONTENT: Record<LazyTab, () => TemplateResult> = {
-  evidence: () => html`<evidence-list-view></evidence-list-view>`,
   documents: () => html`<document-view></document-view>`,
   timeline: () => html`<life-timeline-view></life-timeline-view>`,
   'job-targets': () => html`<job-target-view></job-target-view>`,
