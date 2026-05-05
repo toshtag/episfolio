@@ -24,12 +24,6 @@ pub fn run() {
             commands::backup_if_needed,
             commands::list_backups,
             commands::restore_backup,
-            // episodes
-            commands::create_episode,
-            commands::list_episodes,
-            commands::get_episode,
-            commands::update_episode,
-            commands::delete_episode,
             // documents
             commands::list_documents,
             commands::get_document,
