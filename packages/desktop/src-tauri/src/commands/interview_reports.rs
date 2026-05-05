@@ -32,6 +32,23 @@ fn int_to_bool(v: Option<i64>) -> Option<bool> {
     v.map(|n| n != 0)
 }
 
+fn validate_talk_ratio(value: Option<f64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if !v.is_finite() || !(0.0..=100.0).contains(&v) {
+            return Err("talkRatioSelf must be between 0 and 100".to_string());
+        }
+    }
+    Ok(())
+}
+
+fn validate_interview_create_args(args: &CreateInterviewReportArgs) -> Result<(), String> {
+    validate_talk_ratio(args.talk_ratio_self)
+}
+
+fn validate_interview_update_args(patch: &UpdateInterviewReportArgs) -> Result<(), String> {
+    validate_talk_ratio(patch.talk_ratio_self.flatten())
+}
+
 const SELECT_COLUMNS: &str = "id, job_target_id, stage, interviewer_note, qa_note, \
      motivation_change_note, questions_to_bring_note, conducted_at, \
      interviewer_role, interviewer_style, talk_ratio_self, questions_asked_note, \
@@ -94,6 +111,7 @@ fn create_interview_report_with_conn(
     conn: &Connection,
     args: CreateInterviewReportArgs,
 ) -> Result<InterviewReportRow, String> {
+    validate_interview_create_args(&args)?;
     let id = Ulid::new().to_string();
     let now = chrono_now();
     let stage = args.stage.unwrap_or_else(|| "first".to_string());
@@ -217,6 +235,7 @@ fn update_interview_report_with_conn(
     id: &str,
     patch: UpdateInterviewReportArgs,
 ) -> Result<InterviewReportRow, String> {
+    validate_interview_update_args(&patch)?;
     let now = chrono_now();
 
     let mut sets: Vec<String> = Vec::new();
@@ -501,5 +520,28 @@ mod tests {
         let error = update_interview_report_with_conn(&conn, &created.id, empty_patch())
             .expect_err("empty patch should be rejected");
         assert!(error.contains("更新フィールドがありません"));
+    }
+
+    #[test]
+    fn interview_report_rejects_invalid_talk_ratio() {
+        let conn = sqlite::open_in_memory_with_migrations().unwrap();
+        insert_job_target(&conn, "jt_ratio");
+
+        let mut args = create_args("jt_ratio");
+        args.talk_ratio_self = Some(101.0);
+        assert!(create_interview_report_with_conn(&conn, args)
+            .unwrap_err()
+            .contains("talkRatioSelf"));
+
+        let created = create_interview_report_with_conn(&conn, create_args("jt_ratio")).unwrap();
+        let mut patch = empty_patch();
+        patch.talk_ratio_self = Some(Some(-1.0));
+        assert!(update_interview_report_with_conn(&conn, &created.id, patch)
+            .unwrap_err()
+            .contains("talkRatioSelf"));
+
+        let mut patch = empty_patch();
+        patch.talk_ratio_self = Some(None);
+        update_interview_report_with_conn(&conn, &created.id, patch).unwrap();
     }
 }
