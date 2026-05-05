@@ -10,22 +10,22 @@ pub struct JobRequirementMappingRow {
     pub id: String,
     pub job_target_id: String,
     pub requirement_skill_id: String,
-    pub episode_ids: Vec<String>,
+    pub life_timeline_entry_ids: Vec<String>,
     pub user_note: String,
     pub created_at: String,
     pub updated_at: String,
 }
 
 const SELECT_COLUMNS: &str =
-    "id, job_target_id, requirement_skill_id, episode_ids, user_note, created_at, updated_at";
+    "id, job_target_id, requirement_skill_id, life_timeline_entry_ids, user_note, created_at, updated_at";
 
 fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<JobRequirementMappingRow> {
-    let episode_ids_json: String = row.get(3)?;
+    let life_timeline_entry_ids_json: String = row.get(3)?;
     Ok(JobRequirementMappingRow {
         id: row.get(0)?,
         job_target_id: row.get(1)?,
         requirement_skill_id: row.get(2)?,
-        episode_ids: super::parse_json_column(3, &episode_ids_json)?,
+        life_timeline_entry_ids: super::parse_json_column(3, &life_timeline_entry_ids_json)?,
         user_note: row.get(4)?,
         created_at: row.get(5)?,
         updated_at: row.get(6)?,
@@ -37,7 +37,7 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<JobRequirementMap
 pub struct SaveJobRequirementMappingArgs {
     pub job_target_id: String,
     pub requirement_skill_id: String,
-    pub episode_ids: Option<Vec<String>>,
+    pub life_timeline_entry_ids: Option<Vec<String>>,
     pub user_note: Option<String>,
 }
 
@@ -52,7 +52,7 @@ pub fn save_job_requirement_mapping(
 ) -> Result<JobRequirementMappingRow, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
     let now = chrono_now();
-    let episode_ids_json = serde_json::to_string(&args.episode_ids.unwrap_or_default())
+    let life_timeline_entry_ids_json = serde_json::to_string(&args.life_timeline_entry_ids.unwrap_or_default())
         .map_err(|e| e.to_string())?;
     let user_note = args.user_note.unwrap_or_default();
 
@@ -69,9 +69,9 @@ pub fn save_job_requirement_mapping(
         Some(id) => {
             conn.execute(
                 "UPDATE job_requirement_mappings \
-                 SET episode_ids = ?1, user_note = ?2, updated_at = ?3 \
+                 SET life_timeline_entry_ids = ?1, user_note = ?2, updated_at = ?3 \
                  WHERE id = ?4",
-                rusqlite::params![episode_ids_json, user_note, now, id],
+                rusqlite::params![life_timeline_entry_ids_json, user_note, now, id],
             )
             .map_err(|e| e.to_string())?;
             id
@@ -80,13 +80,13 @@ pub fn save_job_requirement_mapping(
             let id = Ulid::new().to_string();
             conn.execute(
                 "INSERT INTO job_requirement_mappings \
-                 (id, job_target_id, requirement_skill_id, episode_ids, user_note, created_at, updated_at) \
+                 (id, job_target_id, requirement_skill_id, life_timeline_entry_ids, user_note, created_at, updated_at) \
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6)",
                 rusqlite::params![
                     id,
                     args.job_target_id,
                     args.requirement_skill_id,
-                    episode_ids_json,
+                    life_timeline_entry_ids_json,
                     user_note,
                     now,
                 ],
@@ -140,7 +140,7 @@ pub fn get_job_requirement_mapping(
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateJobRequirementMappingArgs {
-    pub episode_ids: Option<Vec<String>>,
+    pub life_timeline_entry_ids: Option<Vec<String>>,
     pub user_note: Option<String>,
 }
 
@@ -156,8 +156,8 @@ pub fn update_job_requirement_mapping(
     let mut sets: Vec<&str> = Vec::new();
     let mut params: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
 
-    if let Some(v) = patch.episode_ids {
-        sets.push("episode_ids = ?");
+    if let Some(v) = patch.life_timeline_entry_ids {
+        sets.push("life_timeline_entry_ids = ?");
         params.push(Box::new(
             serde_json::to_string(&v).map_err(|e| e.to_string())?,
         ));

@@ -50,7 +50,7 @@ const buildMapping = (
   id,
   jobTargetId: '01HJOB1',
   requirementSkillId: '01HSKL1',
-  episodeIds: [],
+  lifeTimelineEntryIds: [],
   userNote: '',
   createdAt: '2026-05-01T00:00:00Z',
   updatedAt: '2026-05-01T00:00:00Z',
@@ -99,10 +99,12 @@ describe('JobRequirementMappingStoragePort contract', () => {
   });
 
   describe('update', () => {
-    it('episodeIds を patch で更新できる', async () => {
+    it('lifeTimelineEntryIds を patch で更新できる', async () => {
       await storage.save(buildMapping('01HJM1'));
-      const updated = await storage.update('01HJM1', { episodeIds: ['01HEP1', '01HEP2'] });
-      expect(updated.episodeIds).toEqual(['01HEP1', '01HEP2']);
+      const updated = await storage.update('01HJM1', {
+        lifeTimelineEntryIds: ['01HLT1', '01HLT2'],
+      });
+      expect(updated.lifeTimelineEntryIds).toEqual(['01HLT1', '01HLT2']);
     });
 
     it('userNote を patch で更新できる', async () => {

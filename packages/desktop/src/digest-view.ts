@@ -1,30 +1,48 @@
 import {
-  type Episode,
   type JobRequirementMapping,
   type JobTarget,
+  type LifeTimelineEntry,
   toCareerDigestMarkdown,
 } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
-import { listEpisodes } from './ipc/episodes.js';
 import {
   listJobRequirementMappingsByJobTarget,
   saveJobRequirementMapping,
 } from './ipc/job-requirement-mappings.js';
 import { listJobTargets } from './ipc/job-targets.js';
+import { listLifeTimelineEntries } from './ipc/life-timeline.js';
 import { waitForTauri } from './ipc/tauri-ready.js';
 
 type CardState = {
-  episodeIds: string[];
+  lifeTimelineEntryIds: string[];
   userNote: string;
   dirty: boolean;
   saving: boolean;
   saved: boolean;
 };
 
+const CATEGORY_LABEL: Record<LifeTimelineEntry['category'], string> = {
+  education: '学び',
+  work: '仕事',
+  family: '家族',
+  health: '健康',
+  hobby: '趣味',
+  other: 'その他',
+};
+
+function formatPeriod(entry: LifeTimelineEntry): string {
+  if (entry.yearStart !== null && entry.yearEnd !== null) {
+    return entry.yearStart === entry.yearEnd
+      ? `${entry.yearStart}`
+      : `${entry.yearStart}-${entry.yearEnd}`;
+  }
+  return `${entry.ageRangeStart}-${entry.ageRangeEnd}歳`;
+}
+
 class DigestView extends LitElement {
   static override properties = {
     jobTargets: { state: true },
-    episodes: { state: true },
+    lifeTimelineEntries: { state: true },
     selectedJobTargetId: { state: true },
     cardByRequirementId: { state: true },
     error: { state: true },
@@ -32,7 +50,7 @@ class DigestView extends LitElement {
   };
 
   declare jobTargets: JobTarget[];
-  declare episodes: Episode[];
+  declare lifeTimelineEntries: LifeTimelineEntry[];
   declare selectedJobTargetId: string;
   declare cardByRequirementId: Record<string, CardState>;
   declare error: string;
@@ -41,7 +59,7 @@ class DigestView extends LitElement {
   constructor() {
     super();
     this.jobTargets = [];
-    this.episodes = [];
+    this.lifeTimelineEntries = [];
     this.selectedJobTargetId = '';
     this.cardByRequirementId = {};
     this.error = '';
@@ -127,7 +145,7 @@ class DigestView extends LitElement {
       min-height: 4rem;
       resize: vertical;
     }
-    .episodes-grid {
+    .entries-grid {
       display: flex;
       flex-direction: column;
       gap: 0.3rem;
@@ -138,13 +156,17 @@ class DigestView extends LitElement {
       padding: 0.5rem 0.7rem;
       background: #fafafa;
     }
-    .episode-item {
+    .entry-item {
       display: flex;
       align-items: center;
       gap: 0.4rem;
       font-size: 0.85rem;
     }
-    .episode-item input { width: auto; }
+    .entry-item input { width: auto; }
+    .entry-meta {
+      color: #888;
+      font-size: 0.78rem;
+    }
     .card-actions {
       display: flex;
       gap: 0.6rem;
@@ -215,9 +237,9 @@ class DigestView extends LitElement {
 
   private async loadInitial() {
     try {
-      const [targets, eps] = await Promise.all([listJobTargets(), listEpisodes()]);
+      const [targets, entries] = await Promise.all([listJobTargets(), listLifeTimelineEntries()]);
       this.jobTargets = targets;
-      this.episodes = eps;
+      this.lifeTimelineEntries = entries;
       const first = targets[0];
       if (first && !this.selectedJobTargetId) {
         await this.selectJobTarget(first.id);
@@ -246,7 +268,7 @@ class DigestView extends LitElement {
         for (const skill of target.requiredSkills) {
           const existing = mappings.find((m) => m.requirementSkillId === skill.id);
           next[skill.id] = {
-            episodeIds: existing?.episodeIds ?? [],
+            lifeTimelineEntryIds: existing?.lifeTimelineEntryIds ?? [],
             userNote: existing?.userNote ?? '',
             dirty: false,
             saving: false,
@@ -273,14 +295,14 @@ class DigestView extends LitElement {
     this.updateCard(skillId, { userNote: value, dirty: true, saved: false });
   }
 
-  private toggleEpisode(skillId: string, episodeId: string, checked: boolean) {
+  private toggleEntry(skillId: string, entryId: string, checked: boolean) {
     const current = this.cardByRequirementId[skillId];
     if (!current) return;
-    const set = new Set(current.episodeIds);
-    if (checked) set.add(episodeId);
-    else set.delete(episodeId);
+    const set = new Set(current.lifeTimelineEntryIds);
+    if (checked) set.add(entryId);
+    else set.delete(entryId);
     this.updateCard(skillId, {
-      episodeIds: Array.from(set),
+      lifeTimelineEntryIds: Array.from(set),
       dirty: true,
       saved: false,
     });
@@ -296,7 +318,7 @@ class DigestView extends LitElement {
       await saveJobRequirementMapping({
         jobTargetId: this.selectedJobTargetId,
         requirementSkillId: skillId,
-        episodeIds: card.episodeIds,
+        lifeTimelineEntryIds: card.lifeTimelineEntryIds,
         userNote: card.userNote,
       });
       this.updateCard(skillId, { dirty: false, saved: true, saving: false });
@@ -316,13 +338,13 @@ class DigestView extends LitElement {
         id: `preview_${skill.id}`,
         jobTargetId: target.id,
         requirementSkillId: skill.id,
-        episodeIds: card?.episodeIds ?? [],
+        lifeTimelineEntryIds: card?.lifeTimelineEntryIds ?? [],
         userNote: card?.userNote ?? '',
         createdAt: now,
         updatedAt: now,
       };
     });
-    return toCareerDigestMarkdown(target, syntheticMappings, this.episodes);
+    return toCareerDigestMarkdown(target, syntheticMappings, this.lifeTimelineEntries);
   }
 
   private async handleCopy() {
@@ -407,21 +429,26 @@ class DigestView extends LitElement {
               placeholder="例: 前職で同等のシステムを設計しました。"
             ></textarea>
 
-            <label class="field">関連 Episode（複数選択可）</label>
-            <div class="episodes-grid">
+            <label class="field">関連する経験（年表エントリから複数選択可）</label>
+            <div class="entries-grid">
               ${
-                this.episodes.length === 0
-                  ? html`<span class="empty">Episode が登録されていません</span>`
-                  : this.episodes.map(
-                      (ep) => html`
-                  <label class="episode-item">
+                this.lifeTimelineEntries.length === 0
+                  ? html`<span class="empty">年表エントリが登録されていません（年表タブで追加してください）</span>`
+                  : this.lifeTimelineEntries.map(
+                      (entry) => html`
+                  <label class="entry-item">
                     <input
                       type="checkbox"
-                      ?checked=${card.episodeIds.includes(ep.id)}
+                      ?checked=${card.lifeTimelineEntryIds.includes(entry.id)}
                       @change=${(e: Event) =>
-                        this.toggleEpisode(skill.id, ep.id, (e.target as HTMLInputElement).checked)}
+                        this.toggleEntry(
+                          skill.id,
+                          entry.id,
+                          (e.target as HTMLInputElement).checked,
+                        )}
                     />
-                    <span>${ep.title || '（無題）'}</span>
+                    <span>${entry.summary || '（無題）'}</span>
+                    <span class="entry-meta">[${formatPeriod(entry)}・${CATEGORY_LABEL[entry.category]}]</span>
                   </label>
                 `,
                     )

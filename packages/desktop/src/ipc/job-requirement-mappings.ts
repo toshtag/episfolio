@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 export type SaveJobRequirementMappingArgs = {
   jobTargetId: string;
   requirementSkillId: string;
-  episodeIds?: string[];
+  lifeTimelineEntryIds?: string[];
   userNote?: string;
 };
 
