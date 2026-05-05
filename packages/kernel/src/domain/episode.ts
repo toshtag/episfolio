@@ -1,5 +1,4 @@
-export type ULID = string;
-export type ISO8601 = string;
+import type { ISO8601, ULID } from './types.js';
 
 export type Episode = {
   id: ULID;

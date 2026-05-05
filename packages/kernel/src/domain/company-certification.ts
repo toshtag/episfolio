@@ -1,4 +1,4 @@
-import type { ISO8601, ULID } from './episode.js';
+import type { ISO8601, ULID } from './types.js';
 
 export type CompanyCertification = {
   id: ULID;
