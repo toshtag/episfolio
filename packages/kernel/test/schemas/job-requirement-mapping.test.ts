@@ -8,7 +8,7 @@ const valid = {
   id: '01HJM1',
   jobTargetId: '01HJOB1',
   requirementSkillId: '01HSKL1',
-  episodeIds: ['01HEP1', '01HEP2'],
+  lifeTimelineEntryIds: ['01HLT1', '01HLT2'],
   userNote: '前職での実装経験',
   createdAt: '2026-05-01T00:00:00Z',
   updatedAt: '2026-05-01T00:00:00Z',
@@ -19,8 +19,10 @@ describe('JobRequirementMappingSchema', () => {
     expect(() => JobRequirementMappingSchema.parse(valid)).not.toThrow();
   });
 
-  it('episodeIds は空配列を受理する（紐付け前の状態）', () => {
-    expect(() => JobRequirementMappingSchema.parse({ ...valid, episodeIds: [] })).not.toThrow();
+  it('lifeTimelineEntryIds は空配列を受理する（紐付け前の状態）', () => {
+    expect(() =>
+      JobRequirementMappingSchema.parse({ ...valid, lifeTimelineEntryIds: [] }),
+    ).not.toThrow();
   });
 
   it('userNote は空文字列を受理する', () => {
@@ -39,9 +41,9 @@ describe('JobRequirementMappingSchema', () => {
     expect(() => JobRequirementMappingSchema.parse({ ...valid, requirementSkillId: '' })).toThrow();
   });
 
-  it('episodeIds に空文字列が混ざると拒否', () => {
+  it('lifeTimelineEntryIds に空文字列が混ざると拒否', () => {
     expect(() =>
-      JobRequirementMappingSchema.parse({ ...valid, episodeIds: ['01HEP1', ''] }),
+      JobRequirementMappingSchema.parse({ ...valid, lifeTimelineEntryIds: ['01HLT1', ''] }),
     ).toThrow();
   });
 
@@ -51,8 +53,10 @@ describe('JobRequirementMappingSchema', () => {
 });
 
 describe('JobRequirementMappingUpdateSchema', () => {
-  it('episodeIds のみの partial を受理', () => {
-    expect(() => JobRequirementMappingUpdateSchema.parse({ episodeIds: ['01HEP1'] })).not.toThrow();
+  it('lifeTimelineEntryIds のみの partial を受理', () => {
+    expect(() =>
+      JobRequirementMappingUpdateSchema.parse({ lifeTimelineEntryIds: ['01HLT1'] }),
+    ).not.toThrow();
   });
 
   it('userNote のみの partial を受理', () => {
