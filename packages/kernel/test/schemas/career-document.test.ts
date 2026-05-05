@@ -22,7 +22,6 @@ const baseRevision = {
   id: '01HREV',
   documentId: '01HDOC',
   content: '# 職務経歴書\n\n本文',
-  sourceEvidenceIds: [],
   sourceAIRunId: null,
   createdBy: 'human' as const,
   revisionReason: '初版',
@@ -158,15 +157,6 @@ describe('DocumentRevisionSchema', () => {
   it('createdBy human/ai 以外を拒否', () => {
     expect(
       DocumentRevisionSchema.safeParse({ ...baseRevision, createdBy: 'system' as 'human' }).success,
-    ).toBe(false);
-  });
-
-  it('sourceEvidenceIds は配列必須', () => {
-    expect(
-      DocumentRevisionSchema.safeParse({
-        ...baseRevision,
-        sourceEvidenceIds: 'ev1' as unknown as string[],
-      }).success,
     ).toBe(false);
   });
 

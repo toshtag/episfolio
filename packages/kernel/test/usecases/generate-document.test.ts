@@ -151,7 +151,6 @@ describe('generateDocument usecase', () => {
     expect(result.document.jobTarget).toBe('バックエンドエンジニア');
     expect(result.document.status).toBe('draft');
     expect(result.revision.content).toBe('');
-    expect(result.revision.sourceEvidenceIds).toEqual([]);
     expect(result.revision.sourceAIRunId).toBeNull();
     expect(deps.aiProvider.generate).not.toHaveBeenCalled();
     expect(deps.documentStorage.save).toHaveBeenCalledOnce();
@@ -167,7 +166,6 @@ describe('generateDocument usecase', () => {
     expect(result.document.status).toBe('draft');
     expect(result.revision.content).toContain('## 課題解決力');
     expect(result.revision.content).toContain('論理的思考と行動力');
-    expect(result.revision.sourceEvidenceIds).toEqual(['01EVIDENCE0001']);
     expect(result.revision.sourceAIRunId).toBe('run-id-001');
     expect(result.revision.createdBy).toBe('ai');
     expect(deps.aiProvider.generate).toHaveBeenCalledOnce();
@@ -247,13 +245,5 @@ describe('generateDocument usecase', () => {
     const deps = makeDeps();
     const result = await generateDocument([], 'データエンジニア', deps);
     expect(result.document.title).toContain('データエンジニア');
-  });
-
-  it('複数エビデンスの ID が sourceEvidenceIds に全て含まれる', async () => {
-    const deps = makeDeps();
-    const ev1 = makeEvidence({ id: 'EV001' });
-    const ev2 = makeEvidence({ id: 'EV002', strengthLabel: 'リーダーシップ' });
-    const result = await generateDocument([ev1, ev2], 'PM', deps);
-    expect(result.revision.sourceEvidenceIds).toEqual(['EV001', 'EV002']);
   });
 });

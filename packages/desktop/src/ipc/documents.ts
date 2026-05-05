@@ -13,7 +13,6 @@ export type DocumentRevisionRow = {
   id: string;
   documentId: string;
   content: string;
-  sourceEvidenceIds: string[];
   sourceAiRunId: string | null;
   createdBy: 'human' | 'ai';
   revisionReason: string;
@@ -40,7 +39,6 @@ export type CreateDocumentManualArgs = {
   title: string;
   template: 'resume' | 'skill-summary' | 'blank';
   content: string;
-  sourceEvidenceIds: string[];
   revisionReason?: string;
   targetMemo?: string;
   jobTargetId?: string;
@@ -60,7 +58,6 @@ export async function createDocumentManual(
 export type CreateRevisionManualArgs = {
   documentId: string;
   content: string;
-  sourceEvidenceIds: string[];
   revisionReason: string;
   targetMemo?: string;
   jobTargetId?: string;

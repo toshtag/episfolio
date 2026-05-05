@@ -31,7 +31,6 @@ export const DocumentRevisionSchema = z.object({
   id: z.string().min(1),
   documentId: z.string().min(1),
   content: z.string(),
-  sourceEvidenceIds: z.array(z.string()),
   sourceAIRunId: z.string().nullable(),
   createdBy: z.enum(['human', 'ai']),
   revisionReason: z.string().min(1),
