@@ -147,6 +147,7 @@ class EpisodeApp extends LitElement {
     newTitle: { state: true },
     saving: { state: true },
     error: { state: true },
+    backupError: { state: true },
     tab: { state: true },
     selectedId: { state: true },
   };
@@ -155,6 +156,7 @@ class EpisodeApp extends LitElement {
   declare newTitle: string;
   declare saving: boolean;
   declare error: string;
+  declare backupError: string;
   declare tab: Tab;
   declare selectedId: string;
 
@@ -168,6 +170,7 @@ class EpisodeApp extends LitElement {
     this.newTitle = '';
     this.saving = false;
     this.error = '';
+    this.backupError = '';
     this.tab = 'episodes';
     this.selectedId = '';
   }
@@ -221,6 +224,14 @@ class EpisodeApp extends LitElement {
     }
     button.save-btn:disabled { opacity: 0.5; cursor: default; }
     .error { color: #c00; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .backup-error {
+      margin: 0;
+      padding: 0.7rem 1.5rem;
+      background: #fff5f5;
+      border-bottom: 1px solid #f1b7b7;
+      color: #8a0000;
+      font-size: 0.85rem;
+    }
     table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid #ddd; }
     td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #eee; }
@@ -231,8 +242,16 @@ class EpisodeApp extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
-    backupIfNeeded().catch(() => {});
+    void this.runStartupBackup();
     await this.loadEpisodes();
+  }
+
+  private async runStartupBackup() {
+    try {
+      await backupIfNeeded();
+    } catch (e) {
+      this.backupError = `バックアップに失敗しました: ${String(e)}`;
+    }
   }
 
   private async loadEpisodes() {
@@ -387,7 +406,11 @@ class EpisodeApp extends LitElement {
   }
 
   override render() {
-    return html`${this.renderNav()}${this.renderContent()}`;
+    return html`
+      ${this.renderNav()}
+      ${this.backupError ? html`<p class="backup-error">${this.backupError}</p>` : ''}
+      ${this.renderContent()}
+    `;
   }
 }
 
