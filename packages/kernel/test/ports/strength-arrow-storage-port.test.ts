@@ -51,7 +51,6 @@ const buildArrow = (id: string, overrides: Partial<StrengthArrow> = {}): Strengt
   description: 'なぜそんなに詳しいんですか？と聞かれた',
   source: '営業部の先輩',
   occurredAt: '2024-03-01',
-  relatedEpisodeIds: [],
   note: null,
   createdAt: '2026-05-03T00:00:00Z',
   updatedAt: '2026-05-03T00:00:00Z',

@@ -12,7 +12,6 @@ const baseArrow = {
   description: 'なぜそんなに詳しいんですか？と聞かれた',
   source: '営業部の先輩',
   occurredAt: '2024-03-01',
-  relatedEpisodeIds: ['01EP0001'],
   note: '自分では当たり前だと思っていた',
   createdAt: '2026-05-03T00:00:00Z',
   updatedAt: '2026-05-03T00:00:00Z',
