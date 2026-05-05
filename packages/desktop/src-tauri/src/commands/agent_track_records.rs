@@ -33,6 +33,50 @@ fn int_to_bool(v: Option<i64>) -> Option<bool> {
     v.map(|n| n != 0)
 }
 
+fn validate_nonnegative_i64(field: &str, value: Option<i64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if v < 0 {
+            return Err(format!("{field} must be nonnegative"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_nonnegative_f64(field: &str, value: Option<f64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if !v.is_finite() || v < 0.0 {
+            return Err(format!("{field} must be a finite nonnegative number"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_rating(field: &str, value: Option<f64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if !v.is_finite() || !(1.0..=5.0).contains(&v) {
+            return Err(format!("{field} must be between 1 and 5"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_agent_create_args(args: &CreateAgentTrackRecordArgs) -> Result<(), String> {
+    validate_nonnegative_i64("numberOfJobsIntroduced", args.number_of_jobs_introduced)?;
+    validate_nonnegative_f64("responseSpeedDays", args.response_speed_days)?;
+    validate_rating("overallRating", args.overall_rating)?;
+    Ok(())
+}
+
+fn validate_agent_update_args(patch: &UpdateAgentTrackRecordArgs) -> Result<(), String> {
+    validate_nonnegative_i64(
+        "numberOfJobsIntroduced",
+        patch.number_of_jobs_introduced.flatten(),
+    )?;
+    validate_nonnegative_f64("responseSpeedDays", patch.response_speed_days.flatten())?;
+    validate_rating("overallRating", patch.overall_rating.flatten())?;
+    Ok(())
+}
+
 const SELECT_COLUMNS: &str = "id, company_name, contact_name, contact_email, contact_phone, \
      first_contact_date, memo, status, \
      specialty_industries, specialty_job_types, consultant_quality, \
@@ -98,6 +142,7 @@ fn create_agent_track_record_with_conn(
     conn: &Connection,
     args: CreateAgentTrackRecordArgs,
 ) -> Result<AgentTrackRecordRow, String> {
+    validate_agent_create_args(&args)?;
     let id = Ulid::new().to_string();
     let now = chrono_now();
     let status = args.status.unwrap_or_else(|| "active".to_string());
@@ -221,6 +266,7 @@ fn update_agent_track_record_with_conn(
     id: &str,
     patch: UpdateAgentTrackRecordArgs,
 ) -> Result<AgentTrackRecordRow, String> {
+    validate_agent_update_args(&patch)?;
     let now = chrono_now();
 
     let mut sets: Vec<String> = Vec::new();
@@ -499,5 +545,35 @@ mod tests {
         let error = update_agent_track_record_with_conn(&conn, &created.id, empty_patch())
             .expect_err("empty patch should be rejected");
         assert!(error.contains("更新フィールドがありません"));
+    }
+
+    #[test]
+    fn agent_track_record_rejects_invalid_v011_numbers() {
+        let conn = sqlite::open_in_memory_with_migrations().unwrap();
+
+        let mut args = create_args();
+        args.number_of_jobs_introduced = Some(-1);
+        assert!(create_agent_track_record_with_conn(&conn, args)
+            .unwrap_err()
+            .contains("numberOfJobsIntroduced"));
+
+        let mut args = create_args();
+        args.overall_rating = Some(6.0);
+        assert!(create_agent_track_record_with_conn(&conn, args)
+            .unwrap_err()
+            .contains("overallRating"));
+
+        let created = create_agent_track_record_with_conn(&conn, create_args()).unwrap();
+        let mut patch = empty_patch();
+        patch.response_speed_days = Some(Some(-0.1));
+        assert!(
+            update_agent_track_record_with_conn(&conn, &created.id, patch)
+                .unwrap_err()
+                .contains("responseSpeedDays")
+        );
+
+        let mut patch = empty_patch();
+        patch.overall_rating = Some(None);
+        update_agent_track_record_with_conn(&conn, &created.id, patch).unwrap();
     }
 }

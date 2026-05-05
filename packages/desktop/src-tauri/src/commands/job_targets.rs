@@ -57,6 +57,69 @@ fn int_to_bool(v: Option<i64>) -> Option<bool> {
     v.map(|n| n != 0)
 }
 
+fn validate_nonnegative_i64(field: &str, value: Option<i64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if v < 0 {
+            return Err(format!("{field} must be nonnegative"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_positive_i64(field: &str, value: Option<i64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if v <= 0 {
+            return Err(format!("{field} must be positive"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_nonnegative_f64(field: &str, value: Option<f64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if !v.is_finite() || v < 0.0 {
+            return Err(format!("{field} must be a finite nonnegative number"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_positive_f64(field: &str, value: Option<f64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if !v.is_finite() || v <= 0.0 {
+            return Err(format!("{field} must be a finite positive number"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_job_target_create_args(args: &CreateJobTargetArgs) -> Result<(), String> {
+    validate_nonnegative_i64("annualHolidays", args.annual_holidays)?;
+    validate_positive_f64("workingHoursPerDay", args.working_hours_per_day)?;
+    validate_nonnegative_i64("commuteTimeMinutes", args.commute_time_minutes)?;
+    validate_nonnegative_f64("averagePaidLeaveTaken", args.average_paid_leave_taken)?;
+    validate_positive_i64("currentTeamSize", args.current_team_size)?;
+    validate_nonnegative_i64("basicSalary", args.basic_salary)?;
+    validate_nonnegative_f64("fixedOvertimeHours", args.fixed_overtime_hours)?;
+    validate_nonnegative_f64("bonusBaseMonths", args.bonus_base_months)?;
+    Ok(())
+}
+
+fn validate_job_target_update_args(patch: &UpdateJobTargetArgs) -> Result<(), String> {
+    validate_nonnegative_i64("annualHolidays", patch.annual_holidays.flatten())?;
+    validate_positive_f64("workingHoursPerDay", patch.working_hours_per_day.flatten())?;
+    validate_nonnegative_i64("commuteTimeMinutes", patch.commute_time_minutes.flatten())?;
+    validate_nonnegative_f64(
+        "averagePaidLeaveTaken",
+        patch.average_paid_leave_taken.flatten(),
+    )?;
+    validate_positive_i64("currentTeamSize", patch.current_team_size.flatten())?;
+    validate_nonnegative_i64("basicSalary", patch.basic_salary.flatten())?;
+    validate_nonnegative_f64("fixedOvertimeHours", patch.fixed_overtime_hours.flatten())?;
+    validate_nonnegative_f64("bonusBaseMonths", patch.bonus_base_months.flatten())?;
+    Ok(())
+}
+
 fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<JobTargetRow> {
     let required_json: String = row.get(5)?;
     let preferred_json: String = row.get(6)?;
@@ -125,6 +188,7 @@ pub fn create_job_target(
     db: State<'_, Mutex<Connection>>,
     args: CreateJobTargetArgs,
 ) -> Result<JobTargetRow, String> {
+    validate_job_target_create_args(&args)?;
     let conn = db.lock().map_err(|e| e.to_string())?;
     let id = Ulid::new().to_string();
     let now = chrono_now();
@@ -184,13 +248,9 @@ pub fn create_job_target(
 }
 
 #[tauri::command]
-pub fn list_job_targets(
-    db: State<'_, Mutex<Connection>>,
-) -> Result<Vec<JobTargetRow>, String> {
+pub fn list_job_targets(db: State<'_, Mutex<Connection>>) -> Result<Vec<JobTargetRow>, String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
-    let sql = format!(
-        "SELECT {SELECT_COLUMNS} FROM job_targets ORDER BY created_at DESC, id DESC"
-    );
+    let sql = format!("SELECT {SELECT_COLUMNS} FROM job_targets ORDER BY created_at DESC, id DESC");
     let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
     let rows = stmt
         .query_map([], row_from_query)
@@ -251,6 +311,7 @@ pub fn update_job_target(
     id: String,
     patch: UpdateJobTargetArgs,
 ) -> Result<JobTargetRow, String> {
+    validate_job_target_update_args(&patch)?;
     let conn = db.lock().map_err(|e| e.to_string())?;
     let now = chrono_now();
 
@@ -347,10 +408,7 @@ pub fn update_job_target(
 }
 
 #[tauri::command]
-pub fn delete_job_target(
-    db: State<'_, Mutex<Connection>>,
-    id: String,
-) -> Result<(), String> {
+pub fn delete_job_target(db: State<'_, Mutex<Connection>>, id: String) -> Result<(), String> {
     let conn = db.lock().map_err(|e| e.to_string())?;
     let affected = conn
         .execute(
@@ -420,4 +478,108 @@ fn epoch_to_parts(secs: u64) -> (u64, u64, u64, u64, u64, u64) {
 
 fn is_leap(y: u64) -> bool {
     (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_args() -> CreateJobTargetArgs {
+        CreateJobTargetArgs {
+            company_name: "Acme".to_string(),
+            job_title: "Engineer".to_string(),
+            job_description: None,
+            status: None,
+            required_skills: None,
+            preferred_skills: None,
+            concerns: None,
+            appeal_points: None,
+            annual_holidays: Some(120),
+            working_hours_per_day: Some(7.5),
+            commute_time_minutes: Some(30),
+            employment_type: None,
+            flex_time_available: None,
+            remote_work_available: None,
+            average_paid_leave_taken: Some(10.0),
+            vacancy_reason: None,
+            current_team_size: Some(4),
+            application_route: None,
+            wage_type: None,
+            basic_salary: Some(300_000),
+            fixed_overtime_hours: Some(20.0),
+            bonus_base_months: Some(2.0),
+            has_future_raise_promise: None,
+            future_raise_promise_in_contract: None,
+        }
+    }
+
+    fn update_patch() -> UpdateJobTargetArgs {
+        UpdateJobTargetArgs {
+            company_name: None,
+            job_title: None,
+            job_description: None,
+            status: None,
+            required_skills: None,
+            preferred_skills: None,
+            concerns: None,
+            appeal_points: None,
+            annual_holidays: None,
+            working_hours_per_day: None,
+            commute_time_minutes: None,
+            employment_type: None,
+            flex_time_available: None,
+            remote_work_available: None,
+            average_paid_leave_taken: None,
+            vacancy_reason: None,
+            current_team_size: None,
+            application_route: None,
+            wage_type: None,
+            basic_salary: None,
+            fixed_overtime_hours: None,
+            bonus_base_months: None,
+            has_future_raise_promise: None,
+            future_raise_promise_in_contract: None,
+        }
+    }
+
+    #[test]
+    fn job_target_create_validation_rejects_invalid_v011_numbers() {
+        let mut args = create_args();
+        args.annual_holidays = Some(-1);
+        assert!(validate_job_target_create_args(&args)
+            .unwrap_err()
+            .contains("annualHolidays"));
+
+        let mut args = create_args();
+        args.working_hours_per_day = Some(0.0);
+        assert!(validate_job_target_create_args(&args)
+            .unwrap_err()
+            .contains("workingHoursPerDay"));
+
+        let mut args = create_args();
+        args.current_team_size = Some(0);
+        assert!(validate_job_target_create_args(&args)
+            .unwrap_err()
+            .contains("currentTeamSize"));
+    }
+
+    #[test]
+    fn job_target_update_validation_allows_null_clear_and_rejects_invalid_numbers() {
+        let mut patch = update_patch();
+        patch.annual_holidays = Some(None);
+        patch.working_hours_per_day = Some(None);
+        validate_job_target_update_args(&patch).unwrap();
+
+        let mut patch = update_patch();
+        patch.basic_salary = Some(Some(-1));
+        assert!(validate_job_target_update_args(&patch)
+            .unwrap_err()
+            .contains("basicSalary"));
+
+        let mut patch = update_patch();
+        patch.fixed_overtime_hours = Some(Some(f64::NAN));
+        assert!(validate_job_target_update_args(&patch)
+            .unwrap_err()
+            .contains("fixedOvertimeHours"));
+    }
 }

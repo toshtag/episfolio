@@ -73,6 +73,54 @@ fn row_from_query(row: &rusqlite::Row<'_>) -> rusqlite::Result<ResignationPlanRo
     })
 }
 
+fn validate_nonnegative_i64(field: &str, value: Option<i64>) -> Result<(), String> {
+    if let Some(v) = value {
+        if v < 0 {
+            return Err(format!("{field} must be nonnegative"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_i64_range(field: &str, value: Option<i64>, min: i64, max: i64) -> Result<(), String> {
+    if let Some(v) = value {
+        if v < min || v > max {
+            return Err(format!("{field} must be between {min} and {max}"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_f64_range(field: &str, value: Option<f64>, min: f64, max: f64) -> Result<(), String> {
+    if let Some(v) = value {
+        if !v.is_finite() || v < min || v > max {
+            return Err(format!("{field} must be between {min} and {max}"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_resignation_create_args(args: &CreateResignationPlanArgs) -> Result<(), String> {
+    validate_nonnegative_i64("annualSalary", args.annual_salary)?;
+    validate_i64_range("annualHolidays", args.annual_holidays, 0, 366)?;
+    validate_f64_range("dailyWorkingHours", args.daily_working_hours, 0.0, 24.0)?;
+    validate_nonnegative_i64("commuteMinutes", args.commute_minutes)?;
+    Ok(())
+}
+
+fn validate_resignation_update_args(patch: &UpdateResignationPlanArgs) -> Result<(), String> {
+    validate_nonnegative_i64("annualSalary", patch.annual_salary.flatten())?;
+    validate_i64_range("annualHolidays", patch.annual_holidays.flatten(), 0, 366)?;
+    validate_f64_range(
+        "dailyWorkingHours",
+        patch.daily_working_hours.flatten(),
+        0.0,
+        24.0,
+    )?;
+    validate_nonnegative_i64("commuteMinutes", patch.commute_minutes.flatten())?;
+    Ok(())
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateResignationPlanArgs {
@@ -113,6 +161,7 @@ fn create_resignation_plan_with_conn(
     conn: &Connection,
     args: CreateResignationPlanArgs,
 ) -> Result<ResignationPlanRow, String> {
+    validate_resignation_create_args(&args)?;
     let id = Ulid::new().to_string();
     let now = chrono_now();
 
@@ -251,6 +300,7 @@ fn update_resignation_plan_with_conn(
     id: &str,
     patch: UpdateResignationPlanArgs,
 ) -> Result<ResignationPlanRow, String> {
+    validate_resignation_update_args(&patch)?;
     let now = chrono_now();
 
     let mut sets: Vec<String> = Vec::new();
@@ -574,6 +624,39 @@ mod tests {
         let error = update_resignation_plan_with_conn(&conn, &created.id, empty_patch())
             .expect_err("empty patch should be rejected");
         assert!(error.contains("更新フィールドがありません"));
+
+        drop(conn);
+        cleanup_db(&path);
+    }
+
+    #[test]
+    fn resignation_plan_rejects_invalid_offer_numbers() {
+        let (conn, path) = db("invalid-numbers");
+        insert_job_target(&conn, "jt_invalid_numbers");
+
+        let mut args = create_args("jt_invalid_numbers");
+        args.annual_holidays = Some(367);
+        assert!(create_resignation_plan_with_conn(&conn, args)
+            .unwrap_err()
+            .contains("annualHolidays"));
+
+        let mut args = create_args("jt_invalid_numbers");
+        args.daily_working_hours = Some(f64::NAN);
+        assert!(create_resignation_plan_with_conn(&conn, args)
+            .unwrap_err()
+            .contains("dailyWorkingHours"));
+
+        let created =
+            create_resignation_plan_with_conn(&conn, create_args("jt_invalid_numbers")).unwrap();
+        let mut patch = empty_patch();
+        patch.commute_minutes = Some(Some(-1));
+        assert!(update_resignation_plan_with_conn(&conn, &created.id, patch)
+            .unwrap_err()
+            .contains("commuteMinutes"));
+
+        let mut patch = empty_patch();
+        patch.annual_salary = Some(None);
+        update_resignation_plan_with_conn(&conn, &created.id, patch).unwrap();
 
         drop(conn);
         cleanup_db(&path);
