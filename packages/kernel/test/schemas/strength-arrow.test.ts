@@ -43,12 +43,6 @@ describe('StrengthArrowSchema', () => {
     expect(StrengthArrowSchema.safeParse({ ...baseArrow, note: null }).success).toBe(true);
   });
 
-  it('relatedEpisodeIds が空配列でも受理', () => {
-    expect(StrengthArrowSchema.safeParse({ ...baseArrow, relatedEpisodeIds: [] }).success).toBe(
-      true,
-    );
-  });
-
   it('description が空文字でも受理', () => {
     expect(StrengthArrowSchema.safeParse({ ...baseArrow, description: '' }).success).toBe(true);
   });
@@ -76,12 +70,6 @@ describe('StrengthArrowSchema', () => {
     expect(StrengthArrowSchema.safeParse(withoutCreatedAt).success).toBe(false);
   });
 
-  it('relatedEpisodeIds 内の空文字 id を拒否', () => {
-    expect(StrengthArrowSchema.safeParse({ ...baseArrow, relatedEpisodeIds: [''] }).success).toBe(
-      false,
-    );
-  });
-
   it('occurredAt が空文字（非 null）を拒否', () => {
     expect(StrengthArrowSchema.safeParse({ ...baseArrow, occurredAt: '' }).success).toBe(false);
   });
@@ -91,13 +79,6 @@ describe('StrengthArrowCreateSchema', () => {
   it('createdAt / updatedAt を含まずに受理', () => {
     const { createdAt: _c, updatedAt: _u, ...input } = baseArrow;
     expect(StrengthArrowCreateSchema.safeParse(input).success).toBe(true);
-  });
-
-  it('relatedEpisodeIds 空配列で create を受理', () => {
-    const { createdAt: _c, updatedAt: _u, ...input } = baseArrow;
-    expect(StrengthArrowCreateSchema.safeParse({ ...input, relatedEpisodeIds: [] }).success).toBe(
-      true,
-    );
   });
 
   it('occurredAt が null でも create を受理', () => {
@@ -125,10 +106,6 @@ describe('StrengthArrowUpdateSchema', () => {
 
   it('note を null に更新できる', () => {
     expect(StrengthArrowUpdateSchema.safeParse({ note: null }).success).toBe(true);
-  });
-
-  it('relatedEpisodeIds を空配列に更新できる', () => {
-    expect(StrengthArrowUpdateSchema.safeParse({ relatedEpisodeIds: [] }).success).toBe(true);
   });
 
   it('id を含めても無視される', () => {

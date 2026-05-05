@@ -71,13 +71,6 @@ describe('StrengthArrowStoragePort contract', () => {
       expect(await storage.get('01ARROW001')).toEqual(arrow);
     });
 
-    it('relatedEpisodeIds が保持される', async () => {
-      const arrow = buildArrow('01ARROW001', { relatedEpisodeIds: ['01EP0001', '01EP0002'] });
-      await storage.create(arrow);
-      const got = await storage.get('01ARROW001');
-      expect(got?.relatedEpisodeIds).toEqual(['01EP0001', '01EP0002']);
-    });
-
     it('occurredAt が null でも保存できる', async () => {
       const arrow = buildArrow('01ARROW001', { occurredAt: null });
       await storage.create(arrow);
@@ -140,14 +133,6 @@ describe('StrengthArrowStoragePort contract', () => {
       await storage.create(buildArrow('01ARROW001', { type: 'interest' }));
       const updated = await storage.update('01ARROW001', { type: 'evaluation' });
       expect(updated.type).toBe('evaluation');
-    });
-
-    it('relatedEpisodeIds を更新できる', async () => {
-      await storage.create(buildArrow('01ARROW001', { relatedEpisodeIds: [] }));
-      const updated = await storage.update('01ARROW001', {
-        relatedEpisodeIds: ['01EP0001'],
-      });
-      expect(updated.relatedEpisodeIds).toEqual(['01EP0001']);
     });
 
     it('occurredAt を null に更新できる', async () => {
