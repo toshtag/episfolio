@@ -2,7 +2,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { waitForTauri } from './tauri-ready.js';
 
 export async function backupIfNeeded(): Promise<boolean> {
-  await waitForTauri();
+  const ready = await waitForTauri();
+  if (!ready) return false;
   return invoke<boolean>('backup_if_needed');
 }
 

@@ -4,7 +4,7 @@ import { listEpisodes } from '../ipc/episodes.js';
 import '../main.js';
 
 vi.mock('../ipc/tauri-ready.js', () => ({
-  waitForTauri: vi.fn().mockResolvedValue(undefined),
+  waitForTauri: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock('../ipc/backup.js', () => ({

@@ -284,7 +284,8 @@ class EpisodeApp extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
-    await waitForTauri();
+    const ready = await waitForTauri();
+    if (!ready) return;
     void this.runStartupBackup();
     await this.loadEpisodes();
   }
