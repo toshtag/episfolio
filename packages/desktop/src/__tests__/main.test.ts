@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { backupIfNeeded } from '../ipc/backup.js';
-import { listEpisodes } from '../ipc/episodes.js';
 import '../main.js';
 
 vi.mock('../ipc/tauri-ready.js', () => ({
@@ -11,13 +10,7 @@ vi.mock('../ipc/backup.js', () => ({
   backupIfNeeded: vi.fn(),
 }));
 
-vi.mock('../ipc/episodes.js', () => ({
-  createEpisode: vi.fn(),
-  listEpisodes: vi.fn(),
-}));
-
 const backupIfNeededMock = vi.mocked(backupIfNeeded);
-const listEpisodesMock = vi.mocked(listEpisodes);
 
 type TestEpisodeApp = HTMLElement & {
   updateComplete: Promise<boolean>;
@@ -51,11 +44,10 @@ function tabLabels(el: TestEpisodeApp): string[] {
 describe('episode-app', () => {
   beforeEach(() => {
     backupIfNeededMock.mockResolvedValue(false);
-    listEpisodesMock.mockResolvedValue([]);
   });
 
   afterEach(() => {
-    document.body.innerHTML = '';
+    document.body.replaceChildren();
     vi.clearAllMocks();
   });
 
@@ -76,13 +68,13 @@ describe('episode-app', () => {
   it('カテゴリ選択で表示する機能タブを切り替える', async () => {
     const el = await mountApp();
 
-    expect(tabLabels(el)).toContain('エピソード');
+    expect(tabLabels(el)).toContain('年表');
     expect(tabLabels(el)).not.toContain('給料分析');
 
     buttonByText(el, '.group-nav button', '企業').click();
     await el.updateComplete;
 
     expect(tabLabels(el)).toContain('給料分析');
-    expect(tabLabels(el)).not.toContain('エピソード');
+    expect(tabLabels(el)).not.toContain('年表');
   });
 });

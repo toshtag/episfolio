@@ -1,11 +1,8 @@
-import type { Episode } from '@episfolio/kernel';
 import { css, html, LitElement, type TemplateResult } from 'lit';
 import { backupIfNeeded } from './ipc/backup.js';
-import { createEpisode, listEpisodes } from './ipc/episodes.js';
 import { waitForTauri } from './ipc/tauri-ready.js';
 
 type Tab =
-  | 'episodes'
   | 'documents'
   | 'timeline'
   | 'job-targets'
@@ -35,12 +32,10 @@ type Tab =
   | 'digest'
   | 'settings';
 
-type LazyTab = Exclude<Tab, 'episodes'>;
-type LazyView = LazyTab | 'episode-detail';
+type LazyView = Tab;
 type TabGroup = 'core' | 'application' | 'interview' | 'proof' | 'company' | 'system';
 
 const VIEW_LOADERS: Record<LazyView, () => Promise<unknown>> = {
-  'episode-detail': () => import('./episode-detail-view.js'),
   documents: () => import('./document-view.js'),
   timeline: () => import('./life-timeline-view.js'),
   'job-targets': () => import('./job-target-view.js'),
@@ -81,9 +76,8 @@ const TAB_GROUPS: { id: TabGroup; label: string }[] = [
 ];
 
 const TABS: { id: Tab; label: string; group: TabGroup }[] = [
-  { id: 'episodes', label: 'エピソード', group: 'core' },
-  { id: 'documents', label: 'ドキュメント', group: 'core' },
   { id: 'timeline', label: '年表', group: 'core' },
+  { id: 'documents', label: 'ドキュメント', group: 'core' },
   { id: 'digest', label: 'ダイジェスト', group: 'core' },
   { id: 'job-targets', label: '求人', group: 'application' },
   { id: 'job-wish-sheets', label: '希望シート', group: 'application' },
@@ -112,7 +106,7 @@ const TABS: { id: Tab; label: string; group: TabGroup }[] = [
   { id: 'settings', label: '設定', group: 'system' },
 ];
 
-const TAB_CONTENT: Record<LazyTab, () => TemplateResult> = {
+const TAB_CONTENT: Record<Tab, () => TemplateResult> = {
   documents: () => html`<document-view></document-view>`,
   timeline: () => html`<life-timeline-view></life-timeline-view>`,
   'job-targets': () => html`<job-target-view></job-target-view>`,
@@ -144,34 +138,20 @@ const TAB_CONTENT: Record<LazyTab, () => TemplateResult> = {
   settings: () => html`<settings-view></settings-view>`,
 };
 
-function isLazyTab(tab: Tab): tab is LazyTab {
-  return tab !== 'episodes';
-}
-
 function groupForTab(tab: Tab): TabGroup {
   return TABS.find((item) => item.id === tab)?.group ?? 'core';
 }
 
 class EpisodeApp extends LitElement {
   static override properties = {
-    episodes: { state: true },
-    newTitle: { state: true },
-    saving: { state: true },
-    error: { state: true },
     backupError: { state: true },
     tab: { state: true },
     tabGroup: { state: true },
-    selectedId: { state: true },
   };
 
-  declare episodes: Episode[];
-  declare newTitle: string;
-  declare saving: boolean;
-  declare error: string;
   declare backupError: string;
   declare tab: Tab;
   declare tabGroup: TabGroup;
-  declare selectedId: string;
 
   private readonly loadedViews = new Set<LazyView>();
   private readonly loadingViews = new Set<LazyView>();
@@ -179,14 +159,9 @@ class EpisodeApp extends LitElement {
 
   constructor() {
     super();
-    this.episodes = [];
-    this.newTitle = '';
-    this.saving = false;
-    this.error = '';
     this.backupError = '';
-    this.tab = 'episodes';
+    this.tab = 'timeline';
     this.tabGroup = 'core';
-    this.selectedId = '';
   }
 
   static override styles = css`
@@ -243,25 +218,7 @@ class EpisodeApp extends LitElement {
       font-weight: 600;
     }
     .panel { padding: 2rem; }
-    h1 { margin: 0 0 1.5rem; font-size: 1.4rem; }
-    .form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-    input {
-      flex: 1;
-      padding: 0.4rem 0.7rem;
-      font-size: 0.95rem;
-      border: 1px solid #ccc;
-      border-radius: 0.3rem;
-    }
-    button.save-btn {
-      padding: 0.4rem 0.9rem;
-      font-size: 0.95rem;
-      background: #1a1a1a;
-      color: #fff;
-      border: none;
-      border-radius: 0.3rem;
-      cursor: pointer;
-    }
-    button.save-btn:disabled { opacity: 0.5; cursor: default; }
+    .empty { color: #888; font-size: 0.9rem; }
     .error { color: #c00; font-size: 0.85rem; margin-bottom: 0.5rem; }
     .backup-error {
       margin: 0;
@@ -271,12 +228,6 @@ class EpisodeApp extends LitElement {
       color: #8a0000;
       font-size: 0.85rem;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 2px solid #ddd; }
-    td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #eee; }
-    tbody tr { cursor: pointer; }
-    tbody tr:hover td { background: #f6f6f6; }
-    .empty { color: #888; font-size: 0.9rem; }
   `;
 
   override async connectedCallback() {
@@ -284,7 +235,7 @@ class EpisodeApp extends LitElement {
     const ready = await waitForTauri();
     if (!ready) return;
     void this.runStartupBackup();
-    await this.loadEpisodes();
+    void this.ensureView(this.tab);
   }
 
   private async runStartupBackup() {
@@ -295,44 +246,10 @@ class EpisodeApp extends LitElement {
     }
   }
 
-  private async loadEpisodes() {
-    try {
-      this.episodes = await listEpisodes();
-    } catch (e) {
-      this.error = String(e);
-    }
-  }
-
-  private async handleSave() {
-    const t = this.newTitle.trim();
-    if (!t) return;
-    this.saving = true;
-    this.error = '';
-    try {
-      await createEpisode(t);
-      this.newTitle = '';
-      await this.loadEpisodes();
-    } catch (e) {
-      this.error = String(e);
-    } finally {
-      this.saving = false;
-    }
-  }
-
-  private handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') this.handleSave();
-  }
-
-  private handleSelect(id: string) {
-    this.selectedId = id;
-    void this.ensureView('episode-detail');
-  }
-
   private activateTab(id: Tab) {
     this.tab = id;
     this.tabGroup = groupForTab(id);
-    if (id === 'episodes') this.selectedId = '';
-    if (isLazyTab(id)) void this.ensureView(id);
+    void this.ensureView(id);
   }
 
   private activateGroup(group: TabGroup) {
@@ -340,16 +257,6 @@ class EpisodeApp extends LitElement {
     if (groupForTab(this.tab) === group) return;
     const firstTab = TABS.find((item) => item.group === group);
     if (firstTab) this.activateTab(firstTab.id);
-  }
-
-  private async handleBack() {
-    this.selectedId = '';
-    await this.loadEpisodes();
-  }
-
-  private async handleDeleted() {
-    this.selectedId = '';
-    await this.loadEpisodes();
   }
 
   private renderNav() {
@@ -378,61 +285,7 @@ class EpisodeApp extends LitElement {
     `;
   }
 
-  private renderEpisodesPanel() {
-    if (this.selectedId) {
-      return this.renderLazyView(
-        'episode-detail',
-        () => html`
-        <episode-detail-view
-          episode-id=${this.selectedId}
-          @back=${this.handleBack}
-          @episode-deleted=${this.handleDeleted}
-        ></episode-detail-view>
-      `,
-      );
-    }
-    return html`
-      <div class="panel">
-        <h1>エピソード</h1>
-        <div class="form">
-          <input
-            .value=${this.newTitle}
-            @input=${(e: Event) => {
-              this.newTitle = (e.target as HTMLInputElement).value;
-            }}
-            @keydown=${this.handleKeydown}
-            placeholder="エピソードのタイトルを入力"
-          />
-          <button class="save-btn" @click=${this.handleSave} ?disabled=${this.saving || !this.newTitle.trim()}>
-            保存
-          </button>
-        </div>
-        ${this.error ? html`<p class="error">${this.error}</p>` : ''}
-        ${
-          this.episodes.length === 0
-            ? html`<p class="empty">エピソードはまだありません</p>`
-            : html`
-            <table>
-              <thead><tr><th>タイトル</th><th>作成日時</th></tr></thead>
-              <tbody>
-                ${this.episodes.map(
-                  (ep) => html`
-                  <tr @click=${() => this.handleSelect(ep.id)}>
-                    <td>${ep.title}</td>
-                    <td>${ep.createdAt.replace('T', ' ').replace('Z', '')}</td>
-                  </tr>
-                `,
-                )}
-              </tbody>
-            </table>
-          `
-        }
-      </div>
-    `;
-  }
-
   private renderContent() {
-    if (this.tab === 'episodes') return this.renderEpisodesPanel();
     return this.renderLazyView(this.tab, TAB_CONTENT[this.tab]);
   }
 
