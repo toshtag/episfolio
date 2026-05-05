@@ -11,7 +11,6 @@ export type LifeTimelineEntry = {
   category: LifeTimelineCategory;
   summary: string;
   detail: string;
-  relatedEpisodeIds: ULID[];
   tags: string[];
   createdAt: ISO8601;
   updatedAt: ISO8601;

@@ -21,9 +21,6 @@ function renderArrow(arrow: StrengthArrow, index: number): string {
   if (arrow.occurredAt != null) {
     lines.push(`- **時期**: ${arrow.occurredAt}`);
   }
-  if (arrow.relatedEpisodeIds.length > 0) {
-    lines.push(`- **関連エピソード**: ${arrow.relatedEpisodeIds.join(', ')}`);
-  }
   if (arrow.note != null && arrow.note.trim() !== '') {
     lines.push(`- **メモ**: ${arrow.note}`);
   }
