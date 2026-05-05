@@ -2,6 +2,7 @@ import type { Episode } from '@episfolio/kernel';
 import { css, html, LitElement, type TemplateResult } from 'lit';
 import { backupIfNeeded } from './ipc/backup.js';
 import { createEpisode, listEpisodes } from './ipc/episodes.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type Tab =
   | 'episodes'
@@ -283,6 +284,7 @@ class EpisodeApp extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    await waitForTauri();
     void this.runStartupBackup();
     await this.loadEpisodes();
   }

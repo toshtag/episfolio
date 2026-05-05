@@ -3,6 +3,10 @@ import { backupIfNeeded } from '../ipc/backup.js';
 import { listEpisodes } from '../ipc/episodes.js';
 import '../main.js';
 
+vi.mock('../ipc/tauri-ready.js', () => ({
+  waitForTauri: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../ipc/backup.js', () => ({
   backupIfNeeded: vi.fn(),
 }));
