@@ -2,6 +2,7 @@ import type { Episode, EpisodeUpdate } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
 import { deleteEpisode, getEpisode, updateEpisode } from './ipc/episodes.js';
 import { type CreateManualEvidenceArgs, createSkillEvidenceManual } from './ipc/evidence.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type Status = 'idle' | 'loading' | 'saving' | 'deleting' | 'saved' | 'creating-evidence' | 'error';
 type Confidence = 'low' | 'medium' | 'high';
@@ -176,6 +177,7 @@ class EpisodeDetailView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.load();
   }
 

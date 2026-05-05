@@ -7,6 +7,7 @@ import {
   listResignationPlansByJobTarget,
   updateResignationPlan,
 } from './ipc/resignation-plans.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 const RECRUITMENT_BACKGROUND_OPTIONS: { value: RecruitmentBackground; label: string }[] = [
   { value: 'vacancy', label: '欠員補充' },
@@ -274,7 +275,10 @@ class ResignationPlanView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this.loadJobTargets();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this.loadJobTargets();
+    })();
   }
 
   private async loadJobTargets() {

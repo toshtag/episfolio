@@ -6,6 +6,7 @@ import type {
 } from '@episfolio/kernel';
 import { toWeakConnectionMarkdown } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
+import { waitForTauri } from './ipc/tauri-ready.js';
 import {
   createWeakConnection,
   deleteWeakConnection,
@@ -154,6 +155,7 @@ export class WeakConnectionView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this._load();
   }
 

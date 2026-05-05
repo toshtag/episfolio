@@ -8,6 +8,7 @@ import {
   listRecruitmentImpressionsByJobTarget,
   updateRecruitmentImpression,
 } from './ipc/recruitment-impressions.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   selectionProcessNote: string;
@@ -139,6 +140,7 @@ export class RecruitmentImpressionView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this._loadJobTargets();
   }
 

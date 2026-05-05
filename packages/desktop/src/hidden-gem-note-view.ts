@@ -8,6 +8,7 @@ import {
   updateHiddenGemNote,
 } from './ipc/hidden-gem-notes.js';
 import { listJobTargets } from './ipc/job-targets.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   isGntListed: boolean;
@@ -139,6 +140,7 @@ export class HiddenGemNoteView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this._loadJobTargets();
   }
 

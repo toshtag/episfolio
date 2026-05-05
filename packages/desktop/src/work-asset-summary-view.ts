@@ -1,6 +1,7 @@
 import type { AssetType, WorkAssetSummary } from '@episfolio/kernel';
 import { toWorkAssetSummaryMarkdown } from '@episfolio/kernel';
 import { css, html, LitElement } from 'lit';
+import { waitForTauri } from './ipc/tauri-ready.js';
 import {
   createWorkAssetSummary,
   deleteWorkAssetSummary,
@@ -80,7 +81,10 @@ class WorkAssetSummaryView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this._load();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this._load();
+    })();
   }
 
   async _load() {

@@ -7,6 +7,7 @@ import {
   listStrengthFromWeakness,
   updateStrengthFromWeakness,
 } from './ipc/strength-from-weakness.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 const BLANK_TYPE_LABELS: Record<BlankType, string> = {
   leave: '休職',
@@ -124,6 +125,7 @@ class StrengthFromWeaknessView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.loadRecords();
   }
 

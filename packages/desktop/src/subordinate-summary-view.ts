@@ -7,6 +7,7 @@ import {
   listSubordinateSummaries,
   updateSubordinateSummary,
 } from './ipc/subordinate-summaries.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   title: string;
@@ -84,7 +85,10 @@ class SubordinateSummaryView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this._load();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this._load();
+    })();
   }
 
   async _load() {

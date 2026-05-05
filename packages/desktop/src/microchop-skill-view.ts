@@ -7,6 +7,7 @@ import {
   listMicrochopSkill,
   updateMicrochopSkill,
 } from './ipc/microchop-skill.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   jobTitle: string;
@@ -138,6 +139,7 @@ class MicrochopSkillView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this._load();
   }
 

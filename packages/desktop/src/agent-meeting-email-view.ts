@@ -7,6 +7,7 @@ import {
   updateAgentMeetingEmail,
 } from './ipc/agent-meeting-emails.js';
 import { listAgentTrackRecords } from './ipc/agent-track-records.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   agentTrackRecordId: string;
@@ -194,7 +195,10 @@ class AgentMeetingEmailView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    void this.loadAll();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this.loadAll();
+    })();
   }
 
   private async loadAll() {

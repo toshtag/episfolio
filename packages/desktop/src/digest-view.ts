@@ -11,6 +11,7 @@ import {
   saveJobRequirementMapping,
 } from './ipc/job-requirement-mappings.js';
 import { listJobTargets } from './ipc/job-targets.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type CardState = {
   episodeIds: string[];
@@ -208,6 +209,7 @@ class DigestView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.loadInitial();
   }
 

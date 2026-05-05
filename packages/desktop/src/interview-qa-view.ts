@@ -8,6 +8,7 @@ import {
   updateInterviewQA,
 } from './ipc/interview-qas.js';
 import { listJobTargets } from './ipc/job-targets.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 const CATEGORIES: { value: InterviewQA['category']; label: string }[] = [
   { value: 'self-introduction', label: '自己紹介' },
@@ -232,6 +233,7 @@ class InterviewQAView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this.loadTargets();
   }
 

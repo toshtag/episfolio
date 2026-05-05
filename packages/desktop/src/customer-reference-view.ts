@@ -7,6 +7,7 @@ import {
   listCustomerReferences,
   updateCustomerReference,
 } from './ipc/customer-references.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type CustomerType = 'b2b' | 'b2c';
 
@@ -107,7 +108,10 @@ class CustomerReferenceView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this._load();
+    void (async () => {
+      if (!(await waitForTauri())) return;
+      void this._load();
+    })();
   }
 
   async _load() {

@@ -8,6 +8,7 @@ import {
   listMonsterCompanyChecksByJobTarget,
   updateMonsterCompanyCheck,
 } from './ipc/monster-company-checks.js';
+import { waitForTauri } from './ipc/tauri-ready.js';
 
 type FormState = {
   mhlwCaseUrl: string;
@@ -133,6 +134,7 @@ export class MonsterCompanyCheckView extends LitElement {
 
   override async connectedCallback() {
     super.connectedCallback();
+    if (!(await waitForTauri())) return;
     await this._loadJobTargets();
   }
 
