@@ -71,7 +71,7 @@ describe('episode-app', () => {
     expect(tabLabels(el)).toContain('年表');
     expect(tabLabels(el)).not.toContain('給料分析');
 
-    buttonByText(el, '.group-nav button', '企業').click();
+    buttonByText(el, '.group-nav button', '求人・企業').click();
     await el.updateComplete;
 
     expect(tabLabels(el)).toContain('給料分析');

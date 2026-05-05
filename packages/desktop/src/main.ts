@@ -33,7 +33,7 @@ type Tab =
   | 'settings';
 
 type LazyView = Tab;
-type TabGroup = 'core' | 'application' | 'interview' | 'proof' | 'company' | 'system';
+type TabGroup = 'strength' | 'job' | 'documents' | 'agent' | 'interview' | 'resignation' | 'system';
 
 const VIEW_LOADERS: Record<LazyView, () => Promise<unknown>> = {
   documents: () => import('./document-view.js'),
@@ -67,42 +67,50 @@ const VIEW_LOADERS: Record<LazyView, () => Promise<unknown>> = {
 };
 
 const TAB_GROUPS: { id: TabGroup; label: string }[] = [
-  { id: 'core', label: '素材' },
-  { id: 'application', label: '応募' },
+  { id: 'strength', label: '強み発掘' },
+  { id: 'job', label: '求人・企業' },
+  { id: 'documents', label: '応募書類' },
+  { id: 'agent', label: 'エージェント' },
   { id: 'interview', label: '面接' },
-  { id: 'proof', label: '実績' },
-  { id: 'company', label: '企業' },
+  { id: 'resignation', label: '退職' },
   { id: 'system', label: '設定' },
 ];
 
 const TABS: { id: Tab; label: string; group: TabGroup }[] = [
-  { id: 'timeline', label: '年表', group: 'core' },
-  { id: 'documents', label: 'ドキュメント', group: 'core' },
-  { id: 'digest', label: 'ダイジェスト', group: 'core' },
-  { id: 'job-targets', label: '求人', group: 'application' },
-  { id: 'job-wish-sheets', label: '希望シート', group: 'application' },
-  { id: 'application-motives', label: '志望動機', group: 'application' },
-  { id: 'resignation-plan', label: '退職交渉', group: 'application' },
+  // 強み発掘（書籍 A 第 1 章 + 書籍 1-02 自分大全）
+  { id: 'timeline', label: '年表', group: 'strength' },
+  { id: 'strength-arrows', label: '三つの矢印', group: 'strength' },
+  { id: 'result-by-types', label: '3 タイプの実績', group: 'strength' },
+  { id: 'strength-from-weakness', label: '弱みを武器に', group: 'strength' },
+  { id: 'microchop-skill', label: 'みじん切り', group: 'strength' },
+  { id: 'weak-connection', label: '弱いつながり', group: 'strength' },
+  // 求人・企業（書籍 A 第 2 章 + 書籍 B 第 4 章前半）
+  { id: 'job-targets', label: '求人', group: 'job' },
+  { id: 'monster-company-check', label: 'モンスター企業判定', group: 'job' },
+  { id: 'recruitment-impression', label: '採用印象メモ', group: 'job' },
+  { id: 'salary-benchmark', label: '給料分析', group: 'job' },
+  { id: 'hidden-gem-note', label: '隠れ優良企業', group: 'job' },
+  { id: 'growth-cycle-note', label: '成長サイクル', group: 'job' },
+  { id: 'company-certification', label: '認定・認証', group: 'job' },
+  { id: 'business-unit-type-match', label: '事業部タイプ相性', group: 'job' },
+  // 応募書類（書籍 A 第 3 章）
+  { id: 'documents', label: 'ドキュメント', group: 'documents' },
+  { id: 'digest', label: 'ダイジェスト', group: 'documents' },
+  { id: 'application-motives', label: '志望動機', group: 'documents' },
+  { id: 'boss-references', label: '上司リファレンス', group: 'documents' },
+  { id: 'customer-references', label: '顧客リファレンス', group: 'documents' },
+  { id: 'work-asset-summaries', label: '仕事資料', group: 'documents' },
+  { id: 'subordinate-summaries', label: '部下まとめ', group: 'documents' },
+  // エージェント（書籍 A 第 4 章 + 書籍 B 第 3 章）
+  { id: 'agent-track-records', label: 'エージェント実績', group: 'agent' },
+  { id: 'agent-meeting-emails', label: '面談メール', group: 'agent' },
+  { id: 'job-wish-sheets', label: '希望シート', group: 'agent' },
+  // 面接（書籍 A 第 5 章 + 書籍 B 第 4 章後半）
   { id: 'interview-qa', label: '面接の赤本', group: 'interview' },
   { id: 'interview-report', label: '面接後報告', group: 'interview' },
-  { id: 'agent-track-records', label: 'エージェント', group: 'interview' },
-  { id: 'agent-meeting-emails', label: '面談メール', group: 'interview' },
-  { id: 'boss-references', label: '上司リファレンス', group: 'proof' },
-  { id: 'customer-references', label: '顧客リファレンス', group: 'proof' },
-  { id: 'strength-arrows', label: '三つの矢印', group: 'proof' },
-  { id: 'work-asset-summaries', label: '仕事資料', group: 'proof' },
-  { id: 'subordinate-summaries', label: '部下まとめ', group: 'proof' },
-  { id: 'result-by-types', label: '3 タイプの実績', group: 'proof' },
-  { id: 'strength-from-weakness', label: '弱みを武器に', group: 'proof' },
-  { id: 'microchop-skill', label: 'みじん切り', group: 'proof' },
-  { id: 'weak-connection', label: '弱いつながり', group: 'proof' },
-  { id: 'company-certification', label: '認定・認証', group: 'company' },
-  { id: 'business-unit-type-match', label: '事業部タイプ相性', group: 'company' },
-  { id: 'monster-company-check', label: 'モンスター企業判定', group: 'company' },
-  { id: 'recruitment-impression', label: '採用印象メモ', group: 'company' },
-  { id: 'salary-benchmark', label: '給料分析', group: 'company' },
-  { id: 'hidden-gem-note', label: '隠れ優良企業', group: 'company' },
-  { id: 'growth-cycle-note', label: '成長サイクル', group: 'company' },
+  // 退職（書籍 B 第 5 章）
+  { id: 'resignation-plan', label: '退職交渉', group: 'resignation' },
+  // 設定
   { id: 'settings', label: '設定', group: 'system' },
 ];
 
@@ -139,7 +147,7 @@ const TAB_CONTENT: Record<Tab, () => TemplateResult> = {
 };
 
 function groupForTab(tab: Tab): TabGroup {
-  return TABS.find((item) => item.id === tab)?.group ?? 'core';
+  return TABS.find((item) => item.id === tab)?.group ?? 'strength';
 }
 
 class EpisodeApp extends LitElement {
@@ -161,7 +169,7 @@ class EpisodeApp extends LitElement {
     super();
     this.backupError = '';
     this.tab = 'timeline';
-    this.tabGroup = 'core';
+    this.tabGroup = 'strength';
   }
 
   static override styles = css`
