@@ -4,7 +4,7 @@ export type JobRequirementMapping = {
   id: ULID;
   jobTargetId: ULID;
   requirementSkillId: string;
-  episodeIds: ULID[];
+  lifeTimelineEntryIds: ULID[];
   userNote: string;
   createdAt: ISO8601;
   updatedAt: ISO8601;
