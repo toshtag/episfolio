@@ -54,7 +54,7 @@ export type {
 export type { CompanyCertification } from './domain/company-certification.js';
 export type { CustomerReference, CustomerType } from './domain/customer-reference.js';
 // domain
-export type { Episode, ISO8601, ULID } from './domain/episode.js';
+export type { Episode } from './domain/episode.js';
 export type { GrowthCycleNote, GrowthStage } from './domain/growth-cycle-note.js';
 export type { HiddenGemNote } from './domain/hidden-gem-note.js';
 export type {
@@ -109,6 +109,7 @@ export type {
   SubordinateRow,
   SubordinateSummary,
 } from './domain/subordinate-summary.js';
+export type { ISO8601, ULID } from './domain/types.js';
 export type {
   ContactStatus,
   WeakConnection,

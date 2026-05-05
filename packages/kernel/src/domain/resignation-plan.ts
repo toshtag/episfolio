@@ -1,4 +1,4 @@
-import type { ISO8601, ULID } from './episode.js';
+import type { ISO8601, ULID } from './types.js';
 
 // 退職交渉設計・藩士意識に基づくフィールド
 export type RecruitmentBackground = 'vacancy' | 'expansion' | 'unknown';
