@@ -53,6 +53,7 @@ const MIGRATIONS: &[Migration] = &[
     ),
     migration!("0039", "0039_drop_related_episode_ids.sql"),
     migration!("0040", "0040_drop_source_evidence_ids.sql"),
+    migration!("0041", "0041_drop_skill_evidence_and_ai_runs.sql"),
 ];
 
 pub fn open(db_path: PathBuf) -> Result<Connection> {
@@ -123,7 +124,7 @@ mod tests {
     // ──────────────────────────────────────────────
 
     #[test]
-    fn migrations_0001_through_0040_apply_to_fresh_db() {
+    fn migrations_0001_through_0041_apply_to_fresh_db() {
         let conn = db();
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
@@ -133,7 +134,7 @@ mod tests {
 
     #[test]
     fn migration_registry_is_contiguous() {
-        assert_eq!(MIGRATIONS.len(), 40);
+        assert_eq!(MIGRATIONS.len(), 41);
         for (idx, (version, sql)) in MIGRATIONS.iter().enumerate() {
             let expected = format!("{:04}", idx + 1);
             assert_eq!(
@@ -282,62 +283,6 @@ mod tests {
         );
     }
 
-    // ──────────────────────────────────────────────
-    // skill_evidence CHECK 制約
-    // ──────────────────────────────────────────────
-
-    fn insert_skill_evidence(
-        conn: &Connection,
-        id: &str,
-        confidence: &str,
-        status: &str,
-        source: &str,
-        created_by: &str,
-    ) -> rusqlite::Result<usize> {
-        conn.execute(
-            "INSERT INTO skill_evidence \
-             (id, strength_label, description, evidence_episode_ids, reproducibility, evaluated_context, \
-              confidence, status, source, created_by, source_ai_run_id, created_at, updated_at) \
-             VALUES (?1, 'lbl', 'desc', '[]', '', '', ?2, ?3, ?4, ?5, NULL, ?6, ?6)",
-            rusqlite::params![id, confidence, status, source, created_by, TS],
-        )
-    }
-
-    #[test]
-    fn skill_evidence_accepts_valid_enums() {
-        let conn = db();
-        insert_skill_evidence(&conn, "ev_ok", "high", "accepted", "manual", "human")
-            .expect("valid enums should pass");
-    }
-
-    #[test]
-    fn skill_evidence_confidence_check_rejects_invalid() {
-        let conn = db();
-        let result = insert_skill_evidence(&conn, "ev1", "unknown", "candidate", "manual", "human");
-        assert!(result.is_err(), "confidence='unknown' must be rejected");
-    }
-
-    #[test]
-    fn skill_evidence_status_check_rejects_invalid() {
-        let conn = db();
-        let result = insert_skill_evidence(&conn, "ev2", "medium", "draft", "manual", "human");
-        assert!(result.is_err(), "status='draft' must be rejected");
-    }
-
-    #[test]
-    fn skill_evidence_source_check_rejects_invalid() {
-        let conn = db();
-        let result =
-            insert_skill_evidence(&conn, "ev3", "medium", "candidate", "imported", "human");
-        assert!(result.is_err(), "source='imported' must be rejected");
-    }
-
-    #[test]
-    fn skill_evidence_created_by_check_rejects_invalid() {
-        let conn = db();
-        let result = insert_skill_evidence(&conn, "ev4", "medium", "candidate", "manual", "robot");
-        assert!(result.is_err(), "created_by='robot' must be rejected");
-    }
 
     // ──────────────────────────────────────────────
     // career_documents / document_revisions
@@ -371,9 +316,9 @@ mod tests {
         insert_document(&conn, "doc1", "draft").unwrap();
         let result = conn.execute(
             "INSERT INTO document_revisions \
-             (id, document_id, content, source_ai_run_id, created_by, \
+             (id, document_id, content, created_by, \
               revision_reason, target_memo, previous_revision_id, created_at) \
-             VALUES (?1, ?2, '', NULL, ?3, '', '', NULL, ?4)",
+             VALUES (?1, ?2, '', ?3, '', '', NULL, ?4)",
             rusqlite::params!["rev_bad", "doc1", "system", TS],
         );
         assert!(result.is_err(), "created_by='system' must be rejected");
@@ -386,18 +331,18 @@ mod tests {
         // 初版
         conn.execute(
             "INSERT INTO document_revisions \
-             (id, document_id, content, source_ai_run_id, created_by, \
+             (id, document_id, content, created_by, \
               revision_reason, target_memo, previous_revision_id, created_at) \
-             VALUES ('rev1', 'doc1', 'v1', NULL, 'human', '初版', '', NULL, ?1)",
+             VALUES ('rev1', 'doc1', 'v1', 'human', '初版', '', NULL, ?1)",
             rusqlite::params![TS],
         )
         .unwrap();
         // 改訂 2
         conn.execute(
             "INSERT INTO document_revisions \
-             (id, document_id, content, source_ai_run_id, created_by, \
+             (id, document_id, content, created_by, \
               revision_reason, target_memo, previous_revision_id, created_at) \
-             VALUES ('rev2', 'doc1', 'v2', NULL, 'human', '改訂', '', 'rev1', ?1)",
+             VALUES ('rev2', 'doc1', 'v2', 'human', '改訂', '', 'rev1', ?1)",
             rusqlite::params![TS],
         )
         .unwrap();
@@ -493,9 +438,9 @@ mod tests {
         // career_documents に存在しない document_id を参照する revision は FK エラー
         let result = conn.execute(
             "INSERT INTO document_revisions \
-             (id, document_id, content, source_ai_run_id, created_by, \
+             (id, document_id, content, created_by, \
               revision_reason, target_memo, previous_revision_id, created_at) \
-             VALUES ('rev_orphan', 'doc_missing', '', NULL, 'human', '', '', NULL, ?1)",
+             VALUES ('rev_orphan', 'doc_missing', '', 'human', '', '', NULL, ?1)",
             rusqlite::params![TS],
         );
         assert!(result.is_err(), "存在しない document_id を参照する revision は FK で拒否される");
@@ -593,9 +538,9 @@ mod tests {
         // NULL を受理（既存 row 互換）
         conn.execute(
             "INSERT INTO document_revisions \
-             (id, document_id, content, source_ai_run_id, created_by, \
+             (id, document_id, content, created_by, \
               revision_reason, target_memo, job_target_id, previous_revision_id, created_at) \
-             VALUES ('rev_null', 'doc1', '', NULL, 'human', 'r', '', NULL, NULL, ?1)",
+             VALUES ('rev_null', 'doc1', '', 'human', 'r', '', NULL, NULL, ?1)",
             rusqlite::params![TS],
         )
         .unwrap();
@@ -603,9 +548,9 @@ mod tests {
         // ULID を受理
         conn.execute(
             "INSERT INTO document_revisions \
-             (id, document_id, content, source_ai_run_id, created_by, \
+             (id, document_id, content, created_by, \
               revision_reason, target_memo, job_target_id, previous_revision_id, created_at) \
-             VALUES ('rev_jt', 'doc1', '', NULL, 'human', 'r', '', '01HJOB1', NULL, ?1)",
+             VALUES ('rev_jt', 'doc1', '', 'human', 'r', '', '01HJOB1', NULL, ?1)",
             rusqlite::params![TS],
         )
         .unwrap();
@@ -715,27 +660,6 @@ mod tests {
             result.is_err(),
             "存在しない job_target_id を参照するマッピングは FK で拒否される"
         );
-    }
-
-    #[test]
-    fn ai_runs_insert_and_select_smoke() {
-        let conn = db();
-        conn.execute(
-            "INSERT INTO ai_runs \
-             (id, provider, model, purpose, prompt_id, prompt_version, prompt_hash, \
-              model_params, input_snapshot_mode, input_snapshot, input_references, \
-              output_raw, output_parsed, parse_error, token_usage, cost_estimate_usd, created_at) \
-             VALUES ('run1', 'openai', 'gpt-4', 'extract', 'p1', '1.0', 'abc', NULL, \
-                     'references_only', NULL, '{}', '{}', NULL, NULL, '{}', NULL, ?1)",
-            rusqlite::params![TS],
-        )
-        .unwrap();
-        let provider: String = conn
-            .query_row("SELECT provider FROM ai_runs WHERE id = 'run1'", [], |r| {
-                r.get(0)
-            })
-            .unwrap();
-        assert_eq!(provider, "openai");
     }
 
     // ──────────────────────────────────────────────
